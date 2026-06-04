@@ -9,6 +9,19 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
 - Stack : **Next.js 15** · Tailwind CSS v4 · TypeScript · Vercel · Stripe
 - Repo GitHub : à créer (compte existant, lier à Vercel)
 
+## Design system (handoff `design_handoff_3beestudio/`)
+- **Fonts** : `Manrope` (sans, 300–800) + `JetBrains Mono` (mono, 400–600) via `next/font/google`
+- **Tokens CSS** : définis dans `src/styles/globals.css` → `@theme` Tailwind v4
+  - Backgrounds : `bg-bg-0` (#0A0A0B) … `bg-bg-4` (#25252B)
+  - Texte : `text-ink-0` (#FAFAFA) … `text-ink-3` (#54545A)
+  - Amber : `text-amber` (#F59E0B), `text-amber-soft` (#FBBF24), `text-amber-deep` (#B45309)
+  - Radii : `rounded-xs/sm/md/lg/xl/2xl/pill` (8→999px)
+  - Shadows : `shadow-card`, `shadow-amber`, `shadow-pop`
+  - CSS vars `--line`, `--line-2`, `--line-amber`, `--honey`, `--btn-primary-bg` utilisables en inline style
+- **Utilitaires CSS** : `.honey-text`, `.no-scrollbar`, `.fade-up`, `.hex-bg` (voir globals.css)
+- **Atomes** : `Eyebrow`, `HexLogo`, `StatusDot`, `ProductGlyph` dans `src/components/ui/`
+- **Sections landing** : `src/components/landing/` — Hero, VideoStrip, ProductsGrid, HowItWorks, CustomCTA, Portfolio, Testimonials, NewsletterBlock, SiteFooter
+
 ## Navigation des docs
 
 | Fichier | Contenu |

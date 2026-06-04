@@ -5,7 +5,6 @@
 
 ## 🔧 Setup Technique
 
-- [ ] `npx create-next-app@latest 3beestudio --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"`
 - [ ] Créer repo GitHub `3beestudio`
 - [ ] Push initial sur GitHub
 - [ ] Créer projet Vercel, lier au repo GitHub
@@ -14,22 +13,31 @@
 - [ ] Créer compte Resend, vérifier le domaine `3beestudio.fr`
 - [ ] Créer compte Supabase, créer le projet `3beestudio`
 - [ ] Copier `.env.local` avec toutes les clés (voir `05-stack-technique.md`)
-- [ ] Installer les dépendances npm (voir `05-stack-technique.md`)
 
 ## 🎨 Design & Pages
 
-- [ ] `src/styles/globals.css` — variables CSS couleurs + fonts
-- [ ] `src/app/layout.tsx` — Root layout avec fonts Syne + DM Sans
-- [ ] `src/components/layout/Navbar.tsx`
-- [ ] `src/components/layout/Footer.tsx`
-- [ ] `src/app/page.tsx` — Page d'accueil complète
-- [ ] `src/app/nfc/page.tsx` — Landing NFC B2B
-- [ ] `src/components/nfc/NfcMockup.tsx` — Mockup animé porte-clé
-- [ ] `src/components/nfc/NfcDevisForm.tsx` — Formulaire devis simple
+- [x] `src/styles/globals.css` — tokens design system (bg-0…4, ink-0…3, amber, radii, shadows)
+- [x] `src/app/layout.tsx` — Root layout avec Manrope + JetBrains Mono
+- [x] `src/components/layout/Navbar.tsx` — Logo texte + liens + burger mobile
+- [x] `src/components/landing/SiteFooter.tsx` — Footer avec socials TikTok/IG/Pinterest/YouTube
+- [x] `src/app/page.tsx` — Landing page complète (9 sections)
+- [x] `src/components/landing/Hero.tsx`
+- [x] `src/components/landing/NFCSection.tsx` — Produit phare porte-clé connecté
+- [x] `src/components/landing/ProductsGrid.tsx`
+- [x] `src/components/landing/CustomCTA.tsx` — Sur-mesure + timeline
+- [x] `src/components/landing/VideoStrip.tsx`
+- [x] `src/components/landing/Portfolio.tsx`
+- [x] `src/components/landing/Testimonials.tsx`
+- [x] `src/components/landing/NewsletterBlock.tsx`
+- [x] `src/app/cgv/page.tsx` ✅
+- [x] `src/app/mentions-legales/page.tsx` ✅
+- [x] `src/app/politique-de-confidentialite/page.tsx` ✅
+- [ ] `src/app/nfc/page.tsx` — Page dédiée porte-clé connecté
 - [ ] `src/app/boutique/page.tsx` — Grille produits
 - [ ] `src/app/boutique/[slug]/page.tsx` — Fiche produit
-- [ ] `src/app/cgv/page.tsx`
-- [ ] `src/app/mentions-legales/page.tsx`
+- [ ] `src/app/sur-mesure/page.tsx` — Formulaire multi-step
+- [ ] `src/app/portfolio/page.tsx` — Galerie masonry
+- [ ] `src/app/contact/page.tsx` — Formulaire contact
 
 ## 💳 Stripe
 
@@ -42,44 +50,43 @@
 ## 📧 Emails
 
 - [ ] `src/lib/resend.ts` — Config Resend
-- [ ] Email de confirmation commande (template React Email)
+- [ ] Email confirmation commande (template React Email)
 - [ ] Tester l'envoi d'email
 
-## 📱 Produit NFC
+## 📱 Produit NFC / Porte-clé connecté
 
-- [ ] Commander 100 puces NFC NTAG213 sur Amazon
+- [ ] Commander 100 puces NFC NTAG213 sur Amazon (~25€)
 - [ ] Installer NFC Tools sur Android
 - [ ] Imprimer 3 prototypes porte-clé (dont 1 avec logo 3BeeStudio)
-- [ ] Programmer 3 puces de démo (Instagram, Google Maps, site)
-- [ ] Filmer la démo NFC 10s (pour la page `/nfc` + TikTok)
+- [ ] Programmer 3 puces de démo (Instagram, site, téléphone)
+- [ ] Filmer la démo NFC 10s (pour `/nfc` + TikTok)
 
-## 📹 Contenu (à faire en parallèle)
+## 📹 Contenu (en parallèle)
 
-- [ ] Activer le timelapse dans Bambu Studio (une fois pour toutes)
+- [ ] Activer le timelapse dans Bambu Studio
 - [ ] Créer le template CapCut réutilisable (9:16, logo, musique)
-- [ ] Poster la 1ère vidéo TikTok (timelapse d'impression)
+- [ ] Poster la 1ère vidéo TikTok
 - [ ] Poster sur Instagram Reels le même contenu
 
 ---
 
 ## 📋 Checklist Lancement
 
-Avant de dire "le site est live" :
-- [ ] Stripe live mode activé (pas test)
+- [ ] Stripe live mode activé
 - [ ] Domaine 3beestudio.fr pointe sur Vercel avec HTTPS
 - [ ] Webhook Stripe configuré sur Vercel
 - [ ] Au moins 1 produit de série achetable
-- [ ] Formulaire devis NFC qui envoie un email
-- [ ] Pages CGV et Mentions légales en ligne
-- [ ] Test mobile (iPhone + Android) : tout s'affiche bien
+- [ ] Formulaire devis porte-clé qui envoie un email
+- [x] Pages CGV, Mentions légales et Confidentialité en ligne
+- [ ] Test mobile (iPhone + Android)
 - [ ] Test achat complet de bout en bout avec carte Stripe test
 
 ---
 
-## 🐞 Bugs Connus / Points de vigilance
+## 🐞 Points de vigilance
 
-- Utiliser **Next.js 15** — App Router uniquement, jamais Pages Router
-- Tailwind CSS v4 : la config est dans `globals.css`, pas dans `tailwind.config.js`
-- Stripe webhook : utiliser `stripe listen --forward-to localhost:3000/api/stripe/webhook` en dev
-- Les Server Actions Next.js 15 nécessitent `'use server'` en début de fichier
-- Turbopack activé par défaut avec `next dev` en Next.js 15
+- **Next.js 15** — App Router uniquement, jamais Pages Router
+- **Tailwind CSS v4** — tokens dans `globals.css` via `@theme`, pas de `tailwind.config.js`
+- **Stripe webhook** : `stripe listen --forward-to localhost:3000/api/stripe/webhook` en dev
+- **TypeScript strict** — zéro `any`
+- **Terminologie** : "porte-clé connecté" sur le site, "NFC" gardé dans les keywords SEO

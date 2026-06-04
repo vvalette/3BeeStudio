@@ -1,34 +1,80 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────
+   Tailwind v4 design tokens
+   → génère bg-bg-0…4, text-ink-0…3, text-amber…
+   ───────────────────────────────────────────── */
 @theme {
-  --color-slate-950: #020617;
-  --color-slate-900: #0f172a;
-  --color-slate-800: #1e293b;
-  --color-slate-700: #334155;
-  --color-slate-400: #94a3b8;
-  --color-slate-200: #e2e8f0;
+  /* Background scale */
+  --color-bg-0: #0A0A0B;
+  --color-bg-1: #101013;
+  --color-bg-2: #161619;
+  --color-bg-3: #1C1C20;
+  --color-bg-4: #25252B;
 
-  --color-amber-500: #f59e0b;
-  --color-amber-300: #fcd34d;
+  /* Ink (text) scale */
+  --color-ink-0: #FAFAFA;
+  --color-ink-1: #C9C9CE;
+  --color-ink-2: #87878E;
+  --color-ink-3: #54545A;
 
-  --color-cream: #fef9f0;
+  /* Amber */
+  --color-amber: #F59E0B;
+  --color-amber-soft: #FBBF24;
+  --color-amber-deep: #B45309;
 
-  --font-syne: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", monospace;
+  /* Fonts */
+  --font-sans: var(--font-manrope), 'Manrope', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace;
 
-  --shadow-amber: 0 10px 30px -10px rgba(245, 158, 11, 0.45);
+  /* Border radius */
+  --radius-xs:   8px;
+  --radius-sm:  12px;
+  --radius-md:  18px;
+  --radius-lg:  24px;
+  --radius-xl:  32px;
+  --radius-2xl: 40px;
+  --radius-pill: 999px;
 
-  --animate-fade-up: fade-up 0.6s ease-out both;
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-pulse-nfc: pulse-nfc 2.4s ease-in-out infinite;
+  /* Shadows */
+  --shadow-card:  0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-amber: 0 0 0 1px rgba(245,158,11,0.4), 0 8px 32px rgba(245,158,11,0.25);
+  --shadow-pop:   0 24px 60px rgba(0,0,0,0.6), 0 2px 0 rgba(255,255,255,0.06) inset;
 }
 
+/* ─────────────────────────────────────────────
+   CSS vars pour inline styles et gradients
+   ───────────────────────────────────────────── */
 :root {
-  --amber-dim: rgba(245, 158, 11, 0.12);
-  --noise-opacity: 0.004;
+  --bg-0: #0A0A0B;
+  --bg-1: #101013;
+  --bg-2: #161619;
+  --bg-3: #1C1C20;
+  --bg-4: #25252B;
+
+  --ink-0: #FAFAFA;
+  --ink-1: #C9C9CE;
+  --ink-2: #87878E;
+  --ink-3: #54545A;
+
+  --amber:      #F59E0B;
+  --amber-soft: #FBBF24;
+  --amber-deep: #B45309;
+  --amber-glow: rgba(245,158,11,0.35);
+  --amber-tint: rgba(245,158,11,0.08);
+
+  --line:       rgba(255,255,255,0.06);
+  --line-2:     rgba(255,255,255,0.10);
+  --line-amber: rgba(245,158,11,0.18);
+
+  --honey: linear-gradient(180deg, #FCD34D 0%, #F59E0B 50%, #B45309 100%);
+  --btn-primary-bg: linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%);
+  --btn-primary-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 8px 24px rgba(245,158,11,0.35);
 }
 
+/* ─────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────── */
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -38,70 +84,121 @@
   }
 
   body {
-    background-color: var(--color-slate-950);
-    color: var(--color-slate-200);
+    background-color: #0A0A0B;
+    color: #FAFAFA;
     font-family: var(--font-sans);
     min-height: 100dvh;
-    position: relative;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    opacity: var(--noise-opacity);
-    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-syne);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--color-cream);
   }
 
   ::selection {
-    background-color: var(--color-amber-500);
-    color: var(--color-slate-900);
+    background-color: #F59E0B;
+    color: #0A0A0B;
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-amber-500);
+    outline: 2px solid #F59E0B;
     outline-offset: 2px;
     border-radius: 4px;
   }
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+/* ─────────────────────────────────────────────
+   Utility classes
+   ───────────────────────────────────────────── */
+@layer utilities {
+  /* Honey gradient text */
+  .honey-text {
+    background: var(--honey);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  /* Hide scrollbar */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Fade-up animation utility */
+  .fade-up { animation: fadeUp 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+  /* Amber ring (gradient border via mask) */
+  .amber-ring {
+    position: relative;
   }
+  .amber-ring::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(245,158,11,0.6), rgba(245,158,11,0));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Hex grid background pattern */
+  .hex-bg {
+    background-image:
+      radial-gradient(circle at 30% 20%, rgba(245,158,11,0.10), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(245,158,11,0.04), transparent 50%);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Keyframes
+   ───────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(52,211,153,0); }
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }
 
-@keyframes pulse-nfc {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 18px rgba(245, 158, 11, 0);
-  }
+/* Le texte « 3BeeStudio » se construit couche par couche, de bas en haut.
+   Bande texte : y 66%→75%, x 17.5%→82.7% (mesuré sur logo.png).
+   steps(6) → 6 couches discrètes, synchronisées avec les passes de l'abeille. */
+@keyframes print-text-up {
+  from { clip-path: inset(75% 0 24% 0); }
+  to   { clip-path: inset(66% 0 24% 0); }
 }
+
+/* L'abeille balaie largement de gauche à droite ET remonte progressivement
+   comme une tête d'impression 3D : elle part près du plateau (bas) et monte
+   à sa position finale au fil des couches. ~6 passes pendant l'impression. */
+@keyframes bee-sweep {
+  0%   { transform: translate(0, 28px); }
+  8%   { transform: translate(-90px, 26px); }
+  25%  { transform: translate(90px, 21px); }
+  42%  { transform: translate(-90px, 16px); }
+  58%  { transform: translate(90px, 12px); }
+  75%  { transform: translate(-90px, 7px); }
+  92%  { transform: translate(90px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Bord de couche lumineux qui remonte avec la construction. */
+@keyframes layer-head {
+  0%   { top: 75%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 66%; opacity: 0; }
+}
+
+@keyframes nozzle-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

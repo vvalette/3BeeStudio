@@ -139,6 +139,7 @@ manuellement     le contenu       la chaîne        le business
 - [ ] Tableau Notion : client / URL / date livraison
 - [ ] QR code de secours dans chaque colis
 - [ ] Portail client pour modifier URL sans te contacter
+- [ ] **Page dédiée multi-liens** : digital business card hébergée par 3BeeStudio (type Linktree personnalisé) — le porte-clé pointe vers cette page qui regroupe Instagram, email, téléphone, site, etc. Modifiable depuis un dashboard client.
 
 ### Phase 4 — Volume
 - [ ] Cibler franchises, chaînes de restaurants, réseaux d'agences

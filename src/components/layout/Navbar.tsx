@@ -1,99 +1,165 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
-import Logo from '@/components/ui/Logo'
+import { useState, useEffect } from 'react'
+import { X, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
-  { href: '/boutique', label: 'Boutique' },
-  { href: '/nfc', label: 'NFC B2B' },
+  { href: '/boutique',   label: 'Boutique' },
+  { href: '/nfc',        label: 'Porte-clé connecté' },
   { href: '/sur-mesure', label: 'Sur-mesure' },
-  { href: '/portfolio', label: 'Portfolio' },
+  { href: '/portfolio',  label: 'Portfolio' },
 ] as const
 
 export default function Navbar() {
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen]         = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Ajoute un fond plus opaque après 40px de scroll
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Bloque le scroll body quand menu mobile ouvert
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        {/* Logo */}
-        <Logo size="md" />
+    <>
+      <header
+        className={cn(
+          'fixed inset-x-0 top-0 z-50 transition-all duration-300',
+          scrolled
+            ? 'border-b border-[var(--line)] bg-bg-0/95 backdrop-blur-xl'
+            : 'bg-transparent'
+        )}
+      >
+        <nav className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8">
 
-        {/* Desktop links */}
-        <ul className="hidden items-center gap-1 md:flex">
-          {navLinks.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                  pathname === href || pathname.startsWith(href + '/')
-                    ? 'text-amber-500'
-                    : 'text-slate-400 hover:text-slate-200'
-                )}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        {/* CTA desktop */}
-        <div className="hidden md:block">
+          {/* ── Logo texte ── */}
           <Link
-            href="/nfc#devis"
-            className="rounded-lg bg-amber-500 px-5 py-2 text-sm font-bold text-slate-900 font-syne transition-all hover:bg-amber-300 hover:-translate-y-0.5 hover:shadow-amber"
+            href="/"
+            onClick={() => setOpen(false)}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber rounded-lg"
+            aria-label="3BeeStudio — accueil"
           >
-            Devis NFC
+            <Image
+              src="/images/logo-name-only.png"
+              alt="3BeeStudio"
+              width={180}
+              height={44}
+              priority
+              className="object-contain mix-blend-lighten"
+              style={{ height: 32, width: 'auto' }}
+            />
           </Link>
-        </div>
 
-        {/* Mobile toggle */}
-        <button
-          aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-          className="rounded-md p-2 text-slate-400 transition-colors hover:text-slate-200 md:hidden"
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </nav>
-
-      {/* Mobile drawer */}
-      {open && (
-        <div className="border-t border-slate-800 bg-slate-950 px-4 pb-5 pt-3 md:hidden">
-          <ul className="flex flex-col gap-1">
+          {/* ── Desktop links ── */}
+          <ul className="hidden items-center gap-0.5 md:flex">
             {navLinks.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
-                  onClick={() => setOpen(false)}
                   className={cn(
-                    'block rounded-md px-4 py-3 text-sm font-medium transition-colors',
-                    pathname === href || pathname.startsWith(href + '/')
-                      ? 'text-amber-500'
-                      : 'text-slate-300 hover:text-slate-200'
+                    'relative px-4 py-2 text-[14px] font-medium rounded-md transition-colors',
+                    isActive(href)
+                      ? 'text-ink-0'
+                      : 'text-ink-2 hover:text-ink-0'
                   )}
                 >
                   {label}
+                  {/* Active indicator dot */}
+                  {isActive(href) && (
+                    <span
+                      className="absolute bottom-1 left-1/2 -translate-x-1/2 block h-[3px] w-[3px] rounded-full bg-amber"
+                      style={{ boxShadow: '0 0 6px var(--amber)' }}
+                    />
+                  )}
                 </Link>
               </li>
             ))}
           </ul>
-          <Link
-            href="/nfc#devis"
-            onClick={() => setOpen(false)}
-            className="mt-4 block rounded-lg bg-amber-500 px-5 py-3 text-center text-sm font-bold text-slate-900 font-syne transition-all hover:bg-amber-300"
-          >
-            Devis NFC
-          </Link>
+
+          {/* ── Right ── */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/contact"
+              className="hidden md:inline-flex h-10 items-center gap-1.5 rounded-pill px-5 text-[13px] font-semibold text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-110"
+              style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+            >
+              Nous contacter
+            </Link>
+
+            {/* Burger mobile */}
+            <button
+              aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+              className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--line)] bg-bg-2 text-ink-1 transition-colors hover:bg-bg-3 hover:text-ink-0 md:hidden"
+            >
+              {open ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* ── Mobile overlay menu ── */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 flex flex-col md:hidden"
+          style={{ background: 'var(--bg-0)', paddingTop: 72 }}
+        >
+          {/* Glow */}
+          <div aria-hidden className="pointer-events-none absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.10), transparent 60%)' }}
+          />
+
+          <nav className="relative flex flex-col flex-1 justify-center px-8 gap-2">
+            {navLinks.map(({ href, label }, i) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  'group flex items-center justify-between py-4 border-b border-[var(--line)] transition-colors',
+                  isActive(href) ? 'text-amber' : 'text-ink-1 hover:text-ink-0'
+                )}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <span className="font-sans font-bold" style={{ fontSize: 28, letterSpacing: '-0.02em' }}>
+                  {label}
+                </span>
+                <span className="font-mono text-ink-3 group-hover:text-amber transition-colors" style={{ fontSize: 11 }}>
+                  0{i + 1}
+                </span>
+              </Link>
+            ))}
+          </nav>
+
+          {/* Bottom CTA */}
+          <div className="relative px-8 pb-10">
+            <Link
+              href="/contact"
+              onClick={() => setOpen(false)}
+              className="flex h-[54px] w-full items-center justify-center rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97]"
+              style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+            >
+              Nous contacter
+            </Link>
+          </div>
         </div>
       )}
-    </header>
+    </>
   )
 }

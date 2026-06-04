@@ -1,18 +1,23 @@
-# 03 — Produit Phare : Porte-Clé NFC B2B
+# 03 — Produit Phare : Porte-Clé Connecté
+
+> **Terminologie officielle sur le site :** "porte-clé connecté" (pas "NFC B2B").
+> L'URL reste `/nfc`. Le terme NFC est gardé dans les métadonnées SEO.
 
 ## Concept
-Porte-clé imprimé en 3D avec logo client + **languette NFC NTAG213** programmée. Approcher un smartphone ouvre instantanément la destination choisie.
+Porte-clé imprimé en 3D avec logo client + **languette NFC NTAG213** programmée.
+Approcher un smartphone ouvre instantanément le lien choisi par le client.
 
 **Argument clé : l'URL est modifiable à tout moment sans refaire le porte-clé.**
 
-## Destinations NFC possibles
-- Profil Instagram / TikTok
-- Fiche Google Maps (restaurants, boutiques)
-- Site web
-- vCard téléchargeable (fiche contact)
-- Menu PDF
-- Formulaire de devis/contact
-- Tout lien HTTPS
+## Destinations possibles (une seule à la fois)
+- Profil Instagram, TikTok ou LinkedIn
+- Site web ou portfolio
+- Numéro de téléphone (`tel:`)
+- Email (`mailto:`)
+- Tout autre lien HTTPS
+
+> **Roadmap Phase 3** : page dédiée multi-liens (type digital business card) hébergée par 3BeeStudio,
+> permettant de regrouper plusieurs liens sur une même page et de les modifier depuis un dashboard.
 
 ## Composants & Coûts
 
@@ -25,7 +30,7 @@ Porte-clé imprimé en 3D avec logo client + **languette NFC NTAG213** programm�
 
 **Coût de revient total : ~1€/unité** à 100 unités
 
-## Pricing B2B (HT)
+## Pricing (HT, micro-entreprise — pas de TVA)
 
 | Quantité | Prix/unité | Total | Marge brute |
 |----------|-----------|-------|-------------|
@@ -42,7 +47,6 @@ Setup logo si vectorisation nécessaire : **35€ one-time**
 |-------|-------|------|
 | NFC Tools (Android) | Programmer les puces | Gratuit |
 | NFC Tools Pro | Programmer en série, templates | 6€ one-time |
-| Notion / Airtable | Suivi clients/URLs programmées | Gratuit |
 
 **Process de programmation :**
 1. Ouvrir NFC Tools sur Android
@@ -50,25 +54,23 @@ Setup logo si vectorisation nécessaire : **35€ one-time**
 3. Approcher la puce du téléphone → programmé en 3 secondes
 4. Tester avec un autre téléphone
 
-## Acquisition B2B (sans budget)
+## Acquisition (sans budget)
 
 **Cibles prioritaires :**
 - Restaurants, cafés, food trucks
 - Salons de coiffure / beauté / bien-être
-- Agences immobilières
-- Auto-écoles
-- Artisans / boutiques locales
+- Agences immobilières, artisans, boutiques locales
 - Tout secteur où le contact client est fréquent
 
 **Tactiques :**
 1. Offrir 5 unités gratuites à un premier client influent → ambassadeur naturel
 2. Vidéos TikTok "regarde ce que j'ai fabriqué pour [secteur]" → leads B2B organiques
-3. Démarche directe LinkedIn + email avec démo vidéo en pièce jointe
+3. Démarche directe LinkedIn + email avec démo vidéo
 4. Partenariat apporteur d'affaires avec agences de communication locales
 
 ## Page Dédiée sur le Site (`/nfc`)
-1. Vidéo démo 10s (téléphone s'approche → fiche s'ouvre)
-2. Sélecteur de destination NFC interactif
+1. Mockup porte-clé avec logo + visuel téléphone (démo tap)
+2. Liste des destinations possibles
 3. Grille tarifaire volume
 4. Formulaire de devis (entreprise, secteur, quantité, logo upload, URL cible)
 5. Logos clients dès premières références

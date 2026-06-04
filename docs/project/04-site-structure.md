@@ -7,38 +7,51 @@
 
 ```
 3beestudio.fr/
-├── /                     ← Accueil (vitrine + entrée tunnel)
-├── /nfc                  ← Landing B2B porte-clés NFC (produit phare)
-├── /boutique             ← Grille produits de série
-│   └── /boutique/[slug]  ← Fiche produit
-├── /sur-mesure           ← Formulaire multi-step sur-mesure
-├── /portfolio            ← Galerie projets réalisés
-├── /suivi/[orderId]      ← Suivi commande client
-├── /cgv                  ← Conditions Générales de Vente
-└── /mentions-legales     ← Mentions légales micro-entreprise
+├── /                            ← Accueil (landing complète)
+├── /nfc                         ← Landing porte-clé connecté (produit phare)
+├── /boutique                    ← Grille produits de série
+│   └── /boutique/[slug]         ← Fiche produit
+├── /sur-mesure                  ← Formulaire multi-step sur-mesure
+├── /portfolio                   ← Galerie projets réalisés
+├── /contact                     ← Formulaire de contact général
+├── /suivi/[orderId]             ← Suivi commande client
+├── /cgv                         ← Conditions Générales de Vente ✅
+├── /mentions-legales            ← Mentions légales micro-entreprise ✅
+└── /politique-de-confidentialite ← Politique RGPD ✅
 ```
+
+## Navigation (Navbar)
+- **Boutique** → `/boutique`
+- **Porte-clé connecté** → `/nfc`
+- **Sur-mesure** → `/sur-mesure`
+- **Portfolio** → `/portfolio`
+- CTA : **Nous contacter** → `/contact`
+
+## Landing page `/` — sections dans l'ordre
+1. `Hero` — headline, double CTA, trust strip
+2. `NFCSection` — produit phare porte-clé connecté
+3. `ProductsGrid` — boutique / pièces signature
+4. `CustomCTA` — sur-mesure avec timeline 3 étapes
+5. `VideoStrip` — TikTok / atelier
+6. `Portfolio` — projets récents
+7. `Testimonials` — avis clients
+8. `NewsletterBlock` — Honey Drop
+9. `SiteFooter` — liens, socials, légal
 
 ## Pages en détail
 
-### 🏠 Accueil (`/`)
-- **Hero** : accroche + double CTA
-  - `Voir les porte-clés NFC` → `/nfc`
-  - `Créer mon projet` → `/sur-mesure`
-- Feed vidéo simulé (timelapses Bambu Lab)
-- Produits vedettes (3-4 bestsellers)
-- Section "Comment ça marche" — 4 étapes
-- Section NFC teaser → lien `/nfc`
+### 🏠 Accueil (`/`) ✅ implémentée
 
-### 📱 NFC B2B (`/nfc`)
-- Sélecteur destination NFC interactif
-- Mockup porte-clé animé avec ondes NFC
-- Grille tarifaire volume
-- Formulaire de devis multi-step
+### 📱 Porte-clé connecté (`/nfc`)
+- Mockup porte-clé animé
+- Destinations NFC possibles (un lien au choix)
+- Grille tarifaire volume (dès 10 pièces)
+- Formulaire de devis multi-step (logo upload, URL, quantité)
 - FAQ
 
 ### 🛒 Boutique (`/boutique`)
 - Grille de produits, filtrée par catégorie
-- Fiche produit : photos, matériau (PLA biodégradable), délai, bouton Stripe
+- Fiche produit : photos, matériau (PLA), délai, bouton Stripe
 - Badge "Fabriqué en France"
 
 ### 🛠️ Sur-Mesure (`/sur-mesure`)
@@ -46,7 +59,7 @@ Formulaire 4 étapes :
 1. Description du besoin
 2. Dimensions approximatives
 3. Upload fichiers (croquis, photo, .stl)
-4. Coordonnées + acompte Stripe
+4. Coordonnées + acompte Stripe (50%)
 
 ### 🖼️ Portfolio (`/portfolio`)
 - Grille masonry des projets réalisés
@@ -54,21 +67,25 @@ Formulaire 4 étapes :
 
 ### 📦 Suivi Commande (`/suivi/[orderId]`)
 - Progression visuelle : Reçue → Design → Impression → Expédié
-- Estimé de livraison
-- Numéro de suivi transporteur
+- Estimé de livraison + numéro de suivi transporteur
 
-## Légal
+### 📬 Contact (`/contact`)
+- Formulaire simple (nom, email, sujet, message)
+- Réponse sous 24h
 
-### CGV Série
-- Rétractation 14 jours (Art. L221-18 Code conso)
-- Remboursement sous 14j après retour
+## Légal ✅
 
-### CGV Sur-Mesure & NFC
-- **Non-remboursement** dès début du travail de design
-- Justification : produit hautement personnalisé (Art. L221-28)
-- L'acompte est acquis définitivement au lancement de la modélisation
+### CGV (`/cgv`)
+- Rétractation 14 jours pour les produits de série
+- **Pas de rétractation** pour sur-mesure et porte-clés connectés (Art. L221-28)
+- Micro-entreprise : pas de TVA
 
-### Mentions Légales
-- Statut : micro-entreprise
-- Champs requis : SIRET, nom, adresse, email
-- Hébergeur : Vercel Inc.
+### Mentions légales (`/mentions-legales`)
+- Éditeur, hébergeur Vercel, propriété intellectuelle
+
+### Politique de confidentialité (`/politique-de-confidentialite`)
+- RGPD complet, droits utilisateurs, Stripe, cookies
+
+## Roadmap future (Phase 3)
+- Portail client pour modifier l'URL du porte-clé connecté sans contacter 3BeeStudio
+- Page dédiée multi-liens (digital business card) hébergée par 3BeeStudio

@@ -1,20 +1,20 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, Syne } from 'next/font/google'
+import { Manrope, JetBrains_Mono } from 'next/font/google'
 import Navbar from '@/components/layout/Navbar'
 import '@/styles/globals.css'
 
-const syne = Syne({
+const manrope = Manrope({
   subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-syne',
+  variable: '--font-manrope',
 })
 
-const dmSans = DM_Sans({
+const jetbrains = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['300', '400', '500'],
+  weight: ['400', '500', '600'],
   display: 'swap',
-  variable: '--font-dm-sans',
+  variable: '--font-jetbrains',
 })
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
@@ -22,59 +22,43 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: '3BeeStudio — Studio d\'impression 3D français',
-    template: '%s · 3BeeStudio',
+    default: '3BeeStudio.fr',
+    template: '%s · 3BeeStudio.fr',
   },
   description:
     'Studio d\'impression 3D français. Porte-clés NFC personnalisés B2B, objets de série et créations sur-mesure. De votre imagination à vos mains.',
   applicationName: '3BeeStudio',
   authors: [{ name: '3BeeStudio' }],
-  keywords: [
-    'impression 3D',
-    'porte-clés NFC',
-    'NFC B2B',
-    'objets personnalisés',
-    'sur-mesure',
-    'studio 3D français',
-  ],
+  keywords: ['impression 3D', 'porte-clés NFC', 'NFC B2B', 'objets personnalisés', 'sur-mesure', 'studio 3D français'],
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
     url: siteUrl,
     siteName: '3BeeStudio',
     title: '3BeeStudio — Studio d\'impression 3D français',
-    description:
-      'Porte-clés NFC personnalisés, objets de série et créations sur-mesure imprimés en France.',
+    description: 'Porte-clés NFC personnalisés, objets de série et créations sur-mesure imprimés en France.',
   },
   twitter: {
     card: 'summary_large_image',
     title: '3BeeStudio',
-    description:
-      'Studio d\'impression 3D français — NFC B2B, série et sur-mesure.',
+    description: 'Studio d\'impression 3D français — NFC B2B, série et sur-mesure.',
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#020617',
+  themeColor: '#0A0A0B',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${syne.variable} ${dmSans.variable}`}>
-      <body className="bg-slate-950 text-slate-200 font-sans antialiased">
+    <html lang="fr" className={`${manrope.variable} ${jetbrains.variable}`}>
+      <body className="bg-bg-0 text-ink-0 font-sans antialiased">
         <Navbar />
-        <main className="pt-[65px]">{children}</main>
+        <main>{children}</main>
       </body>
     </html>
   )
