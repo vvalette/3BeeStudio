@@ -15,14 +15,16 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   delivered: 'bg-emerald-500/20 text-emerald-400',
 }
 
-const ALL_STATUSES: OrderStatus[] = [
+// Statuts modifiables à la main par l'admin.
+const MANUAL_STATUSES: OrderStatus[] = [
   'pending_payment',
   'confirmed',
   'processing',
   'printing',
-  'shipped',
-  'delivered',
 ]
+
+// Statuts pilotés automatiquement par le suivi Boxtal (non modifiables à la main).
+const AUTO_STATUSES: OrderStatus[] = ['shipped', 'delivered']
 
 export default function AdminOrderDetail({ order: initialOrder }: { order: Order }) {
   const [order, setOrder] = useState(initialOrder)
@@ -105,21 +107,39 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {ALL_STATUSES.map((s) => (
+            {MANUAL_STATUSES.map((s) => (
               <button
                 key={s}
                 disabled={saving || order.status === s}
                 onClick={() => updateField({ status: s })}
                 className={[
-                  'rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
+                  'cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-default',
                   order.status === s
-                    ? 'border-amber bg-amber/10 text-amber cursor-default'
+                    ? 'border-amber bg-amber/10 text-amber'
                     : 'border-[var(--line-2)] text-ink-2 hover:border-amber/40 hover:text-ink-1',
                 ].join(' ')}
               >
                 {ORDER_STATUS_LABELS[s]}
               </button>
             ))}
+          </div>
+
+          {/* Statuts automatiques (suivi Boxtal) — non modifiables à la main */}
+          <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-3">
+            {AUTO_STATUSES.map((s) => (
+              <span
+                key={s}
+                className={[
+                  'rounded-lg border border-dashed px-3 py-1.5 text-xs font-medium',
+                  order.status === s
+                    ? 'border-amber/50 bg-amber/10 text-amber'
+                    : 'border-[var(--line-2)] text-ink-3 opacity-60',
+                ].join(' ')}
+              >
+                {ORDER_STATUS_LABELS[s]}
+              </span>
+            ))}
+            <span className="text-[11px] text-ink-3">🔒 Auto via le suivi Boxtal</span>
           </div>
         </div>
 
