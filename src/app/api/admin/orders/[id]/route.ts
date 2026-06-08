@@ -4,7 +4,7 @@ import { isAuthenticated } from '@/lib/auth'
 import { z } from 'zod'
 
 const schema = z.object({
-  status: z.enum(['pending_payment', 'confirmed', 'processing', 'printing', 'shipped', 'delivered']).optional(),
+  status: z.enum(['pending_payment', 'confirmed', 'processing', 'printing', 'printed', 'shipped', 'delivered']).optional(),
   tracking_number: z.string().optional(),
   admin_notes: z.string().optional(),
 })
