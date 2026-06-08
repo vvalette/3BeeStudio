@@ -43,19 +43,12 @@ export async function POST(
 
     // Créer la commande Boxtal
     const { boxtalOrderId, labelUrl } = await createBoxtalShipment(order as Order)
-    console.log('[ship] boxtalOrderId reçu:', boxtalOrderId)
 
     // Sauvegarder l'ID Boxtal — le statut passe à "expédié" via webhook Boxtal quand le transporteur prend en charge
-    const { error: updateError } = await supabaseAdmin
+    await supabaseAdmin
       .from('orders')
       .update({ boxtal_order_id: boxtalOrderId })
       .eq('id', id)
-
-    if (updateError) {
-      console.error('[ship] erreur sauvegarde boxtal_order_id:', updateError)
-    } else {
-      console.log('[ship] boxtal_order_id sauvegardé:', boxtalOrderId)
-    }
 
     return NextResponse.json({ label_url: labelUrl, boxtal_order_id: boxtalOrderId })
   } catch (e) {
