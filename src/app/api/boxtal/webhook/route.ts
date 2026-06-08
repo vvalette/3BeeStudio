@@ -2,14 +2,22 @@ import { NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase'
 
-function verifySignature(body: string, signature: string | null, secret: string): boolean {
-  if (!signature) return false
-  const computed = createHmac('sha256', secret).update(body).digest('hex')
+function matches(computed: string, signature: string): boolean {
   try {
-    return timingSafeEqual(Buffer.from(computed), Buffer.from(signature))
+    const a = Buffer.from(computed)
+    const b = Buffer.from(signature)
+    return a.length === b.length && timingSafeEqual(a, b)
   } catch {
     return false
   }
+}
+
+// La doc Boxtal ne précise pas l'encodage du HMAC SHA256 → on accepte hex et base64.
+function verifySignature(body: string, signature: string | null, secret: string): boolean {
+  if (!signature) return false
+  const hex = createHmac('sha256', secret).update(body).digest('hex')
+  const b64 = createHmac('sha256', secret).update(body).digest('base64')
+  return matches(hex, signature) || matches(b64, signature)
 }
 
 export async function POST(req: Request) {
