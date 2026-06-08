@@ -11,28 +11,31 @@ const STATUS_PILL: Record<OrderStatus, string> = {
   confirmed: 'bg-blue-500/20 text-blue-400',
   processing: 'bg-purple-500/20 text-purple-400',
   printing: 'bg-orange-500/20 text-orange-400',
+  printed: 'bg-lime-500/20 text-lime-400',
   shipped: 'bg-cyan-500/20 text-cyan-400',
   delivered: 'bg-emerald-500/20 text-emerald-400',
 }
 
-// Couleur d'accent (barre gauche) par statut.
 const STATUS_ACCENT: Record<OrderStatus, string> = {
   pending_payment: '#71717a',
   confirmed: '#60a5fa',
   processing: '#c084fc',
   printing: '#fb923c',
+  printed: '#a3e635',
   shipped: '#22d3ee',
   delivered: '#34d399',
 }
 
-type FilterKey = 'all' | 'todo' | 'shipped' | 'delivered' | 'pending'
+type FilterKey = 'all' | 'todo' | 'printed' | 'no_label' | 'shipped' | 'delivered' | 'pending'
 
-const FILTERS: { key: FilterKey; label: string; match: (s: OrderStatus) => boolean }[] = [
+const FILTERS: { key: FilterKey; label: string; match: (o: Order) => boolean }[] = [
   { key: 'all', label: 'Toutes', match: () => true },
-  { key: 'todo', label: 'À traiter', match: (s) => s === 'confirmed' || s === 'processing' || s === 'printing' },
-  { key: 'shipped', label: 'Expédiées', match: (s) => s === 'shipped' },
-  { key: 'delivered', label: 'Livrées', match: (s) => s === 'delivered' },
-  { key: 'pending', label: 'Impayées', match: (s) => s === 'pending_payment' },
+  { key: 'todo', label: 'À traiter', match: (o) => ['confirmed', 'processing', 'printing'].includes(o.status) },
+  { key: 'printed', label: 'Imprimées', match: (o) => o.status === 'printed' },
+  { key: 'no_label', label: 'Sans étiquette', match: (o) => o.status === 'printed' && !o.boxtal_order_id },
+  { key: 'shipped', label: 'Expédiées', match: (o) => o.status === 'shipped' },
+  { key: 'delivered', label: 'Livrées', match: (o) => o.status === 'delivered' },
+  { key: 'pending', label: 'Impayées', match: (o) => o.status === 'pending_payment' },
 ]
 
 export default function AdminOrdersList({ orders }: { orders: Order[] }) {
@@ -52,15 +55,15 @@ export default function AdminOrdersList({ orders }: { orders: Order[] }) {
       total: orders.length,
       revenue: paid.reduce((sum, o) => sum + o.total_amount, 0),
       todo: orders.filter((o) => ['confirmed', 'processing', 'printing'].includes(o.status)).length,
-      shipped: orders.filter((o) => o.status === 'shipped').length,
+      noLabel: orders.filter((o) => o.status === 'printed' && !o.boxtal_order_id).length,
     }
   }, [orders])
 
   const counts = useMemo(() => {
-    const c: Record<FilterKey, number> = { all: 0, todo: 0, shipped: 0, delivered: 0, pending: 0 }
+    const c: Record<FilterKey, number> = { all: 0, todo: 0, printed: 0, no_label: 0, shipped: 0, delivered: 0, pending: 0 }
     for (const o of orders) {
       for (const f of FILTERS) {
-        if (f.match(o.status as OrderStatus)) c[f.key]++
+        if (f.match(o)) c[f.key]++
       }
     }
     return c
@@ -70,7 +73,7 @@ export default function AdminOrdersList({ orders }: { orders: Order[] }) {
     const active = FILTERS.find((f) => f.key === filter)!
     const q = query.trim().toLowerCase()
     return orders.filter((o) => {
-      if (!active.match(o.status as OrderStatus)) return false
+      if (!active.match(o)) return false
       if (!q) return true
       return (
         o.company.toLowerCase().includes(q) ||
@@ -103,8 +106,8 @@ export default function AdminOrdersList({ orders }: { orders: Order[] }) {
           {[
             { label: 'Total', value: String(stats.total), color: 'text-ink-1' },
             { label: 'CA encaissé', value: formatPrice(stats.revenue), color: 'text-amber' },
-            { label: 'À traiter', value: String(stats.todo), color: 'text-orange-400' },
-            { label: 'Expédiées', value: String(stats.shipped), color: 'text-cyan-400' },
+            { label: 'En production', value: String(stats.todo), color: 'text-orange-400' },
+            { label: 'Étiquette à faire', value: String(stats.noLabel), color: 'text-lime-400' },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-[var(--line)] bg-bg-1 p-4">
               <p className={['text-xl font-bold sm:text-2xl', s.color].join(' ')}>{s.value}</p>
@@ -176,6 +179,11 @@ export default function AdminOrdersList({ orders }: { orders: Order[] }) {
                         <span className="shrink-0 font-mono text-[10px] text-ink-3">
                           #{order.id.slice(0, 8).toUpperCase()}
                         </span>
+                        {order.status === 'printed' && !order.boxtal_order_id && (
+                          <span className="shrink-0 rounded-pill border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber">
+                            Étiquette à générer
+                          </span>
+                        )}
                       </div>
                       <p className="truncate text-xs text-ink-3">
                         {order.quantity} u. · {order.email}

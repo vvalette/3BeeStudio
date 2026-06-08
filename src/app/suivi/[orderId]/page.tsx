@@ -206,6 +206,7 @@ function StatusBadge({ status }: { status: OrderStatus }) {
     confirmed: 'bg-blue-500/20 text-blue-400',
     processing: 'bg-purple-500/20 text-purple-400',
     printing: 'bg-orange-500/20 text-orange-400',
+    printed: 'bg-lime-500/20 text-lime-400',
     shipped: 'bg-cyan-500/20 text-cyan-400',
     delivered: 'bg-emerald-500/20 text-emerald-400',
   }

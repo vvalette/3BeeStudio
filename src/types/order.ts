@@ -3,6 +3,7 @@ export type OrderStatus =
   | 'confirmed'
   | 'processing'
   | 'printing'
+  | 'printed'
   | 'shipped'
   | 'delivered'
 
@@ -53,6 +54,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   confirmed: 'Commande confirmée',
   processing: 'En traitement',
   printing: 'Impression en cours',
+  printed: 'Imprimé',
   shipped: 'Expédié',
   delivered: 'Livré',
 }
@@ -61,6 +63,7 @@ export const ORDER_STATUS_STEPS: OrderStatus[] = [
   'confirmed',
   'processing',
   'printing',
+  'printed',
   'shipped',
   'delivered',
 ]

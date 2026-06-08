@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       .from('orders')
       .update({ status: 'shipped' })
       .eq('boxtal_order_id', boxtalOrderId)
-      .in('status', ['confirmed', 'processing', 'printing'])
+      .in('status', ['confirmed', 'processing', 'printing', 'printed'])
     if (error) {
       console.error('[boxtal-webhook] erreur mise à jour shipped:', error)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
