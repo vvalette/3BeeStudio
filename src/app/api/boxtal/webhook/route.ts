@@ -65,24 +65,31 @@ export async function POST(req: Request) {
 
   const { status, trackingNumber, packageTrackingUrl } = trackings[0]
 
-  // SHIPPED = colis récupéré par le transporteur ou déposé en point relais
-  // DELIVERED = livré au destinataire
-  if (status === 'SHIPPED' || status === 'IN_TRANSIT') {
-    const updates: Record<string, unknown> = { status: 'shipped' }
-    if (trackingNumber) updates.tracking_number = trackingNumber
-    if (packageTrackingUrl) updates.tracking_url = packageTrackingUrl
-
+  // 1. Infos de suivi = métadonnées → toujours rafraîchies (sans garde de statut),
+  //    pour backfill l'URL même sur une commande déjà passée en "shipped".
+  const trackingUpdates: Record<string, unknown> = {}
+  if (trackingNumber) trackingUpdates.tracking_number = trackingNumber
+  if (packageTrackingUrl) trackingUpdates.tracking_url = packageTrackingUrl
+  if (Object.keys(trackingUpdates).length > 0) {
     const { error } = await supabaseAdmin
       .from('orders')
-      .update(updates)
+      .update(trackingUpdates)
+      .eq('boxtal_order_id', boxtalOrderId)
+    if (error) console.error('[boxtal-webhook] erreur maj suivi:', error)
+  }
+
+  // 2. Transitions de statut avec gardes (évite tout retour en arrière).
+  // SHIPPED = colis pris en charge / déposé ; DELIVERED = livré.
+  if (status === 'SHIPPED' || status === 'IN_TRANSIT') {
+    const { error } = await supabaseAdmin
+      .from('orders')
+      .update({ status: 'shipped' })
       .eq('boxtal_order_id', boxtalOrderId)
       .in('status', ['confirmed', 'processing', 'printing'])
-
     if (error) {
       console.error('[boxtal-webhook] erreur mise à jour shipped:', error)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
-
     console.log(`[boxtal-webhook] ${boxtalOrderId} → shipped (${status}, tracking: ${trackingNumber ?? 'N/A'})`)
   } else if (status === 'DELIVERED') {
     const { error } = await supabaseAdmin
@@ -90,12 +97,10 @@ export async function POST(req: Request) {
       .update({ status: 'delivered' })
       .eq('boxtal_order_id', boxtalOrderId)
       .in('status', ['shipped'])
-
     if (error) {
       console.error('[boxtal-webhook] erreur mise à jour delivered:', error)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
-
     console.log(`[boxtal-webhook] ${boxtalOrderId} → delivered`)
   }
 
