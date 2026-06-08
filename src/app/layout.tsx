@@ -55,10 +55,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${manrope.variable} ${jetbrains.variable}`}>
+    <html lang="fr" className={`${manrope.variable} ${jetbrains.variable} overflow-x-hidden`}>
       <body className="bg-bg-0 text-ink-0 font-sans antialiased">
         <Navbar />
-        <main>{children}</main>
+        <main className="pt-[72px]">{children}</main>
       </body>
     </html>
   )

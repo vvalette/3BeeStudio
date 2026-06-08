@@ -5,215 +5,142 @@
 ```
 3beestudio.fr/
 ├── Frontend      Next.js 15 (App Router) + Tailwind CSS v4 + TypeScript
-├── Hébergement   Vercel (free tier — déploiement auto depuis GitHub)
-├── Paiements     Stripe (checkout série + payment intent sur-mesure/NFC)
-├── Emails        Resend (gratuit jusqu'à 3k/mois)
-├── Upload        Vercel Blob (fichiers clients sur-mesure)
-├── Base données  Supabase (free tier — commandes, clients, produits)
-└── Fonts         Google Fonts (Syne + DM Sans)
+├── Hébergement   Vercel (déploiement auto depuis GitHub)
+├── Paiements     Stripe (Checkout Session — paiement intégral NFC)
+├── Emails        Resend + React Email (domaine 3beestudio.fr vérifié)
+├── Upload logos  Vercel Blob
+├── Base données  Supabase (table orders)
+└── Fonts         Manrope (300–800) + JetBrains Mono (400–600) via next/font/google
 ```
 
-## Initialisation du Projet
-
-```bash
-npx create-next-app@latest 3beestudio \
-  --typescript \
-  --tailwind \
-  --eslint \
-  --app \
-  --src-dir \
-  --import-alias "@/*"
-
-cd 3beestudio
-```
-
-## Dépendances à Installer
-
-```bash
-# Stripe
-npm install stripe @stripe/stripe-js @stripe/react-stripe-js
-
-# Emails
-npm install resend react-email @react-email/components
-
-# Upload fichiers
-npm install @vercel/blob
-
-# Base de données
-npm install @supabase/supabase-js
-
-# Formulaires
-npm install react-hook-form @hookform/resolvers zod
-
-# UI utilitaires
-npm install clsx tailwind-merge lucide-react
-
-# Animations
-npm install framer-motion
-
-# Upload drag & drop
-npm install react-dropzone
-```
-
-## Structure de Fichiers
+## Structure de Fichiers (état réel)
 
 ```
 src/
 ├── app/
-│   ├── layout.tsx                    # Root layout (fonts, metadata)
-│   ├── page.tsx                      # Accueil
-│   ├── nfc/
-│   │   └── page.tsx                  # Landing NFC B2B
-│   ├── boutique/
-│   │   ├── page.tsx                  # Liste produits
-│   │   └── [slug]/
-│   │       └── page.tsx              # Fiche produit
-│   ├── sur-mesure/
-│   │   └── page.tsx                  # Formulaire multi-step
-│   ├── portfolio/
-│   │   └── page.tsx                  # Galerie
-│   ├── suivi/
-│   │   └── [orderId]/
-│   │       └── page.tsx              # Suivi commande
-│   ├── cgv/page.tsx
-│   ├── mentions-legales/page.tsx
+│   ├── layout.tsx                          # Root layout — navbar + pt-[72px]
+│   ├── page.tsx                            # Landing page (9 sections)
+│   ├── nfc/page.tsx                        # Formulaire multi-step NFC ✅
+│   ├── suivi/[orderId]/page.tsx            # Suivi commande + sync Stripe ✅
+│   ├── admin/
+│   │   ├── page.tsx                        # Auth admin
+│   │   └── commandes/
+│   │       ├── page.tsx                    # Liste commandes ✅
+│   │       └── [id]/page.tsx               # Détail + statut ✅
+│   ├── cgv/page.tsx                        ✅
+│   ├── mentions-legales/page.tsx           ✅
+│   ├── politique-de-confidentialite/       ✅
+│   ├── boutique/page.tsx                   # Placeholder
+│   ├── sur-mesure/page.tsx                 # Placeholder
+│   ├── portfolio/page.tsx                  # Placeholder
+│   ├── contact/page.tsx                    # Placeholder
 │   └── api/
+│       ├── nfc/
+│       │   ├── order/route.ts              # POST — crée commande + session Stripe ✅
+│       │   └── verify-link/route.ts        # POST — vérifie URL/profil NFC ✅
 │       ├── stripe/
-│       │   ├── checkout/route.ts     # Stripe Checkout (série)
-│       │   └── webhook/route.ts      # Webhook Stripe
-│       └── devis/
-│           └── route.ts              # Envoi devis (NFC + sur-mesure)
+│       │   └── webhook/route.ts            # POST — confirme paiement + email ✅
+│       ├── upload/
+│       │   └── logo/route.ts               # POST — upload logo Vercel Blob ✅
+│       ├── admin/
+│       │   ├── login/route.ts              ✅
+│       │   └── orders/[id]/route.ts        ✅
+│       └── test-email/route.ts             # GET — diagnostic (⚠️ supprimer en prod)
 ├── components/
 │   ├── layout/
-│   │   ├── Navbar.tsx
-│   │   └── Footer.tsx
-│   ├── home/
-│   │   ├── Hero.tsx
-│   │   ├── SocialFeed.tsx
-│   │   └── ProcessSteps.tsx
+│   │   └── Navbar.tsx                      # fixed h-[72px]
+│   ├── landing/
+│   │   ├── Hero.tsx                        # -mt-[72px] pour fond plein écran
+│   │   ├── NFCSection.tsx
+│   │   ├── ProductsGrid.tsx
+│   │   ├── CustomCTA.tsx
+│   │   ├── VideoStrip.tsx
+│   │   ├── Portfolio.tsx
+│   │   ├── Testimonials.tsx
+│   │   ├── NewsletterBlock.tsx
+│   │   └── SiteFooter.tsx
 │   ├── nfc/
-│   │   ├── NfcHero.tsx
-│   │   ├── NfcMockup.tsx             # Mockup animé porte-clé
-│   │   ├── NfcRedirectSelector.tsx
-│   │   ├── NfcPricingGrid.tsx
-│   │   └── NfcDevisForm.tsx          # Formulaire multi-step NFC
-│   ├── boutique/
-│   │   ├── ProductGrid.tsx
-│   │   └── ProductCard.tsx
-│   ├── sur-mesure/
-│   │   ├── MultiStepForm.tsx
-│   │   └── UploadZone.tsx
+│   │   ├── NfcOrderForm.tsx               # Formulaire multi-step complet ✅
+│   │   └── NfcLinkPicker.tsx              # Sélecteur destination NFC ✅
+│   ├── admin/
+│   │   ├── AdminOrdersList.tsx            ✅
+│   │   └── AdminOrderDetail.tsx           ✅
 │   └── ui/
-│       ├── Button.tsx
-│       ├── Badge.tsx
-│       ├── Card.tsx
-│       └── Input.tsx
+│       ├── Select.tsx                     # Dropdown custom accessible ✅
+│       ├── LegalLayout.tsx
+│       ├── Eyebrow.tsx
+│       ├── HexLogo.tsx
+│       ├── StatusDot.tsx
+│       └── ProductGlyph.tsx
+├── emails/
+│   └── OrderConfirmation.tsx              # Template React Email ✅
 ├── lib/
-│   ├── stripe.ts                     # Config Stripe client + server
-│   ├── supabase.ts                   # Client Supabase
-│   ├── resend.ts                     # Config Resend emails
-│   └── utils.ts                     # cn(), formatPrice(), etc.
+│   ├── stripe.ts                          # Client Stripe
+│   ├── supabase.ts                        # Clients public + admin
+│   ├── resend.ts                          # sendOrderConfirmation() ✅
+│   └── utils.ts                           # cn(), formatPrice()
 ├── types/
-│   ├── product.ts
-│   ├── order.ts
-│   └── devis.ts
+│   └── order.ts                           # Order, OrderStatus, calcOrder(), etc.
 └── styles/
-    └── globals.css                   # CSS variables + Tailwind base
+    └── globals.css                        # Tokens design system Tailwind v4
 ```
 
 ## Variables d'Environnement (.env.local)
 
 ```env
 # Stripe
-STRIPE_SECRET_KEY=sk_live_...
+STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
-# Resend
+# Resend — domaine 3beestudio.fr vérifié
 RESEND_API_KEY=re_...
-
-# Vercel Blob
-BLOB_READ_WRITE_TOKEN=vercel_blob_...
+RESEND_FROM_EMAIL=commandes@3beestudio.fr   # obligatoire
 
 # App
-NEXT_PUBLIC_APP_URL=https://3beestudio.fr
+NEXT_PUBLIC_APP_URL=http://localhost:3001   # prod: https://3beestudio.fr
 ```
 
-## Intégration Stripe
+## Flux de Paiement NFC (implémenté)
 
-### Flux Série (Checkout Session)
-```typescript
-// src/app/api/stripe/checkout/route.ts
-import Stripe from 'stripe'
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+```
+1. POST /api/nfc/order
+   → Insère commande en DB (status: 'pending_payment')
+   → Crée Stripe Checkout Session (paiement intégral)
+   → Retourne { checkout_url, order_id }
 
-export async function POST(req: Request) {
-  const { items } = await req.json()
+2. Utilisateur paie sur Stripe
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: items,
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/boutique/merci?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/boutique`,
-    shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH'] },
-    metadata: { type: 'serie' },
-  })
+3a. Stripe → POST /api/stripe/webhook (checkout.session.completed)
+    → Update status: 'confirmed'
+    → sendOrderConfirmation() → Resend
 
-  return Response.json({ url: session.url })
-}
+3b. [Fallback] GET /suivi/[orderId]?payment=success
+    → Si status encore 'pending_payment' → stripe.checkout.sessions.retrieve()
+    → Si payment_status === 'paid' → Update DB + sendOrderConfirmation()
 ```
 
-### Flux NFC/Sur-Mesure (Acompte)
-```typescript
-// Acompte 30% du devis estimé
-const paymentIntent = await stripe.paymentIntents.create({
-  amount: Math.round(depositAmount * 100), // en centimes
-  currency: 'eur',
-  metadata: {
-    type: 'nfc-b2b',
-    company: formData.company,
-    quantity: formData.quantity,
-    nfcUrl: formData.nfcUrl,
-    clientEmail: formData.email,
-  },
-})
-```
+## Règles Navbar / Espacement
 
-## Config Next.js 15 (next.config.ts)
+- Navbar : `fixed inset-x-0 top-0 h-[72px] z-50`
+- Layout `<main>` : `pt-[72px]` — source unique de vérité
+- Hero section : `-mt-[72px]` pour fond plein écran, contenu interne a `pt-[88px]`/`pt-[72px]`
+- Pages internes : ajouter `pt-4` à `pt-8` pour respiration, jamais `pt-[72px]` (déjà dans layout)
+- `min-h` : toujours `min-h-[calc(100dvh-72px)]`
 
-```typescript
-import type { NextConfig } from 'next'
+## Commandes Dev
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: 'https', hostname: '*.vercel-storage.com' },
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-    ],
-  },
-  experimental: {
-    typedRoutes: true,
-  },
-}
+```bash
+npm run dev          # Port 3001 (--turbopack)
+npm run build
+npm run type-check   # tsc --noEmit
+npm run migrate      # tsx scripts/migrate.ts
 
-export default nextConfig
-```
-
-## package.json (scripts)
-
-```json
-{
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "type-check": "tsc --noEmit"
-  }
-}
+# Stripe webhook en local
+stripe listen --forward-to localhost:3001/api/stripe/webhook
 ```

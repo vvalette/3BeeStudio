@@ -86,6 +86,6 @@ Formulaire 4 étapes :
 ### Politique de confidentialité (`/politique-de-confidentialite`)
 - RGPD complet, droits utilisateurs, Stripe, cookies
 
-## Roadmap future (Phase 3)
-- Portail client pour modifier l'URL du porte-clé connecté sans contacter 3BeeStudio
-- Page dédiée multi-liens (digital business card) hébergée par 3BeeStudio
+## Roadmap future — option payante (abonnement)
+- Fiche contact personnalisée multi-liens (digital business card) **hébergée par 3BeeStudio**
+- Dashboard client pour gérer sa page, proposé en **option premium avec abonnement** (hébergement récurrent)

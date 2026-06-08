@@ -5,11 +5,21 @@
 Studio d'impression 3D français (micro-entreprise) vendant des objets physiques via un site e-commerce Next.js 15. Produit phare : **porte-clés NFC personnalisés B2B**. Modèle hybride : série + sur-mesure.
 
 ## Domaine & Contacts
-- Site : https://3beestudio.fr (domaine déjà enregistré)
-- Stack : **Next.js 15** · Tailwind CSS v4 · TypeScript · Vercel · Stripe
-- Repo GitHub : à créer (compte existant, lier à Vercel)
+- Site : https://3beestudio.fr (domaine enregistré et vérifié Resend)
+- Stack : **Next.js 15** · Tailwind CSS v4 · TypeScript · Vercel · Stripe · Supabase · Resend
+- Dev : `npm run dev` → port **3001**
 
-## Design system (handoff `design_handoff_3beestudio/`)
+## État du projet (juin 2026)
+Le flux NFC est **complet et fonctionnel** :
+- Formulaire multi-step (logo upload → lien NFC → contact → récap → Stripe Checkout)
+- Webhook Stripe + sync fallback sur la page suivi
+- Email de confirmation automatique (Resend, domaine vérifié)
+- Page suivi `/suivi/[orderId]` avec timeline et "Prochaines étapes"
+- Interface admin `/admin/commandes`
+
+Pages **placeholder** (Phase 2) : `/boutique`, `/sur-mesure`, `/portfolio`, `/contact`
+
+## Design system
 - **Fonts** : `Manrope` (sans, 300–800) + `JetBrains Mono` (mono, 400–600) via `next/font/google`
 - **Tokens CSS** : définis dans `src/styles/globals.css` → `@theme` Tailwind v4
   - Backgrounds : `bg-bg-0` (#0A0A0B) … `bg-bg-4` (#25252B)
@@ -17,10 +27,37 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
   - Amber : `text-amber` (#F59E0B), `text-amber-soft` (#FBBF24), `text-amber-deep` (#B45309)
   - Radii : `rounded-xs/sm/md/lg/xl/2xl/pill` (8→999px)
   - Shadows : `shadow-card`, `shadow-amber`, `shadow-pop`
-  - CSS vars `--line`, `--line-2`, `--line-amber`, `--honey`, `--btn-primary-bg` utilisables en inline style
-- **Utilitaires CSS** : `.honey-text`, `.no-scrollbar`, `.fade-up`, `.hex-bg` (voir globals.css)
+  - CSS vars `--line`, `--line-2`, `--line-amber`, `--honey`, `--btn-primary-bg`
+- **Utilitaires CSS** : `.honey-text`, `.no-scrollbar`, `.fade-up`, `.hex-bg`
 - **Atomes** : `Eyebrow`, `HexLogo`, `StatusDot`, `ProductGlyph` dans `src/components/ui/`
-- **Sections landing** : `src/components/landing/` — Hero, VideoStrip, ProductsGrid, HowItWorks, CustomCTA, Portfolio, Testimonials, NewsletterBlock, SiteFooter
+
+## Règles absolues
+1. **Next.js 15** avec App Router — jamais Pages Router
+2. **TypeScript strict** — pas de `any`
+3. **Mobile-first** — audience TikTok/Instagram
+4. **Aucun fichier numérique vendu** — livrable toujours physique
+5. Flux Stripe NFC = **paiement intégral** (Checkout Session) — pas d'acompte sur le flux actuel
+6. Langue du site : **français uniquement**
+7. **`cursor-pointer`** obligatoire sur tous les éléments interactifs (boutons, sélecteurs, options)
+8. **Navbar `fixed h-[72px]`** — le `<main>` du layout a `pt-[72px]`, ne jamais doubler dans les pages
+
+## Navbar & espacement (règle critique)
+```
+Layout <main className="pt-[72px]">   ← source unique de vérité
+Hero <section className="-mt-[72px]"> ← fond plein écran, contenu interne pt-[88px]
+Pages internes : pt-4 à pt-8 max (layout gère déjà les 72px)
+min-h des pages : min-h-[calc(100dvh-72px)]
+```
+
+## Mémoire projet — lire en priorité
+
+> **Lis ces fichiers avant de commencer** — ils reflètent l'état réel du projet et les décisions prises.
+
+| Fichier | Contenu |
+|---------|---------|
+| [`docs/memory/projet-etat.md`](docs/memory/projet-etat.md) | Ce qui est construit, pages live, API routes, infrastructure |
+| [`docs/memory/regles-techniques.md`](docs/memory/regles-techniques.md) | Navbar spacing, cursor-pointer, emails, Stripe webhook |
+| [`docs/memory/decisions-produit.md`](docs/memory/decisions-produit.md) | Décisions produit figées (NFC URL, paiement intégral, langue) |
 
 ## Navigation des docs
 
@@ -30,24 +67,8 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
 | [`docs/project/02-identite-visuelle.md`](docs/project/02-identite-visuelle.md) | Palette, typo, logo |
 | [`docs/project/03-produit-nfc.md`](docs/project/03-produit-nfc.md) | Produit phare NFC B2B, pricing, acquisition |
 | [`docs/project/04-site-structure.md`](docs/project/04-site-structure.md) | Pages, parcours client, CGV |
-| [`docs/project/05-stack-technique.md`](docs/project/05-stack-technique.md) | Architecture, dépendances Next.js 15, Stripe |
+| [`docs/project/05-stack-technique.md`](docs/project/05-stack-technique.md) | Architecture réelle, structure fichiers, flux paiement |
 | [`docs/project/06-contenu-video.md`](docs/project/06-contenu-video.md) | Stratégie TikTok/Reels, automatisation Bambu Lab |
 | [`docs/project/07-marketing-kpis.md`](docs/project/07-marketing-kpis.md) | SEO, fidélisation, budget, KPIs |
-| [`docs/todo/TODO.md`](docs/todo/TODO.md) | Liste de tâches par sprint |
-| [`docs/todo/ROADMAP.md`](docs/todo/ROADMAP.md) | Feuille de route complète phases 1→4 |
-| [`docs/skills/SKILLS.md`](docs/skills/SKILLS.md) | Index des skills pour Claude |
-
-## Règles absolues pour ce projet
-1. **Next.js 15** avec App Router — jamais Pages Router
-2. **TypeScript strict** — pas de `any`
-3. **Mobile-first** — l'audience vient de TikTok/Instagram
-4. **Aucun fichier numérique vendu** — le livrable est toujours un objet physique
-5. Deux flux Stripe distincts : checkout classique (série) et payment intent (acompte sur-mesure)
-6. Langue du site : **français uniquement**
-
-## Démarrage rapide
-```bash
-npx create-next-app@latest 3beestudio --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
-cd 3beestudio
-```
-Voir [`docs/project/05-stack-technique.md`](docs/project/05-stack-technique.md) pour toutes les dépendances.
+| [`docs/todo/TODO.md`](docs/todo/TODO.md) | Tâches sprint — état réel (✅ = fait) |
+| [`docs/todo/ROADMAP.md`](docs/todo/ROADMAP.md) | Feuille de route phases 1→4 |

@@ -22,7 +22,7 @@ function StarIcon() {
 
 export default function Hero() {
   return (
-    <section className="hex-bg relative overflow-hidden">
+    <section className="hex-bg relative -mt-[72px] overflow-hidden">
       {/* Honey glow */}
       <div
         aria-hidden

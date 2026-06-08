@@ -26,7 +26,7 @@ export default function CGV() {
         <li><strong>Créations sur mesure</strong> : objets conçus et fabriqués selon les spécifications du client.
           Un devis est établi avant toute production. Un acompte de 50% est requis à la commande.</li>
         <li><strong>Porte-clés connectés</strong> : porte-clés 3D personnalisés avec puce NFC intégrée.
-          La destination du lien NFC est configurée selon le choix du client et reste modifiable.</li>
+          La destination de la puce NFC est programmée selon le choix indiqué par le client à la commande.</li>
       </ul>
       <p>
         Tous les objets sont fabriqués en France. Les photos et visuels sont fournis à titre

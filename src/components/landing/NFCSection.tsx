@@ -39,8 +39,7 @@ function NFCWaves() {
 const destinations = [
   'Instagram, TikTok ou LinkedIn',
   'Votre site web ou portfolio',
-  'Un numéro de téléphone',
-  'Une adresse email',
+  'Une fiche contact (ajout en 1 tap)',
   'Tout autre lien',
 ] as const
 

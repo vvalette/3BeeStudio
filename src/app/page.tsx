@@ -10,7 +10,7 @@ import SiteFooter     from '@/components/landing/SiteFooter'
 
 export default function HomePage() {
   return (
-    <div className="bg-bg-0 text-ink-0 w-full overflow-x-hidden">
+    <div className="bg-bg-0 text-ink-0 w-full">
       <Hero />
       <NFCSection />
       <ProductsGrid />

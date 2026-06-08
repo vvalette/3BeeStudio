@@ -136,14 +136,22 @@ manuellement     le contenu       la chaîne        le business
 
 ### Phase 3 — Automatiser la programmation
 - [ ] NFC Tools Pro (6€) pour programmer en série
-- [ ] Tableau Notion : client / URL / date livraison
+- [ ] Tableau Notion : client / destination / date livraison
 - [ ] QR code de secours dans chaque colis
-- [ ] Portail client pour modifier URL sans te contacter
-- [ ] **Page dédiée multi-liens** : digital business card hébergée par 3BeeStudio (type Linktree personnalisé) — le porte-clé pointe vers cette page qui regroupe Instagram, email, téléphone, site, etc. Modifiable depuis un dashboard client.
+
+### Phase 3 bis — Option payante : Fiche contact hébergée (abonnement) 💰
+> Fonctionnalité premium distincte du porte-clé standard. **Ne pas promettre la modification d'URL
+> sur l'offre de base** — c'est précisément la valeur ajoutée de cette option payante.
+- [ ] **Fiche contact multi-liens** hébergée par 3BeeStudio (type Linktree de marque) — le porte-clé
+      pointe vers `3beestudio.fr/c/xxx` qui regroupe Instagram, email, téléphone, site, etc.
+- [ ] Dashboard client pour éditer sa page (logo, liens, couleurs)
+- [ ] **Modèle d'abonnement** : facturation récurrente couvrant l'hébergement + l'édition illimitée
+- [ ] Page publique responsive + bouton « Ajouter aux contacts » (vCard générée)
+- [ ] Slug personnalisé / nom de domaine de marque (option)
 
 ### Phase 4 — Volume
 - [ ] Cibler franchises, chaînes de restaurants, réseaux d'agences
-- [ ] Contrat maintenance annuel "mise à jour URL incluse"
+- [ ] Contrat maintenance annuel (lié à l'option fiche contact hébergée)
 - [ ] Partenariat agences communication locales
 - [ ] Variantes : badge NFC, porte-badge, support bureau NFC
 

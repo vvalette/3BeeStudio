@@ -11,7 +11,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
     <div className="min-h-screen bg-bg-0 text-ink-0">
       {/* Header */}
       <div className="border-b border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
-        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-28 pb-12">
+        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-10 pb-12">
 
           <h1 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
             {title}
