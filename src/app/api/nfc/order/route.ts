@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { calcOrder, formatDestination, isVCard, byteLength, NFC_CHIP_BYTE_LIMIT } from '@/types/order'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -24,6 +25,16 @@ const schema = z.object({
 })
 
 export async function POST(req: Request) {
+  // Limite : 10 commandes / 10 min / IP (anti-spam DB + sessions Stripe)
+  const ip = getClientIp(req)
+  const { ok, retryAfter } = rateLimit(`nfc-order:${ip}`, 10, 10 * 60 * 1000)
+  if (!ok) {
+    return NextResponse.json(
+      { error: 'Trop de tentatives. Réessayez plus tard.' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+    )
+  }
+
   const body = await req.json()
   const parsed = schema.safeParse(body)
 

@@ -48,5 +48,7 @@ create trigger orders_updated_at
   before update on orders
   for each row execute function update_updated_at();
 
--- RLS : désactiver pour l'instant (accès via service_role uniquement)
-alter table orders disable row level security;
+-- RLS : ACTIVÉE sans aucune policy → deny-all pour anon/authenticated.
+-- Seule la clé service_role (côté serveur uniquement) bypasse la RLS.
+-- ⚠️ Ne JAMAIS désactiver : la clé anon est publique (présente dans le navigateur).
+alter table orders enable row level security;

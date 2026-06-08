@@ -1,23 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { cookies } from 'next/headers'
+import { isAuthenticated } from '@/lib/auth'
 import { z } from 'zod'
-import type { OrderStatus } from '@/types/order'
-
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_token')?.value
-  return token === process.env.ADMIN_PASSWORD
-}
-
-const VALID_STATUSES: OrderStatus[] = [
-  'pending_payment',
-  'confirmed',
-  'processing',
-  'printing',
-  'shipped',
-  'delivered',
-]
 
 const schema = z.object({
   status: z.enum(['pending_payment', 'confirmed', 'processing', 'printing', 'shipped', 'delivered']).optional(),
@@ -82,6 +66,3 @@ export async function GET(
 
   return NextResponse.json(data)
 }
-
-// Unused variable fix
-void VALID_STATUSES

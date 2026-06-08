@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { cookies } from 'next/headers'
-
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_token')?.value
-  return token === process.env.ADMIN_PASSWORD
-}
+import { isAuthenticated } from '@/lib/auth'
 
 export async function GET() {
   if (!await isAuthenticated()) {

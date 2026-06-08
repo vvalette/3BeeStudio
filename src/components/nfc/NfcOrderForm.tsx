@@ -258,8 +258,8 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
   const onDropRejected = useCallback((rejections: FileRejection[]) => {
     const code = rejections[0]?.errors[0]?.code
     if (code === 'file-too-large') setRejectError('Fichier trop lourd (max 5 Mo). Compressez l’image ou réduisez sa taille.')
-    else if (code === 'file-invalid-type') setRejectError('Format non supporté. Utilisez un PNG, JPG, SVG ou WEBP.')
-    else setRejectError('Fichier refusé. Vérifiez le format (PNG, JPG, SVG, WEBP) et la taille (max 5 Mo).')
+    else if (code === 'file-invalid-type') setRejectError('Format non supporté. Utilisez un PNG, JPG ou WEBP.')
+    else setRejectError('Fichier refusé. Vérifiez le format (PNG, JPG, WEBP) et la taille (max 5 Mo).')
   }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -268,7 +268,6 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
     accept: {
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg'],
-      'image/svg+xml': ['.svg'],
       'image/webp': ['.webp'],
     },
     maxSize: 5 * 1024 * 1024,
@@ -334,7 +333,7 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
                 <p className="text-base font-semibold text-ink-0">
                   {isDragActive ? 'Déposez votre logo ici' : 'Glisser-déposer ou cliquer'}
                 </p>
-                <p className="mt-1.5 text-sm text-ink-3">PNG, JPG, SVG, WEBP · Max 5 Mo</p>
+                <p className="mt-1.5 text-sm text-ink-3">PNG, JPG, WEBP · Max 5 Mo</p>
               </>
             )}
           </div>

@@ -1,15 +1,13 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase'
+import { isAuthenticated } from '@/lib/auth'
 import type { Order } from '@/types/order'
 import AdminOrdersList from '@/components/admin/AdminOrdersList'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminCommandesPage() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_token')?.value
-  if (token !== process.env.ADMIN_PASSWORD) redirect('/admin')
+  if (!(await isAuthenticated())) redirect('/admin')
 
   const { data } = await supabaseAdmin
     .from('orders')

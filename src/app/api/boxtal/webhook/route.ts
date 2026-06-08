@@ -17,7 +17,14 @@ export async function POST(req: Request) {
   const signature = req.headers.get('x-bxt-signature')
   const secret = process.env.BOXTAL_WEBHOOK_SECRET
 
-  if (secret && !verifySignature(rawBody, signature, secret)) {
+  // Fail-closed : sans secret configuré, on refuse (sinon n'importe qui pourrait
+  // POSTer de faux événements de tracking pour changer le statut des commandes).
+  if (!secret) {
+    console.error('[boxtal-webhook] BOXTAL_WEBHOOK_SECRET non configuré — requête refusée')
+    return NextResponse.json({ error: 'Webhook non configuré' }, { status: 503 })
+  }
+
+  if (!verifySignature(rawBody, signature, secret)) {
     console.warn('[boxtal-webhook] signature invalide')
     return NextResponse.json({ error: 'Signature invalide' }, { status: 401 })
   }

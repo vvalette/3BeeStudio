@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { cookies } from 'next/headers'
+import { isAuthenticated } from '@/lib/auth'
 import { createBoxtalShipment, getBoxtalLabel } from '@/lib/boxtal'
 import type { Order } from '@/types/order'
-
-async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_token')?.value
-  return token === process.env.ADMIN_PASSWORD
-}
 
 export async function POST(
   _req: Request,
