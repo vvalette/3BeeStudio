@@ -143,10 +143,24 @@ export default async function SuiviPage({
                       <p className={['text-sm font-medium', active ? 'text-amber' : done ? 'text-ink-1' : 'text-ink-3'].join(' ')}>
                         {ORDER_STATUS_LABELS[s]}
                       </p>
-                      {s === 'shipped' && o.tracking_number && (
-                        <p className="mt-0.5 font-mono text-xs text-ink-2">
-                          Suivi : {o.tracking_number}
-                        </p>
+                      {s === 'shipped' && (o.tracking_url || o.tracking_number) && (
+                        o.tracking_url ? (
+                          <a
+                            href={o.tracking_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-amber/30 bg-amber/10 px-3 py-1.5 text-xs font-semibold text-amber hover:bg-amber/20 transition-colors"
+                          >
+                            Suivre mon colis
+                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 3h6v6M11 3L3 11" />
+                            </svg>
+                          </a>
+                        ) : (
+                          <p className="mt-0.5 font-mono text-xs text-ink-2">
+                            Suivi : {o.tracking_number}
+                          </p>
+                        )
                       )}
                     </div>
                   </div>

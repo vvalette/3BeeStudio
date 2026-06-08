@@ -30,6 +30,7 @@ export interface Order {
   // Statut
   status: OrderStatus
   tracking_number: string | null
+  tracking_url: string | null
   admin_notes: string | null
 
   // Adresse de livraison

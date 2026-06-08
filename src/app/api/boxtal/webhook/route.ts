@@ -56,19 +56,21 @@ export async function POST(req: Request) {
   const trackings = (body.payload as Record<string, unknown>)?.trackings as Array<{
     status: string
     trackingNumber?: string
+    packageTrackingUrl?: string
   }> | undefined
 
   if (!trackings?.length) {
     return NextResponse.json({ received: true })
   }
 
-  const { status, trackingNumber } = trackings[0]
+  const { status, trackingNumber, packageTrackingUrl } = trackings[0]
 
   // SHIPPED = colis récupéré par le transporteur ou déposé en point relais
   // DELIVERED = livré au destinataire
   if (status === 'SHIPPED' || status === 'IN_TRANSIT') {
     const updates: Record<string, unknown> = { status: 'shipped' }
     if (trackingNumber) updates.tracking_number = trackingNumber
+    if (packageTrackingUrl) updates.tracking_url = packageTrackingUrl
 
     const { error } = await supabaseAdmin
       .from('orders')
