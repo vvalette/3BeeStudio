@@ -2,12 +2,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
-// Types autorisés → extension dérivée du MIME (jamais du nom de fichier client).
-// SVG volontairement exclu : peut contenir du JavaScript (risque XSS stocké).
 const ALLOWED: Record<string, string> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
 }
 
 export async function POST(req: Request) {
@@ -28,13 +24,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Aucun fichier reçu' }, { status: 400 })
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: 'Fichier trop lourd (max 5 Mo)' }, { status: 400 })
+  if (file.size > 2 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Fichier trop lourd (max 2 Mo)' }, { status: 400 })
   }
 
   const ext = ALLOWED[file.type]
   if (!ext) {
-    return NextResponse.json({ error: 'Format non supporté (PNG, JPG, WEBP)' }, { status: 400 })
+    return NextResponse.json({ error: 'Seul le format SVG est accepté' }, { status: 400 })
+  }
+
+  // Sécurité : rejeter les SVG contenant des vecteurs XSS courants
+  const text = await file.text()
+  const dangerous =
+    /<script[\s>]/i.test(text) ||
+    /javascript:/i.test(text) ||
+    /on\w+\s*=/i.test(text) ||
+    /<foreignObject/i.test(text)
+  if (dangerous) {
+    return NextResponse.json({ error: 'SVG non conforme (contenu interdit détecté)' }, { status: 400 })
   }
 
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`

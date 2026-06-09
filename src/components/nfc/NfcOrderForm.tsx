@@ -257,20 +257,18 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
 
   const onDropRejected = useCallback((rejections: FileRejection[]) => {
     const code = rejections[0]?.errors[0]?.code
-    if (code === 'file-too-large') setRejectError('Fichier trop lourd (max 5 Mo). Compressez l’image ou réduisez sa taille.')
-    else if (code === 'file-invalid-type') setRejectError('Format non supporté. Utilisez un PNG, JPG ou WEBP.')
-    else setRejectError('Fichier refusé. Vérifiez le format (PNG, JPG, WEBP) et la taille (max 5 Mo).')
+    if (code === 'file-too-large') setRejectError('Fichier trop lourd (max 2 Mo). Exportez à nouveau votre SVG depuis votre logiciel de design.')
+    else if (code === 'file-invalid-type') setRejectError('Format non supporté. Seul le format SVG est accepté pour la modélisation 3D.')
+    else setRejectError("Fichier refusé. Vérifiez que c'est bien un fichier .svg (max 2 Mo).")
   }, [])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     onDropRejected,
     accept: {
-      'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/webp': ['.webp'],
+      'image/svg+xml': ['.svg'],
     },
-    maxSize: 5 * 1024 * 1024,
+    maxSize: 2 * 1024 * 1024,
     multiple: false,
   })
 
@@ -279,7 +277,7 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
       <StepTitle num="01" title="Configuration" sub="Votre logo et la destination de la puce NFC" />
 
       {/* ── Sous-partie 1 : Logo ── */}
-      <SubSection title="Votre logo" hint="Imprimé en relief sur chaque porte-clé">
+      <SubSection title="Votre logo" hint="Fichier SVG — requis pour la modélisation 3D">
         <div
           {...getRootProps()}
           className="relative cursor-pointer overflow-hidden rounded-2xl transition-all duration-300"
@@ -333,7 +331,20 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
                 <p className="text-base font-semibold text-ink-0">
                   {isDragActive ? 'Déposez votre logo ici' : 'Glisser-déposer ou cliquer'}
                 </p>
-                <p className="mt-1.5 text-sm text-ink-3">PNG, JPG, WEBP · Max 5 Mo</p>
+                <p className="mt-1.5 text-sm font-semibold text-amber">Format SVG uniquement · Max 2 Mo</p>
+                <div
+                  className="mt-4 flex items-start gap-2.5 rounded-xl px-4 py-3 text-left"
+                  style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}
+                >
+                  <svg className="mt-0.5 shrink-0" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="8" cy="8" r="7"/>
+                    <line x1="8" y1="7" x2="8" y2="11"/>
+                    <circle cx="8" cy="5" r="0.5" fill="#F59E0B" stroke="none"/>
+                  </svg>
+                  <p className="text-xs leading-relaxed text-amber/80">
+                    Le SVG est obligatoire pour tracer précisément les contours de votre logo et générer le modèle 3D en relief. Exportez-le depuis Illustrator, Figma ou Inkscape.
+                  </p>
+                </div>
               </>
             )}
           </div>
