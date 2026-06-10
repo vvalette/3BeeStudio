@@ -45,7 +45,7 @@ export default function NewsletterBlock() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="flex h-[46px] items-center justify-center rounded-pill px-6 font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105 disabled:opacity-60 whitespace-nowrap"
+              className="flex h-[46px] cursor-pointer items-center justify-center rounded-pill px-6 font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105 disabled:opacity-60 whitespace-nowrap"
               style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
             >
               {status === 'loading' ? '…' : "Je m'abonne"}

@@ -1,4 +1,7 @@
 import Eyebrow from '@/components/ui/Eyebrow'
+import Reveal from '@/components/ui/Reveal'
+
+const TIKTOK_URL = 'https://tiktok.com/@3beestudio'
 
 interface VideoCardProps {
   title: string
@@ -18,8 +21,12 @@ function PlayIcon() {
 function VideoCard({ title, views, accent = false, index }: VideoCardProps) {
   const patternId = `tri-${index}`
   return (
-    <div
-      className="relative overflow-hidden flex-shrink-0 w-[168px] h-[296px] lg:w-full lg:h-[360px]"
+    <a
+      href={TIKTOK_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Voir « ${title} » sur TikTok`}
+      className="group relative block overflow-hidden flex-shrink-0 w-[168px] h-[296px] lg:w-full lg:h-[360px] transition-transform duration-300 hover:-translate-y-1"
       style={{
         borderRadius: 24,
         background: accent
@@ -45,7 +52,7 @@ function VideoCard({ title, views, accent = false, index }: VideoCardProps) {
       </div>
 
       <div
-        className="absolute flex items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] transition-transform hover:scale-110"
+        className="absolute flex items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] transition-transform duration-300 group-hover:scale-110"
         style={{ top: '46%', left: '50%', transform: 'translate(-50%, -50%)', width: 56, height: 56, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}
       >
         <PlayIcon />
@@ -59,7 +66,7 @@ function VideoCard({ title, views, accent = false, index }: VideoCardProps) {
           <span className="font-mono text-ink-2" style={{ fontSize: 10 }}>0:42</span>
         </div>
       </div>
-    </div>
+    </a>
   )
 }
 
@@ -74,17 +81,17 @@ export default function VideoStrip() {
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex items-end justify-between mb-8">
+        <Reveal className="flex items-end justify-between mb-8">
           <div>
-            <div className="mb-3"><Eyebrow>Atelier · TikTok</Eyebrow></div>
+            <div className="mb-3"><Eyebrow>Studio · TikTok</Eyebrow></div>
             <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
               Voir naître les pièces.
             </h2>
           </div>
-          <a href="https://tiktok.com/@3beestudio" target="_blank" rel="noopener noreferrer" className="font-mono text-amber whitespace-nowrap hover:text-amber-soft transition-colors" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
+          <a href={TIKTOK_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-amber whitespace-nowrap hover:text-amber-soft transition-colors" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
             VOIR TOUT →
           </a>
-        </div>
+        </Reveal>
 
         {/* Mobile: scroll · Desktop: 4-col grid */}
         <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible">

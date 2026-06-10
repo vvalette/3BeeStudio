@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import Eyebrow from '@/components/ui/Eyebrow'
+import Reveal from '@/components/ui/Reveal'
 import VideoModal from '@/components/ui/VideoModal'
 
 // Remplacer par l'URL de la vraie vidéo (MP4 ou YouTube)
@@ -151,19 +152,18 @@ export default function NFCSection() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
 
         {/* Header */}
-        <div className="mb-12 max-w-2xl">
+        <Reveal className="mb-12 max-w-2xl">
           <div className="mb-3"><Eyebrow>Porte-clé connecté</Eyebrow></div>
           <h2 className="font-sans font-bold text-ink-0 mb-4" style={{ fontSize: 'clamp(1.875rem, 4vw, 3rem)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
             Le porte-clé connecté<br />qui parle pour vous.
           </h2>
           <p className="text-ink-2" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.15rem)', lineHeight: 1.55 }}>
-            Un porte-clé imprimé en 3D avec votre logo, avec une puce NFC intégrée.<br />
-  
-            Le client approche son téléphone et le lien de votre choix apparaît.
+            Un porte-clé imprimé en 3D à votre logo, puce NFC intégrée.<br />
+            Votre client approche son téléphone — votre lien s&apos;ouvre, sans application.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 items-stretch">
+        <Reveal delay={120} className="grid gap-6 lg:grid-cols-2 lg:gap-8 items-stretch">
 
           {/* ── Left: the full story scene ── */}
           <div
@@ -227,17 +227,22 @@ export default function NFCSection() {
               </ul>
             </div>
 
-            <Link
-              href="/nfc#commander"
-              className="flex h-[54px] w-full items-center justify-center gap-2 rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
-              style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
-            >
-              Commander mon porte-clé connecté <ArrowIcon />
-            </Link>
+            <div className="flex flex-col gap-2.5">
+              <Link
+                href="/nfc#commander"
+                className="flex h-[54px] w-full items-center justify-center gap-2 rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
+                style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+              >
+                Commander mon porte-clé connecté <ArrowIcon />
+              </Link>
+              <p className="text-center font-mono text-ink-3" style={{ fontSize: 11, letterSpacing: '0.04em' }}>
+                Dès <span className="text-amber-soft">1,70 €</span> l&apos;unité · commande minimum 5 · livraison offerte dès 100
+              </p>
+            </div>
 
             <button
               onClick={() => setVideoOpen(true)}
-              className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-pill border border-[var(--line-amber)] font-sans font-semibold text-[15px] text-amber-soft transition-all active:scale-[0.97] hover:bg-[rgba(245,158,11,0.06)]"
+              className="flex h-[54px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-pill border border-[var(--line-amber)] font-sans font-semibold text-[15px] text-amber-soft transition-all active:scale-[0.97] hover:bg-[rgba(245,158,11,0.06)]"
               style={{ background: 'rgba(10,8,1,0.4)', backdropFilter: 'blur(8px)' }}
             >
               <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
@@ -247,7 +252,7 @@ export default function NFCSection() {
             </button>
 
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )

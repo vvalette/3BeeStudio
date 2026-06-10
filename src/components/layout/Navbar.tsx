@@ -8,7 +8,6 @@ import { X, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
-  { href: '/boutique',   label: 'Boutique' },
   { href: '/nfc',        label: 'Porte-clé connecté' },
   { href: '/sur-mesure', label: 'Sur-mesure' },
   { href: '/portfolio',  label: 'Portfolio' },

@@ -57,7 +57,7 @@ export default function OrderConfirmation({
             <Text style={h1}>Votre commande est confirmée !</Text>
             <Text style={intro}>
               Merci <strong>{company}</strong> — nous avons bien reçu votre paiement.
-              Vos porte-clés NFC vont être imprimés en 3D et programmés à la main dans nos ateliers.
+              Vos porte-clés NFC vont être imprimés en 3D et programmés à la main dans nos studios.
             </Text>
           </Section>
 

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Eyebrow from '@/components/ui/Eyebrow'
+import Reveal from '@/components/ui/Reveal'
 
 function ArrowIcon() {
   return (
@@ -19,7 +20,7 @@ const stats = [
 const steps = [
   {
     n: '01',
-    title: "L'atelier vous écoute",
+    title: "Le studio vous écoute",
     desc: "Pas de formulaire à rallonge — une conversation directe avec l'artisan. Premier rendu 3D en main sous 48h.",
   },
   {
@@ -36,8 +37,9 @@ const steps = [
 
 export default function CustomCTA() {
   return (
-    <section className="py-20 lg:py-28">
+    <section className="py-20 lg:py-28 border-t border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <Reveal>
         <div
           className="relative overflow-hidden"
           style={{ borderRadius: 32, background: 'linear-gradient(160deg, #2A1C08 0%, #100A02 60%)', border: '1px solid var(--line-amber)' }}
@@ -143,6 +145,7 @@ export default function CustomCTA() {
             </div>
           </div>
         </div>
+        </Reveal>
       </div>
     </section>
   )

@@ -1,4 +1,5 @@
 import Eyebrow from '@/components/ui/Eyebrow'
+import Reveal from '@/components/ui/Reveal'
 
 interface TestimonialProps {
   name: string
@@ -41,22 +42,22 @@ function TestimonialCard({ name, role, body, avatar }: TestimonialProps) {
 const testimonials: TestimonialProps[] = [
   { name: 'Léa M.',         role: '@lea.designs · TikTok',    body: "J'ai reçu mon vase Hive en 5 jours. La finition est dingue, le grain mat est exactement ce que j'attendais.", avatar: 'linear-gradient(135deg, #F59E0B, #7C2D12)' },
   { name: 'Studio Bouchet', role: 'Architecte d\'intérieur',  body: "On a fait 4 projets avec 3Bee. Réactivité bluffante, qualité au rendez-vous. Notre fournisseur 3D.", avatar: 'linear-gradient(135deg, #6366F1, #1E1B4B)' },
-  { name: 'Tom V.',         role: 'Joueur d\'échecs',         body: "Le set Atelier est juste magnifique. Pièces équilibrées, finition mate parfaite. Un cadeau qui marque.", avatar: 'linear-gradient(135deg, #10B981, #064E3B)' },
+  { name: 'Tom V.',         role: 'Joueur d\'échecs',         body: "Le set Studio est juste magnifique. Pièces équilibrées, finition mate parfaite. Un cadeau qui marque.", avatar: 'linear-gradient(135deg, #10B981, #064E3B)' },
 ]
 
 export default function Testimonials() {
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="mb-8">
+        <Reveal className="mb-8">
           <div className="mb-3"><Eyebrow>Témoignages</Eyebrow></div>
           <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
             Ils nous font confiance.
           </h2>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible">
+        </Reveal>
+        <Reveal delay={120} className="flex gap-4 overflow-x-auto pb-2 no-scrollbar lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible">
           {testimonials.map((t) => <TestimonialCard key={t.name} {...t} />)}
-        </div>
+        </Reveal>
       </div>
     </section>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,7 +8,7 @@ import { calcOrder, getUnitPrice, formatDestination, isVCard, byteLength, NFC_CH
 import { formatPrice } from '@/lib/utils'
 import { useDropzone, type FileRejection } from 'react-dropzone'
 import Select from '@/components/ui/Select'
-import NfcLinkPicker from '@/components/nfc/NfcLinkPicker'
+import NfcLinkPicker, { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 
 // ─── Schémas par étape ────────────────────────────────────────────────────────
 
@@ -84,6 +84,14 @@ export default function NfcOrderForm() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  function goToStep(n: number) {
+    setStep(n)
+    requestAnimationFrame(() => {
+      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 
   async function handleLogoAccepted(file: File) {
     setLogoFile(file)
@@ -123,7 +131,8 @@ export default function NfcOrderForm() {
 
   return (
     <div
-      className="overflow-hidden rounded-2xl"
+      ref={containerRef}
+      className="scroll-mt-[88px] overflow-hidden rounded-2xl"
       style={{
         background: 'rgba(16,16,19,0.85)',
         backdropFilter: 'blur(20px)',
@@ -131,7 +140,7 @@ export default function NfcOrderForm() {
         boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset',
       }}
     >
-      <ProgressBar step={step} />
+      <ProgressBar step={step} onStepClick={goToStep} />
 
       <div className="p-7 sm:p-9">
         {step === 1 && (
@@ -142,21 +151,21 @@ export default function NfcOrderForm() {
             uploading={uploading}
             uploadError={uploadError}
             onFileAccepted={handleLogoAccepted}
-            onNext={(data) => { setFormData(p => ({ ...p, ...data })); setStep(2) }}
+            onNext={(data) => { setFormData(p => ({ ...p, ...data })); goToStep(2) }}
           />
         )}
         {step === 2 && (
           <StepQuantity
             defaultValues={formData}
-            onBack={() => setStep(1)}
-            onNext={(data) => { setFormData(p => ({ ...p, ...data })); setStep(3) }}
+            onBack={() => goToStep(1)}
+            onNext={(data) => { setFormData(p => ({ ...p, ...data })); goToStep(3) }}
           />
         )}
         {step === 3 && (
           <StepContact
             defaultValues={formData}
-            onBack={() => setStep(2)}
-            onNext={(data) => { setFormData(p => ({ ...p, ...data })); setStep(4) }}
+            onBack={() => goToStep(2)}
+            onNext={(data) => { setFormData(p => ({ ...p, ...data })); goToStep(4) }}
           />
         )}
         {step === 4 && (
@@ -165,7 +174,8 @@ export default function NfcOrderForm() {
             logoUrl={logoUrl!}
             submitting={submitting}
             submitError={submitError}
-            onBack={() => setStep(3)}
+            onBack={() => goToStep(3)}
+            onEdit={goToStep}
             onSubmit={handleSubmit}
           />
         )}
@@ -176,7 +186,7 @@ export default function NfcOrderForm() {
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
 
-function ProgressBar({ step }: { step: number }) {
+function ProgressBar({ step, onStepClick }: { step: number; onStepClick: (n: number) => void }) {
   const labels = ['Logo', 'Quantité', 'Contact', 'Paiement']
 
   return (
@@ -192,14 +202,21 @@ function ProgressBar({ step }: { step: number }) {
           const rightFilled = n < step
 
           return (
-            <div key={n} className="flex flex-1 flex-col items-center">
+            <button
+              key={n}
+              type="button"
+              onClick={done ? () => onStepClick(n) : undefined}
+              disabled={!done}
+              title={done ? 'Revenir à cette étape' : undefined}
+              className={`group flex flex-1 flex-col items-center ${done ? 'cursor-pointer' : 'cursor-default'}`}
+            >
               <div className="flex w-full items-center">
                 <div
                   className="h-[2px] flex-1 rounded-full transition-colors duration-500"
                   style={{ background: isFirst ? 'transparent' : leftFilled ? '#F59E0B' : 'var(--line-2)' }}
                 />
                 <div
-                  className="mx-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300"
+                  className={`mx-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 ${done ? 'group-hover:scale-110' : ''}`}
                   style={
                     done
                       ? { background: '#F59E0B', color: '#0A0A0B', boxShadow: '0 0 12px rgba(245,158,11,0.45)' }
@@ -220,12 +237,13 @@ function ProgressBar({ step }: { step: number }) {
                 />
               </div>
               <span
-                className="mt-2.5 text-[10px] font-medium tracking-wide transition-colors"
-                style={{ color: active ? '#FAFAFA' : done ? '#F59E0B' : '#54545A' }}
+                className={`mt-2.5 text-[10px] font-medium tracking-wide transition-colors ${
+                  active ? 'text-ink-0' : done ? 'text-amber group-hover:text-amber-soft' : 'text-ink-3'
+                }`}
               >
                 {label}
               </span>
-            </div>
+            </button>
           )
         })}
       </div>
@@ -389,22 +407,25 @@ function StepQuantity({ defaultValues, onBack, onNext }: {
   const qty = watch('quantity') ?? 5
   const { unitPrice, subtotal, shipping, total } = calcOrder(qty)
   const missingForFree = Math.max(0, FREE_SHIPPING_QTY - qty)
+  const basePrice = getUnitPrice(5)
+  const discountPct = Math.round((1 - unitPrice / basePrice) * 100)
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-6">
       <StepTitle num="02" title="Quantité" sub="Le prix au porte-clé baisse automatiquement selon le volume" />
 
-      <div>
+      <div className="mt-6">
         <label className={labelCls}>Nombre de porte-clés</label>
         <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {QUANTITY_PRESETS.map((value) => {
             const active = qty === value
+            const popular = value === 50
             return (
               <button
                 key={value}
                 type="button"
                 onClick={() => setValue('quantity', value, { shouldValidate: true })}
-                className="flex flex-col cursor-pointer items-center rounded-xl py-3 px-2 text-center transition-all duration-200"
+                className="relative flex flex-col cursor-pointer items-center rounded-xl py-3 px-2 text-center transition-all duration-200"
                 style={active ? {
                   background: 'rgba(245,158,11,0.12)',
                   border: '1.5px solid rgba(245,158,11,0.6)',
@@ -414,6 +435,14 @@ function StepQuantity({ defaultValues, onBack, onNext }: {
                   border: '1px solid rgba(255,255,255,0.07)',
                 }}
               >
+                {popular && (
+                  <span
+                    className="absolute -top-2 rounded-pill px-1.5 py-px text-[8px] font-bold uppercase tracking-wider"
+                    style={{ background: 'var(--btn-primary-bg)', color: '#1A1300' }}
+                  >
+                    Populaire
+                  </span>
+                )}
                 <span className={`text-sm font-bold transition-colors ${active ? 'text-amber' : 'text-ink-1'}`}>{value}</span>
                 <span className={`mt-0.5 text-[10px] font-mono transition-colors ${active ? 'text-amber/70' : 'text-ink-3'}`}>{formatPrice(getUnitPrice(value))}</span>
               </button>
@@ -445,7 +474,12 @@ function StepQuantity({ defaultValues, onBack, onNext }: {
       >
         <div className="flex justify-between text-sm">
           <span className="text-ink-2">Prix unitaire</span>
-          <span className="font-mono text-ink-1">{formatPrice(unitPrice)}</span>
+          <span className="font-mono text-ink-1">
+            {discountPct > 0 && (
+              <span className="mr-2 text-emerald-400">−{discountPct}%</span>
+            )}
+            {formatPrice(unitPrice)}
+          </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-ink-2">Sous-total ({qty} porte-clés)</span>
@@ -468,12 +502,23 @@ function StepQuantity({ defaultValues, onBack, onNext }: {
 
       {/* Incitation livraison offerte */}
       {missingForFree > 0 && (
-        <div className="flex items-center gap-2 text-[11px] text-ink-3">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M1 4h9v7H1zM10 6h3l2 2v3h-5z" />
-            <circle cx="4" cy="11" r="1.3" /><circle cx="12" cy="11" r="1.3" />
-          </svg>
-          Plus que <span className="text-amber">{missingForFree}</span> porte-clés pour la livraison offerte
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-[11px] text-ink-3">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 4h9v7H1zM10 6h3l2 2v3h-5z" />
+              <circle cx="4" cy="11" r="1.3" /><circle cx="12" cy="11" r="1.3" />
+            </svg>
+            Plus que <span className="text-amber">{missingForFree}</span> porte-clés pour la livraison offerte
+          </div>
+          <div className="h-1 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(100, (qty / FREE_SHIPPING_QTY) * 100)}%`,
+                background: 'linear-gradient(90deg, rgba(245,158,11,0.5), #F59E0B)',
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -578,85 +623,140 @@ function StepContact({ defaultValues, onBack, onNext }: {
 
 // ─── Étape 4 : Récap + paiement ───────────────────────────────────────────────
 
-function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onSubmit }: {
+function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit, onSubmit }: {
   formData: FormData; logoUrl: string; submitting: boolean; submitError: string | null
-  onBack: () => void; onSubmit: () => void
+  onBack: () => void; onEdit: (step: number) => void; onSubmit: () => void
 }) {
-  const { subtotal, shipping, total } = calcOrder(formData.quantity)
+  const { unitPrice, subtotal, shipping, total } = calcOrder(formData.quantity)
+  const countryLabel = COUNTRIES.find(c => c.value === formData.shipping_country)?.label ?? formData.shipping_country
 
   return (
-    <div className="space-y-6">
-      <StepTitle num="04" title="Récapitulatif" sub="Vérifiez votre commande avant le paiement" />
+    <div className="space-y-5">
+      <StepTitle num="04" title="Récapitulatif" sub="Un dernier coup d'œil avant le paiement sécurisé" />
 
+      {/* ── Produit ── */}
+      <RecapSection icon={<TagMini />} title="Votre commande" onEdit={() => onEdit(1)}>
+        <div className="flex items-center gap-4">
+          {/* Logo dans son écrin */}
+          <div
+            className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl"
+            style={{
+              background: 'radial-gradient(circle at 50% 30%, rgba(245,158,11,0.16), rgba(255,255,255,0.03) 75%)',
+              border: '1px solid rgba(245,158,11,0.3)',
+              boxShadow: '0 0 24px rgba(245,158,11,0.12)',
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt="Votre logo" className="h-14 w-14 rounded-lg object-contain" />
+            <span
+              className="absolute -bottom-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500"
+              style={{ border: '2px solid #101013' }}
+              title="Logo validé"
+            >
+              <svg width="9" height="9" viewBox="0 0 11 11" fill="none">
+                <path d="M2 5.5L4.5 8L9 3" stroke="#0A0A0B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-bold text-ink-0">Porte-clé connecté NFC</p>
+            <p className="mt-0.5 text-xs text-ink-3">Imprimé en 3D à votre logo · puce programmée</p>
+            <div
+              className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-pill px-2.5 py-1"
+              style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.22)' }}
+            >
+              <span className="flex shrink-0 text-amber"><DestinationIcon value={formData.nfc_url} size={12} /></span>
+              <span className="truncate font-mono text-[11px] text-amber-soft">
+                {formatDestination(formData.nfc_url)}
+              </span>
+            </div>
+          </div>
+
+          {/* Quantité */}
+          <div
+            className="flex shrink-0 flex-col items-center rounded-xl px-3.5 py-2"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <span className="font-mono text-lg font-bold leading-tight text-ink-0">×{formData.quantity}</span>
+            <span className="font-mono text-[10px] text-ink-3">{formatPrice(unitPrice)} /u</span>
+          </div>
+        </div>
+      </RecapSection>
+
+      {/* ── Contact + Livraison ── */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <RecapCard title="Contact">
-          <RecapRow label="Entreprise" value={formData.company} />
-          <RecapRow label="Email" value={formData.email} />
-          <RecapRow label="Tél." value={formData.phone} />
-          <RecapRow label="Secteur" value={formData.sector} />
-        </RecapCard>
+        <RecapSection icon={<UserTiny />} title="Contact" onEdit={() => onEdit(3)}>
+          <p className="text-sm font-semibold text-ink-0">{formData.company}</p>
+          <p className="mt-0.5 text-xs text-ink-3">{formData.sector}</p>
+          <div className="mt-3 space-y-2">
+            <p className="flex items-center gap-2 text-[13px] text-ink-1">
+              <span className="text-ink-3"><MailTiny /></span>
+              <span className="truncate">{formData.email}</span>
+            </p>
+            <p className="flex items-center gap-2 text-[13px] text-ink-1">
+              <span className="text-ink-3"><PhoneTiny /></span>
+              {formData.phone}
+            </p>
+          </div>
+        </RecapSection>
 
-        <RecapCard title="Commande">
-          <RecapRow label="Quantité" value={`${formData.quantity} porte-clés`} />
-          <RecapRow label="Destination" value={formatDestination(formData.nfc_url)} truncate />
-          <RecapRow label="Sous-total" value={formatPrice(subtotal)} />
-          <RecapRow label="Livraison" value={shipping === 0 ? 'Offerte' : formatPrice(shipping)} />
-          <RecapRow label="Total" value={formatPrice(total)} />
-        </RecapCard>
-
-        <RecapCard title="Adresse de livraison">
-          <RecapRow label="Destinataire" value={formData.shipping_name} />
-          <RecapRow label="Adresse" value={formData.shipping_address} />
-          {formData.shipping_address2 && (
-            <RecapRow label="Complément" value={formData.shipping_address2} />
-          )}
-          <RecapRow label="Ville" value={`${formData.shipping_postal_code} ${formData.shipping_city}`} />
-          <RecapRow label="Pays" value={COUNTRIES.find(c => c.value === formData.shipping_country)?.label ?? formData.shipping_country} />
-        </RecapCard>
+        <RecapSection icon={<PinTiny />} title="Livraison" onEdit={() => onEdit(3)}>
+          <address className="text-[13px] not-italic leading-relaxed text-ink-1">
+            <span className="font-semibold text-ink-0">{formData.shipping_name}</span><br />
+            {formData.shipping_address}<br />
+            {formData.shipping_address2 && <>{formData.shipping_address2}<br /></>}
+            {formData.shipping_postal_code} {formData.shipping_city}
+          </address>
+          <p className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-ink-3">{countryLabel}</p>
+        </RecapSection>
       </div>
 
-      {/* Logo preview */}
+      {/* ── Total — style reçu ── */}
       <div
-        className="flex items-center gap-4 rounded-xl p-4"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+        className="overflow-hidden rounded-2xl"
+        style={{
+          border: '1px solid rgba(245,158,11,0.28)',
+          background: 'linear-gradient(180deg, rgba(245,158,11,0.10), rgba(245,158,11,0.03))',
+        }}
       >
-        <div
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.06)' }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl} alt="Logo" className="h-12 w-12 object-contain" />
+        <div className="space-y-2.5 px-5 pt-5">
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="text-ink-2">
+              Sous-total <span className="font-mono text-xs text-ink-3">{formData.quantity} × {formatPrice(unitPrice)}</span>
+            </span>
+            <span className="font-mono text-ink-1">{formatPrice(subtotal)}</span>
+          </div>
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="text-ink-2">Livraison suivie</span>
+            {shipping === 0 ? (
+              <span className="font-mono font-semibold text-emerald-400">Offerte</span>
+            ) : (
+              <span className="font-mono text-ink-1">{formatPrice(shipping)}</span>
+            )}
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-ink-3">Logo uploadé</p>
-          <p className="text-sm font-medium text-ink-1">Prêt pour l&apos;impression</p>
-        </div>
-        <svg className="ml-auto text-emerald-400" width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5"/>
-          <path d="M6 10l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
 
-      {/* Paiement */}
-      <div
-        className="rounded-xl p-5 space-y-3"
-        style={{ background: 'rgba(245,158,11,0.07)', border: '1.5px solid rgba(245,158,11,0.25)' }}
-      >
-        <div className="flex items-baseline justify-between">
+        <div className="mx-5 my-4 border-t border-dashed" style={{ borderColor: 'rgba(245,158,11,0.3)' }} />
+
+        <div className="flex items-end justify-between px-5 pb-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-amber/70">Total à payer</p>
-            <p className="mt-0.5 text-3xl font-extrabold text-ink-0" style={{ letterSpacing: '-0.03em' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber/80">Total à payer</p>
+            <p className="mt-1 text-[34px] font-extrabold leading-none text-ink-0" style={{ letterSpacing: '-0.03em' }}>
               {formatPrice(total)}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-ink-3">Port inclus</p>
-            <p className="font-mono text-sm font-semibold text-ink-2">{shipping === 0 ? 'Offert' : formatPrice(shipping)}</p>
-          </div>
+          <p className="text-right text-[11px] leading-relaxed text-ink-3">
+            TVA non applicable<br />art. 293 B du CGI
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-[11px] text-ink-3">
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="12" height="9" rx="1.5" stroke="#54545A" strokeWidth="1.2"/><path d="M4 4V3a3 3 0 016 0v1" stroke="#54545A" strokeWidth="1.2" strokeLinecap="round"/></svg>
-          Paiement sécurisé · CB, Apple Pay, Google Pay
+
+        <div
+          className="flex items-center justify-center gap-2 px-5 py-3"
+          style={{ borderTop: '1px solid rgba(245,158,11,0.14)', background: 'rgba(10,8,1,0.35)' }}
+        >
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="12" height="9" rx="1.5" stroke="#87878E" strokeWidth="1.2"/><path d="M4 4V3a3 3 0 016 0v1" stroke="#87878E" strokeWidth="1.2" strokeLinecap="round"/></svg>
+          <span className="text-[11px] text-ink-2">Paiement sécurisé Stripe · CB, Apple Pay, Google Pay</span>
         </div>
       </div>
 
@@ -746,30 +846,78 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   )
 }
 
-function RecapCard({ title, children }: { title: string; children: React.ReactNode }) {
+function RecapSection({ icon, title, onEdit, children }: {
+  icon: React.ReactNode; title: string; onEdit: () => void; children: React.ReactNode
+}) {
   return (
-    <div
-      className="rounded-xl p-4 space-y-2"
+    <section
+      className="overflow-hidden rounded-2xl"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-3">{title}</p>
-      <div className="space-y-1.5">{children}</div>
-    </div>
+      <header className="flex items-center justify-between border-b border-[var(--line)] px-4 py-2.5">
+        <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+          <span className="flex text-amber/70">{icon}</span>
+          {title}
+        </span>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="flex cursor-pointer items-center gap-1.5 text-[11px] font-medium text-amber/70 transition-colors hover:text-amber"
+        >
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 1.5l2.5 2.5L5 11.5l-3.2.7.7-3.2L10 1.5z" />
+          </svg>
+          Modifier
+        </button>
+      </header>
+      <div className="p-4">{children}</div>
+    </section>
   )
 }
 
-function RecapRow({ label, value, mono, truncate }: { label: string; value: string; mono?: boolean; truncate?: boolean }) {
+// ─── Mini-icônes du récap ─────────────────────────────────────────────────────
+
+function TagMini() {
   return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="shrink-0 text-xs text-ink-3">{label}</span>
-      <span className={[
-        'text-xs text-ink-1 text-right',
-        mono ? 'font-mono' : '',
-        truncate ? 'max-w-[140px] truncate' : 'break-all',
-      ].join(' ')}>
-        {value}
-      </span>
-    </div>
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.6 1.5H14v5.4l-7 7-5.4-5.4 7-7z" />
+      <circle cx="11" cy="4.6" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function UserTiny() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="5" r="2.5" />
+      <path d="M3 13c.8-2.4 2.7-3.3 5-3.3s4.2.9 5 3.3" />
+    </svg>
+  )
+}
+
+function PinTiny() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 14.5s5-4.4 5-8a5 5 0 10-10 0c0 3.6 5 8 5 8z" />
+      <circle cx="8" cy="6.3" r="1.7" />
+    </svg>
+  )
+}
+
+function MailTiny() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3.5" width="12" height="9" rx="1.5" />
+      <path d="M2 5l6 4 6-4" />
+    </svg>
+  )
+}
+
+function PhoneTiny() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 2.5h2l1.3 3.3-1.6 1a7 7 0 003.3 3.3l1-1.6 3.3 1.3v2a1.3 1.3 0 01-1.3 1.3A10.7 10.7 0 012.2 3.8 1.3 1.3 0 013.5 2.5z" />
+    </svg>
   )
 }
 

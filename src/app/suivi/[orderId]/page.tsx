@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe'
 import { sendOrderConfirmation } from '@/lib/resend'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STEPS, formatDestination, calcOrder, type Order, type OrderStatus } from '@/types/order'
 import { formatPrice } from '@/lib/utils'
+import { STATUS_PILL } from '@/lib/status-ui'
+import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
@@ -11,6 +13,16 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = 'force-dynamic'
+
+// Détail affiché sous l'étape en cours de la timeline.
+const STEP_HINTS: Partial<Record<OrderStatus, string>> = {
+  confirmed: 'Paiement validé — votre commande entre en production.',
+  processing: 'Nous vérifions votre logo et préparons vos puces NFC.',
+  printing: "Vos porte-clés sont en cours d’impression 3D dans nos studios.",
+  printed: 'Production terminée — votre colis est en préparation.',
+  shipped: 'Votre colis est en route.',
+  delivered: 'Votre commande est arrivée. Merci pour votre confiance !',
+}
 
 async function syncStripePayment(order: Order): Promise<Order> {
   if (!order.stripe_checkout_session_id) return order
@@ -76,154 +88,341 @@ export default async function SuiviPage({
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-6 pb-12">
       <div className="mx-auto max-w-xl space-y-6">
 
-        {/* Bannière succès paiement */}
-        {payment === 'success' && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
-            <p className="text-sm font-semibold text-emerald-400">✅ Paiement reçu — merci !</p>
-            <p className="mt-1 text-xs text-ink-2">
-              Un email de confirmation a été envoyé à {o.email}.
+        {/* En-tête — confirmation après paiement, suivi sobre sinon */}
+        {payment === 'success' ? (
+          <header className="relative pt-6 pb-2 text-center">
+            {/* Halo */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2"
+              style={{
+                width: 420, height: 260,
+                background: 'radial-gradient(ellipse at 50% 20%, rgba(245,158,11,0.16), transparent 70%)',
+                filter: 'blur(30px)',
+              }}
+            />
+
+            {/* Coche dessinée dans un anneau */}
+            <div className="relative mx-auto h-20 w-20">
+              <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                <circle cx="40" cy="40" r="37" stroke="rgba(245,158,11,0.18)" strokeWidth="1.5" />
+                <circle
+                  cx="40" cy="40" r="37"
+                  stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"
+                  strokeDasharray="233" strokeDashoffset="233"
+                  transform="rotate(-90 40 40)"
+                  style={{ animation: 'draw-stroke 700ms 150ms cubic-bezier(0.2,0.7,0.2,1) forwards' }}
+                />
+                <path
+                  d="M27 41.5L36.5 50.5L53 32.5"
+                  stroke="#FBBF24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                  strokeDasharray="40" strokeDashoffset="40"
+                  style={{ animation: 'draw-stroke 450ms 650ms cubic-bezier(0.2,0.7,0.2,1) forwards', filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.5))' }}
+                />
+              </svg>
+            </div>
+
+            <p className="relative mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-amber">
+              Paiement reçu
             </p>
-          </div>
+            <h1
+              className="relative mt-2 font-extrabold text-ink-0"
+              style={{ fontSize: 'clamp(1.6rem, 5vw, 2.2rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}
+            >
+              Merci pour votre commande.
+            </h1>
+            <p className="relative mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-2">
+              Nous lançons la fabrication de vos porte-clés.
+              Un récapitulatif vient d&apos;être envoyé à{' '}
+              <span className="font-medium text-ink-0">{o.email}</span>.
+            </p>
+
+            <div
+              className="relative mt-5 inline-flex items-center gap-2 rounded-pill px-4 py-2"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line-amber)' }}
+            >
+              <span className="text-[11px] text-ink-3">Référence</span>
+              <span className="font-mono text-xs font-semibold tracking-wider text-amber-soft">
+                #{o.id.slice(0, 8).toUpperCase()}
+              </span>
+            </div>
+          </header>
+        ) : (
+          <header className="pt-2 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">Suivi de commande</p>
+            <h1 className="mt-2 font-extrabold text-ink-0" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', letterSpacing: '-0.03em' }}>
+              Commande <span className="font-mono">#{o.id.slice(0, 8).toUpperCase()}</span>
+            </h1>
+          </header>
         )}
 
-        {/* Prochaines étapes */}
-        {(payment === 'success' || o.status !== 'pending_payment') && (
-          <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-6 shadow-card">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink-3">Prochaines étapes</p>
-            <div className="space-y-4">
+        {/* Comment ça se passe — uniquement après paiement */}
+        {payment === 'success' && (
+          <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1 shadow-card">
+            <header className="border-b border-[var(--line)] px-6 py-4">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">Comment ça se passe</h2>
+            </header>
+            <div className="space-y-5 p-6">
               {[
-                { n: 1, title: 'Validation sous 24h', desc: 'Nous vérifions votre logo et vos paramètres NFC.' },
-                { n: 2, title: 'Impression & programmation', desc: 'Chaque porte-clé est imprimé en 3D et programmé à la main dans nos ateliers.' },
-                { n: 3, title: 'Expédition', desc: 'Livraison suivie sous 5 à 10 jours ouvrés.' },
-              ].map(({ n, title, desc }) => (
-                <div key={n} className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber/10 text-xs font-bold text-amber">
-                    {n}
-                  </div>
+                {
+                  title: 'Validation sous 24h',
+                  desc: 'Nous vérifions votre logo et vos paramètres NFC.',
+                  icon: (
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8 1.5l5.5 2v4c0 3.2-2.3 5.6-5.5 7-3.2-1.4-5.5-3.8-5.5-7v-4l5.5-2z" />
+                      <path d="M5.5 8l1.8 1.8L10.8 6" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Impression & programmation',
+                  desc: 'Chaque porte-clé est imprimé en 3D et programmé à la main dans nos studios.',
+                  icon: (
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Expédition suivie',
+                  desc: 'Livraison sous 5 à 10 jours ouvrés, lien de suivi envoyé par email.',
+                  icon: (
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1.5 3.5h8v8h-8v-8zM9.5 6h3l2 2.5v3h-5V6z" />
+                      <circle cx="4.5" cy="12.5" r="1.4" /><circle cx="11.5" cy="12.5" r="1.4" />
+                    </svg>
+                  ),
+                },
+              ].map(({ title, desc, icon }) => (
+                <div key={title} className="flex items-start gap-3.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber/20 bg-amber/10 text-amber">
+                    {icon}
+                  </span>
                   <div>
                     <p className="text-sm font-semibold text-ink-0">{title}</p>
-                    <p className="mt-0.5 text-xs text-ink-3">{desc}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-ink-3">{desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Statut */}
-        <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-6 shadow-card">
-          <div className="mb-6 flex items-start justify-between">
-            <div>
-              <p className="text-xs text-ink-3">Commande</p>
-              <p className="font-mono text-xs text-ink-2">{o.id.slice(0, 8).toUpperCase()}</p>
-            </div>
+        {/* Avancement */}
+        <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1 shadow-card">
+          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">Avancement</h2>
             <StatusBadge status={o.status as OrderStatus} />
-          </div>
+          </header>
 
-          {/* Timeline */}
-          {o.status !== 'pending_payment' && (
-            <div className="space-y-0">
-              {ORDER_STATUS_STEPS.map((s, i) => {
-                const done = i <= currentStepIndex
-                const active = i === currentStepIndex
-                return (
-                  <div key={s} className="flex items-start gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className={[
-                        'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold shrink-0',
-                        done ? 'bg-amber text-bg-0' : 'bg-bg-3 text-ink-3',
-                      ].join(' ')}>
-                        {done ? '✓' : i + 1}
-                      </div>
-                      {i < ORDER_STATUS_STEPS.length - 1 && (
-                        <div className={['w-px flex-1 my-1', done ? 'bg-amber/40' : 'bg-[var(--line)]'].join(' ')} style={{ minHeight: 20 }} />
-                      )}
-                    </div>
-                    <div className="pb-4">
-                      <p className={['text-sm font-medium', active ? 'text-amber' : done ? 'text-ink-1' : 'text-ink-3'].join(' ')}>
-                        {ORDER_STATUS_LABELS[s]}
-                      </p>
-                      {s === 'shipped' && (o.tracking_url || o.tracking_number) && (
-                        o.tracking_url ? (
-                          <a
-                            href={o.tracking_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-amber/30 bg-amber/10 px-3 py-1.5 text-xs font-semibold text-amber hover:bg-amber/20 transition-colors"
-                          >
-                            Suivre mon colis
-                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M5 3h6v6M11 3L3 11" />
+          <div className="p-6">
+            {o.status !== 'pending_payment' ? (
+              <div>
+                {ORDER_STATUS_STEPS.map((s, i) => {
+                  const done = i < currentStepIndex
+                  const active = i === currentStepIndex
+                  const last = i === ORDER_STATUS_STEPS.length - 1
+                  return (
+                    <div key={s} className="flex items-stretch gap-4">
+                      {/* Pastille + connecteur */}
+                      <div className="flex flex-col items-center">
+                        {done ? (
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber text-bg-0">
+                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M2.5 7.5l3 3 6-7" />
                             </svg>
-                          </a>
+                          </span>
+                        ) : active ? (
+                          <span
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber/60 bg-amber/10"
+                            style={{ boxShadow: '0 0 0 4px rgba(245,158,11,0.12), 0 0 16px rgba(245,158,11,0.25)' }}
+                          >
+                            <span className="h-2 w-2 rounded-full bg-amber" />
+                          </span>
                         ) : (
-                          <p className="mt-0.5 font-mono text-xs text-ink-2">
-                            Suivi : {o.tracking_number}
-                          </p>
-                        )
-                      )}
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--line-2)] bg-bg-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-ink-3/50" />
+                          </span>
+                        )}
+                        {!last && (
+                          <span
+                            className="w-px flex-1 my-1"
+                            style={{
+                              minHeight: 18,
+                              background: done
+                                ? 'rgba(245,158,11,0.45)'
+                                : active
+                                  ? 'linear-gradient(180deg, rgba(245,158,11,0.45), var(--line))'
+                                  : 'var(--line)',
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Libellé + détail */}
+                      <div className={last ? 'pb-0' : 'pb-5'}>
+                        <p className={[
+                          'text-sm leading-7',
+                          active ? 'font-semibold text-ink-0' : done ? 'font-medium text-ink-1' : 'font-medium text-ink-3',
+                        ].join(' ')}>
+                          {ORDER_STATUS_LABELS[s]}
+                          {active && (
+                            <span className="ml-2 align-middle font-mono text-[10px] uppercase tracking-[0.12em] text-amber">
+                              en cours
+                            </span>
+                          )}
+                        </p>
+                        {active && STEP_HINTS[s] && (
+                          <p className="mt-0.5 max-w-xs text-xs leading-relaxed text-ink-2">{STEP_HINTS[s]}</p>
+                        )}
+                        {s === 'shipped' && i <= currentStepIndex && (o.tracking_url || o.tracking_number) && (
+                          o.tracking_url ? (
+                            <a
+                              href={o.tracking_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                            >
+                              Suivre mon colis
+                              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 3h6v6M11 3L3 11" />
+                              </svg>
+                            </a>
+                          ) : (
+                            <p className="mt-1 font-mono text-xs text-ink-2">Suivi : {o.tracking_number}</p>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {o.status === 'pending_payment' && (
-            <p className="text-sm text-ink-2 text-center py-4">
-              En attente de confirmation du paiement...
-            </p>
-          )}
-        </div>
-
-        {/* Détails commande */}
-        <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-6 shadow-card space-y-3">
-          <h2 className="text-sm font-semibold text-ink-0">Détails de la commande</h2>
-          <div className="divide-y divide-[var(--line)]">
-            <Row label="Entreprise" value={o.company} />
-            <Row label="Email" value={o.email} />
-            <Row label="Quantité" value={`${o.quantity} porte-clés`} />
-            <Row label="Destination" value={formatDestination(o.nfc_url)} />
-            <Row label="Livraison" value={calcOrder(o.quantity).shipping === 0 ? 'Offerte' : formatPrice(calcOrder(o.quantity).shipping)} />
-            <Row label="Total réglé" value={formatPrice(o.total_amount)} />
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 py-2">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber/50" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber" />
+                </span>
+                <p className="text-sm text-ink-2">En attente de confirmation du paiement…</p>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
 
-        <p className="text-center text-xs text-ink-3">
-          Une question ? Écrivez-nous à{' '}
-          <a href="mailto:contact@3beestudio.fr" className="text-amber hover:underline">
-            contact@3beestudio.fr
-          </a>
-        </p>
+        {/* Votre commande */}
+        <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1 shadow-card">
+          <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">Votre commande</h2>
+            <span className="font-mono text-[11px] tracking-wider text-ink-3">#{o.id.slice(0, 8).toUpperCase()}</span>
+          </header>
+
+          <div className="space-y-5 p-6">
+            {/* Produit */}
+            <div className="flex items-center gap-4">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line-amber)' }}
+              >
+                {o.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={o.logo_url} alt={`Logo ${o.company}`} className="h-10 w-10 object-contain" />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#54545A" strokeWidth="1.3">
+                    <rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink-0">
+                  {o.quantity} porte-clés NFC personnalisés
+                </p>
+                <p className="mt-0.5 truncate text-xs text-ink-3">{o.company}</p>
+                <span
+                  className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-pill px-2 py-0.5"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}
+                >
+                  <span className="flex shrink-0 text-ink-3"><DestinationIcon value={o.nfc_url} size={10} /></span>
+                  <span className="truncate font-mono text-[10px] text-ink-2">{formatDestination(o.nfc_url)}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Livraison */}
+            {o.shipping_address && o.shipping_city && (
+              <div className="flex items-start gap-3.5 rounded-xl border border-[var(--line)] bg-bg-0/40 p-4">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-bg-3 text-ink-2">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 6.5c0 3.5-5 8-5 8s-5-4.5-5-8a5 5 0 0110 0z" /><circle cx="8" cy="6.5" r="1.8" />
+                  </svg>
+                </span>
+                <address className="text-xs not-italic leading-relaxed text-ink-2">
+                  {o.shipping_name && <span className="block font-semibold text-ink-1">{o.shipping_name}</span>}
+                  <span className="block">{o.shipping_address}</span>
+                  {o.shipping_address2 && <span className="block">{o.shipping_address2}</span>}
+                  <span className="block">{`${o.shipping_postal_code ?? ''} ${o.shipping_city}`.trim()}</span>
+                </address>
+              </div>
+            )}
+
+            {/* Reçu */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-ink-3">
+                  Sous-total <span className="font-mono text-ink-3">· {o.quantity} × {formatPrice(calcOrder(o.quantity).unitPrice)}</span>
+                </span>
+                <span className="font-mono text-ink-1">{formatPrice(calcOrder(o.quantity).subtotal)}</span>
+              </div>
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-ink-3">Livraison</span>
+                {calcOrder(o.quantity).shipping === 0 ? (
+                  <span className="font-mono font-semibold text-emerald-400">Offerte</span>
+                ) : (
+                  <span className="font-mono text-ink-1">{formatPrice(calcOrder(o.quantity).shipping)}</span>
+                )}
+              </div>
+              <div className="border-t border-dashed border-[var(--line-2)] pt-3">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-semibold text-ink-0">Total réglé</span>
+                  <span className="font-mono text-lg font-bold text-amber">{formatPrice(o.total_amount)}</span>
+                </div>
+                <p className="mt-1 text-right text-[10px] text-ink-3">TVA non applicable, art. 293 B du CGI</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact */}
+        <a
+          href="mailto:contact@3beestudio.fr"
+          className="group flex items-center justify-between rounded-2xl border border-[var(--line)] bg-bg-1 px-6 py-4 transition-colors hover:border-[var(--line-amber)]"
+        >
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber/20 bg-amber/10 text-amber">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1.5" y="3" width="13" height="10" rx="1.5" /><path d="M1.5 4.5L8 9l6.5-4.5" />
+              </svg>
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-ink-0">Une question sur votre commande ?</p>
+              <p className="mt-0.5 text-xs text-ink-3">contact@3beestudio.fr — réponse sous 24h</p>
+            </div>
+          </div>
+          <svg
+            className="shrink-0 text-ink-3 transition-all group-hover:translate-x-0.5 group-hover:text-amber"
+            width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+          >
+            <path d="M5 3l4 4-4 4" />
+          </svg>
+        </a>
       </div>
     </main>
   )
 }
 
 function StatusBadge({ status }: { status: OrderStatus }) {
-  const colors: Record<OrderStatus, string> = {
-    pending_payment: 'bg-zinc-500/20 text-zinc-400',
-    confirmed: 'bg-blue-500/20 text-blue-400',
-    processing: 'bg-purple-500/20 text-purple-400',
-    printing: 'bg-orange-500/20 text-orange-400',
-    printed: 'bg-lime-500/20 text-lime-400',
-    shipped: 'bg-cyan-500/20 text-cyan-400',
-    delivered: 'bg-emerald-500/20 text-emerald-400',
-  }
   return (
-    <span className={['rounded-pill px-3 py-1 text-xs font-semibold', colors[status]].join(' ')}>
+    <span className={['rounded-pill px-3 py-1 text-xs font-semibold', STATUS_PILL[status]].join(' ')}>
       {ORDER_STATUS_LABELS[status]}
     </span>
-  )
-}
-
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5">
-      <span className="text-xs text-ink-3 shrink-0">{label}</span>
-      <span className={['text-xs text-right text-ink-1 break-all', mono ? 'font-mono' : ''].join(' ')}>
-        {value}
-      </span>
-    </div>
   )
 }

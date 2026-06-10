@@ -81,7 +81,8 @@ export function getUnitPrice(quantity: number): number {
   if (quantity >= 250) return 170
   if (quantity >= 100) return 190
   if (quantity >= 50) return 220
-  if (quantity >= 10) return 250
+  if (quantity >= 25) return 240
+  if (quantity >= 10) return 260
   return 290
 }
 
