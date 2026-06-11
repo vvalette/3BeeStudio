@@ -1,0 +1,12 @@
+Structure des pages :
+  - Toutes les pages publiques sous src/app/[locale]/
+  - /sur-mesure → redirige vers /custom (locale-aware)
+  - Admin reste à la racine avec son propre layout + NextIntlClientProvider locale="fr"
+
+  Bouton dans la navbar :
+  - LocaleSwitcher : affiche EN en FR, FR en anglais — petite pill font-mono avec border amber au hover
+  - Visible uniquement sur les pages publiques (showLocaleSwitcher={false} en admin)
+  - Mobile : apparaît au-dessus du CTA en bas du menu
+
+  Prochaines sessions : extraire les strings de chaque page dans messages/fr.json + écrire messages/en.json. On peut commencer par la
+  landing ou une page plus simple.

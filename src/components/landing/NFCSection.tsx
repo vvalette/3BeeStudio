@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 import VideoModal from '@/components/ui/VideoModal'
@@ -37,15 +38,11 @@ function NFCWaves() {
   )
 }
 
-const destinations = [
-  'Instagram, TikTok ou LinkedIn',
-  'Votre site web ou portfolio',
-  'Une fiche contact (ajout en 1 tap)',
-  'Tout autre lien',
-] as const
+const destinationKeys = ['social', 'website', 'contact', 'other'] as const
 
 /* ── Keychain disc with embossed logo ── */
 function Keychain() {
+  const t = useTranslations('nfcSection')
   return (
     <div className="relative flex flex-col items-center" style={{ animation: 'float 6s ease-in-out infinite' }}>
       {/* Ring loop */}
@@ -65,7 +62,7 @@ function Keychain() {
       >
         <Image
           src="/images/logo-bee-only.png"
-          alt="Porte-clé 3D personnalisé avec votre logo"
+          alt={t('keychainAlt')}
           width={104}
           height={104}
           className="object-contain mix-blend-lighten drop-shadow-[0_0_18px_rgba(245,158,11,0.4)]"
@@ -75,7 +72,7 @@ function Keychain() {
       <div className="mt-4 flex items-center gap-1.5 rounded-pill border border-[var(--line-amber)] px-3 py-1.5"
         style={{ background: 'rgba(10,8,1,0.7)', backdropFilter: 'blur(8px)' }}>
         <span className="block h-1.5 w-1.5 rounded-full bg-amber" style={{ boxShadow: '0 0 6px var(--amber)' }} />
-        <span className="font-mono text-amber-soft" style={{ fontSize: 9, letterSpacing: '0.08em' }}>PORTE CLÉ AVEC VOTRE LOGO</span>
+        <span className="font-mono text-amber-soft" style={{ fontSize: 9, letterSpacing: '0.08em' }}>{t('keychainTag')}</span>
       </div>
     </div>
   )
@@ -83,6 +80,7 @@ function Keychain() {
 
 /* ── Phone mockup — browser opening chosen link ── */
 function PhoneMockup() {
+  const t = useTranslations('nfcSection')
   return (
     <div className="relative" style={{ width: 172, filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.6))' }}>
       <div className="relative overflow-hidden" style={{ width: 172, borderRadius: 32, background: '#111113', border: '2px solid rgba(255,255,255,0.10)' }}>
@@ -110,12 +108,12 @@ function PhoneMockup() {
                 </div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>3bee.studio</div>
-                  <div style={{ fontSize: 9, color: '#888' }}>Studio 3D · Lyon 🇫🇷</div>
+                  <div style={{ fontSize: 9, color: '#888' }}>{t('mock.bio')}</div>
                 </div>
               </div>
 
               <div className="flex gap-2 mb-3">
-                {[['124', 'posts'], ['2,4k', 'abonnés'], ['318', 'suivis']].map(([n, l]) => (
+                {[['124', t('mock.posts')], ['2,4k', t('mock.followers')], ['318', t('mock.following')]].map(([n, l]) => (
                   <div key={l} className="text-center flex-1">
                     <div style={{ fontSize: 11, fontWeight: 700, color: '#111' }}>{n}</div>
                     <div style={{ fontSize: 8, color: '#888' }}>{l}</div>
@@ -124,7 +122,7 @@ function PhoneMockup() {
               </div>
 
               <div className="text-center py-1.5 rounded-md font-sans font-semibold" style={{ fontSize: 11, background: '#0095F6', color: '#fff' }}>
-                S&apos;abonner
+                {t('mock.follow')}
               </div>
             </div>
 
@@ -145,6 +143,7 @@ function PhoneMockup() {
 }
 
 export default function NFCSection() {
+  const t = useTranslations('nfcSection')
   const [videoOpen, setVideoOpen] = useState(false)
 
   return (
@@ -153,13 +152,12 @@ export default function NFCSection() {
 
         {/* Header */}
         <Reveal className="mb-12 max-w-2xl">
-          <div className="mb-3"><Eyebrow>Porte-clé connecté</Eyebrow></div>
+          <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
           <h2 className="font-sans font-bold text-ink-0 mb-4" style={{ fontSize: 'clamp(1.875rem, 4vw, 3rem)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
-            Le porte-clé connecté<br />qui parle pour vous.
+            {t.rich('heading', { br: () => <br /> })}
           </h2>
           <p className="text-ink-2" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.15rem)', lineHeight: 1.55 }}>
-            Un porte-clé imprimé en 3D à votre logo, puce NFC intégrée.<br />
-            Votre client approche son téléphone — votre lien s&apos;ouvre, sans application.
+            {t.rich('subtitle', { br: () => <br /> })}
           </p>
         </Reveal>
 
@@ -199,7 +197,7 @@ export default function NFCSection() {
 
             {/* URL caption */}
             <div className="absolute bottom-5 left-0 right-0 flex justify-center">
-              <span className="font-mono text-ink-3" style={{ fontSize: 9, letterSpacing: '0.08em' }}>EXEMPLE : votre page instagram</span>
+              <span className="font-mono text-ink-3" style={{ fontSize: 9, letterSpacing: '0.08em' }}>{t('urlCaption')}</span>
             </div>
 
             <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} src={VIDEO_SRC} />
@@ -209,19 +207,18 @@ export default function NFCSection() {
           <div className="flex flex-col gap-5">
             <div className="flex-1 rounded-xl border border-[var(--line)] bg-bg-2 p-7" style={{ borderRadius: 24 }}>
               <p className="font-sans font-semibold text-ink-0 mb-1.5" style={{ fontSize: 17 }}>
-                Votre identité numérique, toujours à portée de main.
+                {t('pitchTitle')}
               </p>
               <p className="text-ink-2 mb-6" style={{ fontSize: 14, lineHeight: 1.55 }}>
-                Approchez un smartphone et accédez immédiatement à votre page,
-                sans application ni QR code.
+                {t('pitchDesc')}
               </p>
               <ul className="flex flex-col gap-3.5">
-                {destinations.map((item) => (
-                  <li key={item} className="flex items-center gap-3">
+                {destinationKeys.map((key) => (
+                  <li key={key} className="flex items-center gap-3">
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-bg-3 border border-[var(--line-amber)]">
                       <CheckIcon />
                     </span>
-                    <span className="text-ink-1" style={{ fontSize: 14 }}>{item}</span>
+                    <span className="text-ink-1" style={{ fontSize: 14 }}>{t(`destinations.${key}`)}</span>
                   </li>
                 ))}
               </ul>
@@ -233,10 +230,10 @@ export default function NFCSection() {
                 className="flex h-[54px] w-full items-center justify-center gap-2 rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
                 style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
               >
-                Commander mon porte-clé connecté <ArrowIcon />
+                {t('orderCta')} <ArrowIcon />
               </Link>
               <p className="text-center font-mono text-ink-3" style={{ fontSize: 11, letterSpacing: '0.04em' }}>
-                Dès <span className="text-amber-soft">1,70 €</span> l&apos;unité · commande minimum 5 · livraison offerte dès 100
+                {t.rich('priceLine', { amber: (chunks) => <span className="text-amber-soft">{chunks}</span> })}
               </p>
             </div>
 
@@ -248,7 +245,7 @@ export default function NFCSection() {
               <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
                 <path d="M2.5 1.5L10 6L2.5 10.5V1.5Z" />
               </svg>
-              Voir la démo du porte-clé connecté
+              {t('demoButton')}
             </button>
 
           </div>

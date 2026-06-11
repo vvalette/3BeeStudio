@@ -10,14 +10,24 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
 - Dev : `npm run dev` → port **3001**
 
 ## État du projet (juin 2026)
-Le flux NFC est **complet et fonctionnel** :
+Deux flux de commande **complets et fonctionnels** :
+
+**NFC (porte-clés connectés)**
 - Formulaire multi-step (logo upload → lien NFC → contact → récap → Stripe Checkout)
 - Webhook Stripe + sync fallback sur la page suivi
 - Email de confirmation automatique (Resend, domaine vérifié)
 - Page suivi `/suivi/[orderId]` avec timeline et "Prochaines étapes"
-- Interface admin `/admin/commandes`
 
-Pages **placeholder** (Phase 2) : `/boutique`, `/sur-mesure`, `/portfolio`, `/contact`
+**Sur-mesure**
+- Formulaire multi-step `/custom` (type projet → description → budget/délai → contact → adresse)
+- Devis admin + acompte 50% via Stripe (créé manuellement depuis `/admin/custom/[orderId]`)
+- Page suivi `/custom/[orderId]` avec timeline et CTA paiement acompte
+- Emails : confirmation client + notification admin interne
+- `/sur-mesure` redirige vers `/custom`
+
+**Admin** : `/admin/commandes` — dashboard combiné NFC + sur-mesure, stats, tabs, filtres, tri, bulk delete
+
+Pages **placeholder** (Phase 2) : `/boutique`, `/portfolio`, `/contact`
 
 ## Design system
 - **Fonts** : `Manrope` (sans, 300–800) + `JetBrains Mono` (mono, 400–600) via `next/font/google`
@@ -37,7 +47,7 @@ Pages **placeholder** (Phase 2) : `/boutique`, `/sur-mesure`, `/portfolio`, `/co
 3. **Mobile-first** — audience TikTok/Instagram
 4. **Aucun fichier numérique vendu** — livrable toujours physique
 5. Flux Stripe NFC = **paiement intégral** (Checkout Session) — pas d'acompte sur le flux actuel
-6. Langue du site : **français uniquement**
+6. Langue du site : **français** — une version anglaise est prévue (internationalisation à planifier), ne pas hardcoder des chaînes non-extractibles
 7. **`cursor-pointer`** obligatoire sur tous les éléments interactifs (boutons, sélecteurs, options)
 8. **Navbar `fixed h-[72px]`** — le `<main>` du layout a `pt-[72px]`, ne jamais doubler dans les pages
 

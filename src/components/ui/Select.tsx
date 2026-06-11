@@ -15,6 +15,7 @@ interface SelectProps {
   placeholder?: string
   disabled?: boolean
   invalid?: boolean
+  compact?: boolean
 }
 
 function normalize(opt: string | SelectOption): SelectOption {
@@ -28,6 +29,7 @@ export default function Select({
   placeholder = 'Choisir...',
   disabled,
   invalid,
+  compact,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const [highlight, setHighlight] = useState(0)
@@ -128,7 +130,7 @@ export default function Select({
         onKeyDown={onKeyDown}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center justify-between rounded-xl px-4 py-3 text-sm outline-none transition-all disabled:cursor-not-allowed disabled:opacity-40"
+        className={`flex w-full cursor-pointer items-center justify-between outline-none transition-all disabled:cursor-not-allowed disabled:opacity-40 ${compact ? 'rounded-lg px-2.5 py-1.5 text-xs' : 'rounded-xl px-4 py-3 text-sm'}`}
         style={{
           background: open ? 'rgba(245,158,11,0.04)' : 'rgba(255,255,255,0.04)',
           border: `1px solid ${invalid ? 'rgba(248,113,113,0.5)' : open ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.08)'}`,
@@ -141,7 +143,7 @@ export default function Select({
           height="14"
           viewBox="0 0 16 16"
           fill="none"
-          className="ml-2 shrink-0 transition-transform duration-200"
+          className={`shrink-0 transition-transform duration-200 ${compact ? 'ml-1.5' : 'ml-2'}`}
           style={{ transform: open ? 'rotate(180deg)' : 'none' }}
         >
           <path d="M4 6l4 4 4-4" stroke={open ? '#F59E0B' : '#87878E'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

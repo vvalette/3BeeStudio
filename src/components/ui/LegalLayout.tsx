@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import SiteFooter from '@/components/landing/SiteFooter'
 
 interface LegalLayoutProps {
@@ -16,6 +17,7 @@ function BackIcon() {
 }
 
 export default function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) {
+  const t = useTranslations('legal')
   return (
     <div className="min-h-screen bg-bg-0 text-ink-0">
 
@@ -47,7 +49,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
             style={{ fontSize: 13 }}
           >
             <BackIcon />
-            <span className="font-mono text-[11px] uppercase tracking-[0.1em]">Accueil</span>
+            <span className="font-mono text-[11px] uppercase tracking-[0.1em]">{t('back')}</span>
           </Link>
 
           <h1
@@ -60,7 +62,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
           <div className="mt-4 flex items-center gap-3">
             <span className="h-px w-8 bg-[var(--line-2)]" />
             <p className="font-mono text-ink-3" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
-              Mise à jour · {lastUpdated}
+              {t('updated')} · {lastUpdated}
             </p>
           </div>
         </div>

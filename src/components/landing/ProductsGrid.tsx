@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import ProductGlyph from '@/components/ui/ProductGlyph'
 import Reveal from '@/components/ui/Reveal'
@@ -12,22 +13,23 @@ type GlyphKind = 'vase' | 'lamp' | 'chess' | 'planter' | 'speaker'
 type Category = (typeof FILTERS)[number]
 
 interface Product {
-  name: string
+  id: string
   price: string
-  tag?: string
+  hasTag?: boolean
   kind: GlyphKind
-  cat: Exclude<Category, 'Tout'>
+  cat: Exclude<Category, 'all'>
   featured?: boolean
 }
 
-const FILTERS = ['Tout', 'Déco', 'Lampes', 'Jeux', 'Audio', 'Plantes'] as const
+// Clés de catégorie stables (libellés résolus via i18n) — 'all' = tout afficher
+const FILTERS = ['all', 'deco', 'lamps', 'games', 'audio', 'plants'] as const
 
 const PRODUCTS: Product[] = [
-  { name: 'Hive Vase 01',     price: '89€',  tag: 'Nouveau',         kind: 'vase',    cat: 'Déco',    featured: true },
-  { name: 'Apex Lamp',        price: '129€',                         kind: 'lamp',    cat: 'Lampes' },
-  { name: "Roi du Studio", price: '42€',  tag: 'Édition limitée', kind: 'chess',   cat: 'Jeux' },
-  { name: 'Pollen Pot S',     price: '34€',                          kind: 'planter', cat: 'Plantes' },
-  { name: 'Sonus Mini',       price: '89€',                          kind: 'speaker', cat: 'Audio' },
+  { id: 'hiveVase',   price: '89€',  hasTag: true, kind: 'vase',    cat: 'deco',  featured: true },
+  { id: 'apexLamp',   price: '129€',               kind: 'lamp',    cat: 'lamps' },
+  { id: 'studioKing', price: '42€',  hasTag: true, kind: 'chess',   cat: 'games' },
+  { id: 'pollenPot',  price: '34€',                kind: 'planter', cat: 'plants' },
+  { id: 'sonusMini',  price: '89€',                kind: 'speaker', cat: 'audio' },
 ]
 
 function HeartIcon() {
@@ -38,8 +40,10 @@ function HeartIcon() {
   )
 }
 
-function ProductCard({ name, price, tag, kind, featured }: Product) {
+function ProductCard({ id, price, hasTag, kind, featured }: Product) {
+  const t = useTranslations('productsGrid')
   const [liked, setLiked] = useState(false)
+  const name = t(`products.${id}.name`)
 
   return (
     <div
@@ -49,14 +53,14 @@ function ProductCard({ name, price, tag, kind, featured }: Product) {
       )}
       style={{ borderRadius: 24, boxShadow: 'var(--shadow-card)' }}
     >
-      {tag && (
+      {hasTag && (
         <div className="absolute top-3 left-3 z-10 inline-flex items-center rounded-full border border-[var(--line-amber)] px-2 py-1 font-mono text-amber-soft" style={{ fontSize: 10, background: 'var(--amber-tint)' }}>
-          {tag}
+          {t(`products.${id}.tag`)}
         </div>
       )}
 
       <button
-        aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        aria-label={liked ? t('unfavorite') : t('favorite')}
         onClick={() => setLiked((v) => !v)}
         className="absolute top-3 right-3 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[var(--line)] transition-colors hover:border-[var(--line-amber)]"
         style={{ background: liked ? 'var(--amber-tint)' : 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)' }}
@@ -80,11 +84,11 @@ function ProductCard({ name, price, tag, kind, featured }: Product) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="text-[15px] font-semibold leading-[1.2] text-ink-0 mb-0.5">{name}</div>
-          <div className="font-mono text-ink-2" style={{ fontSize: 10, letterSpacing: '0.06em' }}>PLA · MAT NOIR</div>
+          <div className="font-mono text-ink-2" style={{ fontSize: 10, letterSpacing: '0.06em' }}>{t('material')}</div>
         </div>
         <div className="text-right flex-shrink-0">
           <div className="text-[15px] font-bold text-amber">{price}</div>
-          <div className="font-mono text-ink-3" style={{ fontSize: 9 }}>EN STOCK</div>
+          <div className="font-mono text-ink-3" style={{ fontSize: 9 }}>{t('inStock')}</div>
         </div>
       </div>
     </div>
@@ -92,9 +96,10 @@ function ProductCard({ name, price, tag, kind, featured }: Product) {
 }
 
 export default function ProductsGrid() {
-  const [active, setActive] = useState<Category>('Tout')
+  const t = useTranslations('productsGrid')
+  const [active, setActive] = useState<Category>('all')
 
-  const visible = active === 'Tout' ? PRODUCTS : PRODUCTS.filter((p) => p.cat === active)
+  const visible = active === 'all' ? PRODUCTS : PRODUCTS.filter((p) => p.cat === active)
 
   return (
     <section className="relative pt-12 pb-12 lg:pt-16 lg:pb-16 border-t border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
@@ -124,7 +129,7 @@ export default function ProductsGrid() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber" />
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-amber">Bientôt disponible</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-amber">{t('comingSoon')}</span>
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-60" style={{ animationDelay: '0.4s' }} />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber" />
@@ -134,11 +139,13 @@ export default function ProductsGrid() {
             className="font-sans font-bold text-ink-0"
             style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', letterSpacing: '-0.025em', lineHeight: 1.1 }}
           >
-            La boutique arrive<br />
-            <span className="honey-text">très bientôt.</span>
+            {t.rich('bannerTitle', {
+              honey: (chunks) => <span className="honey-text">{chunks}</span>,
+              br: () => <br />,
+            })}
           </h3>
           <p className="mx-auto mt-3 text-sm leading-relaxed text-ink-3" style={{ maxWidth: 320 }}>
-            En attendant, contactez-nous directement pour passer une commande personnalisée.
+            {t('bannerDesc')}
           </p>
         </div>
       </div>
@@ -146,13 +153,13 @@ export default function ProductsGrid() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Reveal className="flex items-end justify-between mb-8">
           <div>
-            <div className="mb-3"><Eyebrow>Boutique</Eyebrow></div>
+            <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
             <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
-              Nos pièces signature.
+              {t('heading')}
             </h2>
           </div>
           <Link href="/boutique" className="font-mono text-amber whitespace-nowrap hover:text-amber-soft transition-colors" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
-            TOUT VOIR →
+            {t('viewAll')}
           </Link>
         </Reveal>
 
@@ -170,13 +177,13 @@ export default function ProductsGrid() {
                 fontWeight: active === filter ? 600 : 500,
               }}
             >
-              {filter}
+              {t(`filters.${filter}`)}
             </button>
           ))}
         </div>
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
-          {visible.map((p) => <ProductCard key={p.name} {...p} />)}
+          {visible.map((p) => <ProductCard key={p.id} {...p} />)}
         </div>
       </div>
     </section>

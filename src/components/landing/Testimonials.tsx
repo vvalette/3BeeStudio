@@ -1,11 +1,15 @@
+import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 
-interface TestimonialProps {
+interface Testimonial {
+  id: string
   name: string
   role: string
   body: string
-  avatar: string
+  avatar_gradient: string
+  display_order: number
 }
 
 function StarIcon() {
@@ -16,7 +20,7 @@ function StarIcon() {
   )
 }
 
-function TestimonialCard({ name, role, body, avatar }: TestimonialProps) {
+function TestimonialCard({ name, role, body, avatar_gradient }: Omit<Testimonial, 'id' | 'display_order'>) {
   return (
     <div
       className="flex-shrink-0 w-[280px] lg:w-auto flex flex-col border border-[var(--line)] bg-bg-2 p-6 transition-colors hover:border-[var(--line-amber)]"
@@ -29,7 +33,7 @@ function TestimonialCard({ name, role, body, avatar }: TestimonialProps) {
         &ldquo;{body}&rdquo;
       </p>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full flex-shrink-0 border border-[var(--line)]" style={{ background: avatar }} />
+        <div className="w-10 h-10 rounded-full flex-shrink-0 border border-[var(--line)]" style={{ background: avatar_gradient }} />
         <div>
           <div className="text-[14px] font-semibold text-ink-0">{name}</div>
           <div className="font-mono text-ink-2 mt-0.5" style={{ fontSize: 10, letterSpacing: '0.04em' }}>{role}</div>
@@ -39,25 +43,38 @@ function TestimonialCard({ name, role, body, avatar }: TestimonialProps) {
   )
 }
 
-const testimonials: TestimonialProps[] = [
-  { name: 'Léa M.',         role: '@lea.designs · TikTok',    body: "J'ai reçu mon vase Hive en 5 jours. La finition est dingue, le grain mat est exactement ce que j'attendais.", avatar: 'linear-gradient(135deg, #F59E0B, #7C2D12)' },
-  { name: 'Studio Bouchet', role: 'Architecte d\'intérieur',  body: "On a fait 4 projets avec 3Bee. Réactivité bluffante, qualité au rendez-vous. Notre fournisseur 3D.", avatar: 'linear-gradient(135deg, #6366F1, #1E1B4B)' },
-  { name: 'Tom V.',         role: 'Joueur d\'échecs',         body: "Le set Studio est juste magnifique. Pièces équilibrées, finition mate parfaite. Un cadeau qui marque.", avatar: 'linear-gradient(135deg, #10B981, #064E3B)' },
-]
+export default async function Testimonials() {
+  const { data } = await supabase
+    .from('testimonials')
+    .select('id, name, role, body, avatar_gradient, display_order')
+    .eq('visible', true)
+    .order('display_order', { ascending: true })
 
-export default function Testimonials() {
+  const items: Testimonial[] = data ?? []
+
+  return (
+    <TestimonialsInner items={items} />
+  )
+}
+
+function TestimonialsInner({ items }: { items: Testimonial[] }) {
+  const t = useTranslations('testimonials')
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Reveal className="mb-8">
-          <div className="mb-3"><Eyebrow>Témoignages</Eyebrow></div>
+          <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
           <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
-            Ils nous font confiance.
+            {t('heading')}
           </h2>
         </Reveal>
-        <Reveal delay={120} className="flex gap-4 overflow-x-auto pb-2 no-scrollbar lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible">
-          {testimonials.map((t) => <TestimonialCard key={t.name} {...t} />)}
-        </Reveal>
+        {items.length > 0 && (
+          <Reveal delay={120} className="flex gap-4 overflow-x-auto pb-2 no-scrollbar lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible">
+            {items.map((item) => (
+              <TestimonialCard key={item.id} {...item} />
+            ))}
+          </Reveal>
+        )}
       </div>
     </section>
   )

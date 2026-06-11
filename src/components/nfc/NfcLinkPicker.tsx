@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { NFC_CHIP_BYTE_LIMIT, byteLength } from '@/types/order'
 
 // ─── Types de destination ─────────────────────────────────────────────────────
@@ -15,57 +16,19 @@ export type LinkType =
 
 interface TypeConfig {
   id: LinkType
-  label: string
   icon: React.ReactNode
-  prefix?: string          // adornment texte (réseaux sociaux)
-  placeholder: string
+  prefix?: string          // adornment texte (réseaux sociaux) — non traduit
   inputType?: string
-  help: string[]           // étapes / explications
 }
 
+// Libellés, placeholders et aides résolus via i18n (clé = id)
 const TYPES: TypeConfig[] = [
-  {
-    id: 'instagram', label: 'Instagram', prefix: 'instagram.com/', placeholder: 'votrecompte ou URL complète', icon: <IgIcon />,
-    help: [
-      'Ouvrez l’app Instagram sur votre profil',
-      'Touchez le menu ☰ (en haut à droite)',
-      '« Partager ce profil » → « Copier le lien »',
-      'Collez le lien ici — l’identifiant sera extrait automatiquement',
-    ],
-  },
-  {
-    id: 'tiktok', label: 'TikTok', prefix: 'tiktok.com/@', placeholder: 'votrecompte ou URL complète', icon: <TtIcon />,
-    help: [
-      'Ouvrez votre profil TikTok',
-      'Touchez le bouton « Partager » (flèche)',
-      '« Copier le lien »',
-      'Collez-le ici',
-    ],
-  },
-  {
-    id: 'linkedin', label: 'LinkedIn', prefix: 'linkedin.com/in/', placeholder: 'votre-profil ou URL complète', icon: <LiIcon />,
-    help: [
-      'Ouvrez votre profil LinkedIn',
-      'Cliquez sur « Plus » puis « Copier le lien du profil »',
-      'Collez-le ici',
-    ],
-  },
-  {
-    id: 'website', label: 'Site web', placeholder: 'monsite.fr', icon: <GlobeIcon />,
-    help: ['Collez l’adresse complète de votre site (ex : monsite.fr)', 'Pas besoin du https:// — il est ajouté automatiquement'],
-  },
-  {
-    id: 'contact', label: 'Fiche contact', placeholder: '', icon: <ContactIcon />,
-    help: [
-      'Remplissez le nom et au moins un contact (téléphone ou email)',
-      'Au contact du téléphone, une fenêtre « Ajouter aux contacts » s’ouvre',
-      'Le client enregistre tout d’un seul geste — zéro saisie, zéro faute de frappe',
-    ],
-  },
-  {
-    id: 'other', label: 'Autre lien', placeholder: 'https://...', icon: <LinkIcon />,
-    help: ['Collez n’importe quel lien commençant par https://'],
-  },
+  { id: 'instagram', prefix: 'instagram.com/', icon: <IgIcon /> },
+  { id: 'tiktok',    prefix: 'tiktok.com/@',   icon: <TtIcon /> },
+  { id: 'linkedin',  prefix: 'linkedin.com/in/', icon: <LiIcon /> },
+  { id: 'website',   icon: <GlobeIcon /> },
+  { id: 'contact',   icon: <ContactIcon /> },
+  { id: 'other',     icon: <LinkIcon /> },
 ]
 
 interface Contact { firstName: string; lastName: string; phone: string; email: string }
@@ -175,6 +138,7 @@ type VerifyStatus = 'idle' | 'loading' | 'ok' | 'notfound' | 'unknown'
 const VERIFIABLE: LinkType[] = ['instagram', 'tiktok', 'website', 'other']
 
 export default function NfcLinkPicker({ value, onChange, error }: Props) {
+  const t = useTranslations('nfcLink')
   const initial = parseValue(value)
   const [type, setType] = useState<LinkType>(initial.type)
   const [raw, setRaw] = useState(initial.raw)
@@ -182,15 +146,18 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
   const [verify, setVerify] = useState<VerifyStatus>('idle')
   const [showHelp, setShowHelp] = useState(false)
 
-  const cfg = TYPES.find((t) => t.id === type)!
+  const cfg = TYPES.find((tp) => tp.id === type)!
+  const cfgLabel = t(`types.${type}.label`)
+  const cfgPlaceholder = t(`types.${type}.placeholder`)
+  const cfgHelp = t.raw(`types.${type}.help`) as string[]
   const builtValue = buildValue(type, raw, contact)
   const isContact = type === 'contact'
 
   // Validation de format des champs contact
   const phoneError = isContact && contact.phone.trim() && !isValidPhone(contact.phone)
-    ? 'Numéro de téléphone invalide' : undefined
+    ? t('phoneInvalid') : undefined
   const emailError = isContact && contact.email.trim() && !isValidEmail(contact.email)
-    ? 'Email invalide' : undefined
+    ? t('emailInvalid') : undefined
 
   function setTypeAndEmit(nextType: LinkType) {
     setType(nextType)
@@ -244,13 +211,13 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
     <div className="space-y-3">
       {/* Grille de types */}
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {TYPES.map((t) => {
-          const active = t.id === type
+        {TYPES.map((tp) => {
+          const active = tp.id === type
           return (
             <button
-              key={t.id}
+              key={tp.id}
               type="button"
-              onClick={() => setTypeAndEmit(t.id)}
+              onClick={() => setTypeAndEmit(tp.id)}
               className="flex flex-col cursor-pointer items-center gap-1.5 rounded-xl py-3 px-1 transition-all duration-200"
               style={active ? {
                 background: 'rgba(245,158,11,0.12)',
@@ -262,13 +229,13 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
               }}
             >
               <span style={{ color: active ? '#F59E0B' : '#87878E' }} className="transition-colors">
-                {t.icon}
+                {tp.icon}
               </span>
               <span
                 className="text-[11px] font-medium transition-colors"
                 style={{ color: active ? '#F59E0B' : '#C9C9CE' }}
               >
-                {t.label}
+                {t(`types.${tp.id}.label`)}
               </span>
             </button>
           )
@@ -283,14 +250,14 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
             <div className="grid grid-cols-2 gap-2">
               <ContactInput
                 icon={<UserMini />}
-                placeholder="Prénom"
+                placeholder={t('contact.firstName')}
                 value={contact.firstName}
                 onChange={(v) => setContactAndEmit({ ...contact, firstName: v })}
               />
               <ContactInput
                 icon={<UserMini />}
                 required
-                placeholder="Nom ou entreprise"
+                placeholder={t('contact.lastName')}
                 value={contact.lastName}
                 onChange={(v) => setContactAndEmit({ ...contact, lastName: v })}
               />
@@ -298,7 +265,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
             <ContactInput
               icon={<PhoneMini />}
               type="tel"
-              placeholder="Téléphone"
+              placeholder={t('contact.phone')}
               value={contact.phone}
               error={phoneError}
               onChange={(v) => setContactAndEmit({ ...contact, phone: v })}
@@ -306,7 +273,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
             <ContactInput
               icon={<MailMini />}
               type="email"
-              placeholder="Email"
+              placeholder={t('contact.email')}
               value={contact.email}
               error={emailError}
               onChange={(v) => setContactAndEmit({ ...contact, email: v })}
@@ -316,7 +283,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
           {/* Guidage tant que la fiche n'est pas valide (sans erreur de format affichée) */}
           {!builtValue && !phoneError && !emailError && (
             <p className="text-[11px] text-ink-3">
-              Indiquez le nom et au moins un contact — téléphone ou email.
+              {t('contact.guidance')}
             </p>
           )}
 
@@ -342,7 +309,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
             type={cfg.inputType ?? 'text'}
             value={raw}
             onChange={(e) => setRawAndEmit(sanitizeHandle(type, e.target.value))}
-            placeholder={cfg.placeholder}
+            placeholder={cfgPlaceholder}
             className={`w-full bg-transparent py-3 text-sm text-ink-0 outline-none placeholder:text-ink-3 ${cfg.prefix ? 'pl-0 pr-4' : 'px-3'}`}
           />
         </div>
@@ -359,7 +326,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
             <circle cx="7" cy="7" r="6" />
             <path d="M7 10v-.5M7 7.4c0-1 1.2-1.1 1.2-2.1A1.2 1.2 0 007 4.2" strokeLinecap="round" />
           </svg>
-          {isContact ? 'Que contient la fiche contact ?' : `Comment récupérer mon lien ${cfg.label} ?`}
+          {isContact ? t('help.contactToggle') : t('help.linkToggle', { label: cfgLabel })}
           <svg
             width="11" height="11" viewBox="0 0 16 16" fill="none"
             className="transition-transform duration-200"
@@ -378,7 +345,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
               animation: 'fadeUp 160ms cubic-bezier(0.2,0.7,0.2,1) both',
             }}
           >
-            {cfg.help.map((step, i) => (
+            {cfgHelp.map((step, i) => (
               <li key={i} className="flex gap-2.5 text-[12px] text-ink-1">
                 <span
                   className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-bold text-amber"
@@ -396,7 +363,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
       {/* Aperçu du lien final (liens web uniquement) */}
       {builtValue && !isContact && (
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="text-ink-3">Lien final :</span>
+          <span className="text-ink-3">{t('finalLink')}</span>
           <span className="truncate font-mono text-amber/80">{builtValue}</span>
         </div>
       )}
@@ -412,6 +379,7 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
 // ─── Compteur d'octets de la vCard ────────────────────────────────────────────
 
 function VCardMeter({ vcard }: { vcard: string }) {
+  const t = useTranslations('nfcLink')
   const bytes = byteLength(vcard)
   const pct = Math.min(100, (bytes / NFC_CHIP_BYTE_LIMIT) * 100)
   const over = bytes > NFC_CHIP_BYTE_LIMIT
@@ -424,20 +392,19 @@ function VCardMeter({ vcard }: { vcard: string }) {
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
       <div className="flex items-center justify-between text-[11px]">
-        <span className="text-ink-3">Taille sur la puce NFC</span>
-        <span className="font-mono font-semibold" style={{ color }}>{bytes} / {NFC_CHIP_BYTE_LIMIT} octets</span>
+        <span className="text-ink-3">{t('meter.label')}</span>
+        <span className="font-mono font-semibold" style={{ color }}>{t('meter.bytes', { bytes, limit: NFC_CHIP_BYTE_LIMIT })}</span>
       </div>
       <div className="h-1 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, background: color }} />
       </div>
       {over ? (
         <p className="text-[11px] text-red-400">
-          Trop d’informations pour la puce. La puce NFC (NTAG213) ne stocke que ~{NFC_CHIP_BYTE_LIMIT} octets :
-          raccourcissez le nom, ou ne gardez qu’un seul moyen de contact (téléphone <em>ou</em> email).
+          {t.rich('meter.over', { limit: NFC_CHIP_BYTE_LIMIT, em: (chunks) => <em>{chunks}</em> })}
         </p>
       ) : (
         <p className="text-[11px] text-ink-3">
-          La puce NFC a une mémoire limitée (~{NFC_CHIP_BYTE_LIMIT} octets). Tant que la barre n’est pas pleine, tout rentre.
+          {t('meter.under', { limit: NFC_CHIP_BYTE_LIMIT })}
         </p>
       )}
     </div>
@@ -450,6 +417,7 @@ function ContactInput({ icon, value, onChange, placeholder, type = 'text', requi
   icon: React.ReactNode; value: string; onChange: (v: string) => void
   placeholder: string; type?: string; required?: boolean; error?: string
 }) {
+  const t = useTranslations('nfcLink')
   const filled = value.trim().length > 0
   const borderColor = error
     ? 'rgba(248,113,113,0.5)'
@@ -469,7 +437,7 @@ function ContactInput({ icon, value, onChange, placeholder, type = 'text', requi
           className="w-full bg-transparent px-3 py-2.5 text-sm text-ink-0 outline-none placeholder:text-ink-3"
         />
         {required && !filled && !error && (
-          <span className="shrink-0 pr-3.5 font-mono text-[10px] uppercase tracking-wider text-amber/60">requis</span>
+          <span className="shrink-0 pr-3.5 font-mono text-[10px] uppercase tracking-wider text-amber/60">{t('required')}</span>
         )}
       </div>
       {error && <p className="mt-1 text-[11px] text-red-400">{error}</p>}
@@ -480,6 +448,7 @@ function ContactInput({ icon, value, onChange, placeholder, type = 'text', requi
 // ─── Indicateur de vérification ───────────────────────────────────────────────
 
 function VerifyIndicator({ status, type }: { status: VerifyStatus; type: LinkType }) {
+  const t = useTranslations('nfcLink')
   if (status === 'idle') return null
   const isWebsite = type === 'website' || type === 'other'
 
@@ -489,7 +458,7 @@ function VerifyIndicator({ status, type }: { status: VerifyStatus; type: LinkTyp
         <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeDasharray="40" strokeDashoffset="14" strokeLinecap="round" />
         </svg>
-        Vérification…
+        {t('verify.loading')}
       </div>
     )
   }
@@ -499,7 +468,7 @@ function VerifyIndicator({ status, type }: { status: VerifyStatus; type: LinkTyp
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
           <path d="M2 7L5.5 10.5L12 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {isWebsite ? 'Site accessible' : 'Compte trouvé'}
+        {isWebsite ? t('verify.okWebsite') : t('verify.okAccount')}
       </div>
     )
   }
@@ -511,7 +480,7 @@ function VerifyIndicator({ status, type }: { status: VerifyStatus; type: LinkTyp
           <path d="M7 5.5V8" strokeLinecap="round" />
           <circle cx="7" cy="10" r="0.6" fill="currentColor" stroke="none" />
         </svg>
-        {isWebsite ? 'Site introuvable — vérifiez l’adresse' : 'Compte introuvable — vérifiez l’identifiant'}
+        {isWebsite ? t('verify.notFoundWebsite') : t('verify.notFoundAccount')}
       </div>
     )
   }
@@ -521,7 +490,7 @@ function VerifyIndicator({ status, type }: { status: VerifyStatus; type: LinkTyp
         <circle cx="7" cy="7" r="6" />
         <path d="M7 10v-.5M7 7.5c0-1 1.2-1.2 1.2-2.2A1.2 1.2 0 007 4.1" strokeLinecap="round" />
       </svg>
-      Vérification automatique impossible
+      {t('verify.impossible')}
     </div>
   )
 }

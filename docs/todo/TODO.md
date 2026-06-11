@@ -28,7 +28,9 @@
 - [x] `src/app/suivi/[orderId]/page.tsx` — Suivi commande avec timeline + prochaines étapes + sync Stripe
 - [ ] `src/app/boutique/page.tsx` — Grille produits (placeholder)
 - [ ] `src/app/boutique/[slug]/page.tsx` — Fiche produit
-- [ ] `src/app/sur-mesure/page.tsx` — Formulaire multi-step (placeholder)
+- [x] `src/app/custom/page.tsx` — Formulaire sur-mesure multi-step ✅ (3 étapes, validation RHF+Zod, budget/délai pills)
+- [x] `src/app/custom/[orderId]/page.tsx` — Suivi sur-mesure ✅ (timeline + CTA acompte)
+- [x] `src/app/sur-mesure/page.tsx` — Redirect → `/custom` ✅
 - [ ] `src/app/portfolio/page.tsx` — Galerie masonry (placeholder)
 - [ ] `src/app/contact/page.tsx` — Formulaire contact (placeholder)
 
@@ -50,8 +52,22 @@
 
 ## 🛠️ Admin
 
-- [x] `src/app/admin/commandes/page.tsx` — Liste commandes
-- [x] `src/app/admin/commandes/[id]/page.tsx` — Détail + changement statut
+- [x] `src/app/admin/commandes/page.tsx` — Dashboard combiné NFC + sur-mesure (stats, tabs, filtres, tri, bulk delete) ✅
+- [x] `src/app/admin/commandes/[id]/page.tsx` — Détail NFC + changement statut + Boxtal ✅
+- [x] `src/app/admin/custom/[orderId]/page.tsx` — Détail sur-mesure + changement statut + envoi devis Stripe ✅
+
+## 📧 Sur-mesure — Emails
+
+- [x] `src/emails/CustomOrderConfirmation.tsx` — Confirmation client (header texte, pas d'image) ✅
+- [x] `src/emails/CustomOrderAdmin.tsx` — Notification interne avec lien `/admin/custom/[id]` ✅
+
+## 🔌 Sur-mesure — API
+
+- [x] `POST /api/custom/order` — Crée demande Supabase + emails ✅
+- [x] `POST /api/custom/[orderId]/quote` — Crée session Stripe acompte + email client ✅
+- [x] `PATCH /api/admin/custom/[orderId]` — Mise à jour statut/notes/suivi ✅
+- [x] `DELETE /api/admin/custom/[orderId]` — Suppression ✅
+- [ ] Appliquer migration `006_create_custom_orders.sql` dans Supabase SQL editor (table `custom_orders`)
 
 ## 📱 Produit NFC / Porte-clé connecté
 

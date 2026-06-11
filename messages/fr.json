@@ -1,0 +1,692 @@
+{
+  "nav": {
+    "nfc": "Porte-clé connecté",
+    "custom": "Sur-mesure",
+    "portfolio": "Portfolio",
+    "contact": "Nous contacter",
+    "home": "3BeeStudio — accueil",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
+  },
+  "footer": {
+    "tagline1": "Studio de design 3D et fabrication sur mesure.",
+    "tagline2": "Imaginé et imprimé en France.",
+    "boutique": {
+      "title": "BOUTIQUE",
+      "all": "Tous les objets",
+      "deco": "Objets déco",
+      "lamps": "Lampes",
+      "limited": "Séries limitées"
+    },
+    "nfc": {
+      "title": "PORTE-CLÉ CONNECTÉ",
+      "discover": "Découvrir le produit",
+      "how": "Comment ça marche",
+      "pricing": "Tarifs & devis",
+      "order": "Commander"
+    },
+    "custom": {
+      "title": "SUR-MESURE",
+      "start": "Lancer un projet",
+      "process": "Notre process",
+      "portfolio": "Portfolio",
+      "contact": "Nous contacter"
+    },
+    "rights": "© 2026 · 3BEESTUDIO · TOUS DROITS RÉSERVÉS",
+    "legal": {
+      "mentions": "Mentions légales",
+      "cgv": "CGV",
+      "privacy": "Politique de confidentialité"
+    }
+  },
+  "hero": {
+    "eyebrow": "Studio d'impression 3D · France",
+    "heading": "Impression <honey>3D</honey>,<br></br>imaginée et<br></br>imprimée en France.",
+    "subtitle": "Pièces uniques, séries limitées et porte-clés connectés personnalisés.",
+    "ctaPrimary": "Créer mon porte-clé connecté",
+    "ctaSecondary": "Explorer la boutique",
+    "trust": {
+      "france": "Fabriqué en France",
+      "payment": "Paiement sécurisé",
+      "delivery": "Livré en 5–10 j"
+    },
+    "studioOpen": "STUDIO OUVERT",
+    "scroll": "DÉCOUVRIR"
+  },
+  "nfcSection": {
+    "eyebrow": "Porte-clé connecté",
+    "heading": "Le porte-clé connecté<br></br>qui parle pour vous.",
+    "subtitle": "Un porte-clé imprimé en 3D à votre logo, puce NFC intégrée.<br></br>Votre client approche son téléphone — votre lien s'ouvre, sans application.",
+    "keychainAlt": "Porte-clé 3D personnalisé avec votre logo",
+    "keychainTag": "PORTE CLÉ AVEC VOTRE LOGO",
+    "urlCaption": "EXEMPLE : votre page instagram",
+    "mock": {
+      "bio": "Studio 3D · Lyon 🇫🇷",
+      "posts": "posts",
+      "followers": "abonnés",
+      "following": "suivis",
+      "follow": "S'abonner"
+    },
+    "pitchTitle": "Votre identité numérique, toujours à portée de main.",
+    "pitchDesc": "Approchez un smartphone et accédez immédiatement à votre page, sans application ni QR code.",
+    "destinations": {
+      "social": "Instagram, TikTok ou LinkedIn",
+      "website": "Votre site web ou portfolio",
+      "contact": "Une fiche contact (ajout en 1 tap)",
+      "other": "Tout autre lien"
+    },
+    "orderCta": "Commander mon porte-clé connecté",
+    "priceLine": "Dès <amber>1,70 €</amber> l'unité · commande minimum 5 · livraison offerte dès 100",
+    "demoButton": "Voir la démo du porte-clé connecté"
+  },
+  "customCta": {
+    "eyebrow": "Sur-mesure",
+    "heading": "Une idée?<br></br><honey>On la fabrique.</honey>",
+    "description": "Cadeau personnalisé, prototype produit, pièces mécanique, réparation d'objets cassés etc...<br></br>Devis sous 48h, prototype sous 7 jours.",
+    "cta": "Décrire mon projet",
+    "stats": {
+      "imagination": {
+        "label": "IMAGINATION"
+      },
+      "quote": {
+        "value": "48h",
+        "label": "DEVIS"
+      },
+      "prototype": {
+        "value": "7j",
+        "label": "PROTOTYPE"
+      },
+      "delivery": {
+        "value": "5–7j",
+        "label": "LIVRAISON"
+      }
+    },
+    "steps": {
+      "01": {
+        "title": "Le studio vous écoute",
+        "desc": "Pas de formulaire à rallonge — une conversation directe avec l'artisan. Premier rendu 3D en main sous 48h."
+      },
+      "02": {
+        "title": "Prototype & itération",
+        "desc": "Impression test, photos détaillées, retours. On affine jusqu'à la pièce parfaite."
+      },
+      "03": {
+        "title": "Production & livraison",
+        "desc": "Production en série courte ou pièce unique. Expédié sous 5–7 jours en France."
+      }
+    }
+  },
+  "videoStrip": {
+    "eyebrow": "Studio · TikTok",
+    "heading": "Voir naître les pièces.",
+    "viewAll": "VOIR TOUT →",
+    "cardAria": "Voir « {title} » sur TikTok"
+  },
+  "portfolioSection": {
+    "eyebrow": "Portfolio",
+    "heading": "Projets récents.",
+    "viewAll": "TOUT VOIR →",
+    "explore": "Explorer le portfolio",
+    "tileAria": "Voir le projet {label}",
+    "tileMeta": "2025 · COMMANDE",
+    "tiles": {
+      "hexalux": "Lampe Hexalux",
+      "eldur": "Trophée Eldur",
+      "bouchet": "Maison Bouchet",
+      "capsule": "Capsule Studio R"
+    }
+  },
+  "productsGrid": {
+    "eyebrow": "Boutique",
+    "heading": "Nos pièces signature.",
+    "viewAll": "TOUT VOIR →",
+    "comingSoon": "Bientôt disponible",
+    "bannerTitle": "La boutique arrive<br></br><honey>très bientôt.</honey>",
+    "bannerDesc": "En attendant, contactez-nous directement pour passer une commande personnalisée.",
+    "material": "PLA · MAT NOIR",
+    "inStock": "EN STOCK",
+    "favorite": "Ajouter aux favoris",
+    "unfavorite": "Retirer des favoris",
+    "filters": {
+      "all": "Tout",
+      "deco": "Déco",
+      "lamps": "Lampes",
+      "games": "Jeux",
+      "audio": "Audio",
+      "plants": "Plantes"
+    },
+    "products": {
+      "hiveVase": {
+        "name": "Hive Vase 01",
+        "tag": "Nouveau"
+      },
+      "apexLamp": {
+        "name": "Apex Lamp"
+      },
+      "studioKing": {
+        "name": "Roi du Studio",
+        "tag": "Édition limitée"
+      },
+      "pollenPot": {
+        "name": "Pollen Pot S"
+      },
+      "sonusMini": {
+        "name": "Sonus Mini"
+      }
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Témoignages",
+    "heading": "Ils nous font confiance."
+  },
+  "newsletter": {
+    "eyebrow": "Honey Drop",
+    "heading": "Nouveautés en avant-première.",
+    "description": "Drop mensuel, séries limitées, -10% sur la première commande.",
+    "placeholder": "email@studio.fr",
+    "submit": "Je m'abonne",
+    "success": "Parfait ! On vous réserve les avant-premières."
+  },
+  "nfcPage": {
+    "meta": {
+      "title": "Porte-clé connecté NFC — 3BeeStudio",
+      "description": "Porte-clé 3D avec puce NFC personnalisé à votre logo. Dès 10 unités."
+    },
+    "heading": "Porte-clé <honey>connecté NFC</honey>",
+    "subtitle": "Imprimé en 3D · Logo personnalisé · Puce NFC programmée",
+    "trust": {
+      "france": "Fabriqué en France",
+      "payment": "Paiement sécurisé Stripe",
+      "validation": "Validation sous 24h",
+      "delivery": "Livré en 5–10 j ouvrés"
+    }
+  },
+  "nfcForm": {
+    "next": "Suivant",
+    "back": "Retour",
+    "edit": "Modifier",
+    "errors": {
+      "upload": "Erreur upload",
+      "order": "Erreur lors de la commande",
+      "destinationRequired": "Renseignez une destination",
+      "destinationInvalid": "Destination invalide",
+      "vcardTooLong": "Fiche contact trop longue pour la puce NFC — raccourcissez-la",
+      "quantityRequired": "Quantité requise",
+      "quantityMin": "Minimum 5 porte-clés",
+      "nameRequired": "Nom requis",
+      "emailInvalid": "Email invalide",
+      "phoneInvalid": "Téléphone invalide",
+      "sectorRequired": "Secteur requis",
+      "addressRequired": "Adresse requise",
+      "cityRequired": "Ville requise",
+      "postalInvalid": "Code postal invalide",
+      "countryRequired": "Pays requis"
+    },
+    "progress": {
+      "logo": "Logo",
+      "quantity": "Quantité",
+      "contact": "Contact",
+      "payment": "Paiement",
+      "back": "Revenir à cette étape"
+    },
+    "config": {
+      "title": "Configuration",
+      "sub": "Votre logo et la destination de la puce NFC",
+      "logoTitle": "Votre logo",
+      "logoHint": "Fichier SVG — requis pour la modélisation 3D",
+      "rejectTooLarge": "Fichier trop lourd (max 2 Mo). Exportez à nouveau votre SVG depuis votre logiciel de design.",
+      "rejectType": "Ce format n'est pas pris en charge ici. Vous n'avez qu'un PNG ou JPG ? Écrivez-nous à contact@3beestudio.fr, on le vectorise pour vous.",
+      "rejectGeneric": "Fichier refusé. Vérifiez que c'est bien un fichier .svg (max 2 Mo).",
+      "previewAlt": "Aperçu du logo",
+      "uploaded": "Logo ajouté",
+      "clickToChange": "Cliquer pour changer",
+      "uploading": "Upload en cours...",
+      "dropHere": "Déposez votre logo ici",
+      "dropPrompt": "Glisser-déposer ou cliquer",
+      "maxSize": "Max 2 Mo",
+      "noSvg": "Pas de SVG ?",
+      "svgInfo": "On peut le créer à partir de votre image PNG ou JPG. Écrivez-nous à <mail>contact@3beestudio.fr</mail>.",
+      "linkTitle": "Votre lien",
+      "linkHint": "Ce qui s'ouvre quand on approche le téléphone du porte-clé"
+    },
+    "quantity": {
+      "title": "Quantité",
+      "sub": "Le prix au porte-clé baisse automatiquement selon le volume",
+      "label": "Nombre de porte-clés",
+      "popular": "Populaire",
+      "or": "ou saisir",
+      "customPlaceholder": "Autre quantité (min. 5)",
+      "unitPrice": "Prix unitaire",
+      "subtotal": "Sous-total ({qty} porte-clés)",
+      "shipping": "Livraison",
+      "free": "Offerte",
+      "total": "Total à payer",
+      "freeShippingHint": "Plus que <amber>{count}</amber> porte-clés pour la livraison offerte"
+    },
+    "contact": {
+      "title": "Contact & livraison",
+      "sub": "Vos coordonnées et où envoyer votre commande",
+      "coordsTitle": "Vos coordonnées",
+      "coordsHint": "Pour confirmer la commande",
+      "company": "Nom de l'entreprise",
+      "companyPlaceholder": "Nom de votre entreprise",
+      "email": "Email professionnel",
+      "phone": "Téléphone",
+      "sector": "Secteur d'activité",
+      "sectorPlaceholder": "Choisir un secteur",
+      "addressTitle": "Adresse de livraison",
+      "addressHint": "Où envoyer votre commande",
+      "recipient": "Nom du destinataire",
+      "recipientPlaceholder": "Prénom Nom ou raison sociale",
+      "address": "Adresse",
+      "addressPlaceholder": "Numéro et nom de rue",
+      "address2": "Complément (optionnel)",
+      "address2Placeholder": "Bâtiment, étage, digicode…",
+      "postalCode": "Code postal",
+      "city": "Ville",
+      "country": "Pays",
+      "countryPlaceholder": "Choisir un pays"
+    },
+    "sectors": {
+      "restaurant": "Restaurant / Food",
+      "beauty": "Salon de coiffure / Beauté",
+      "wellness": "Bien-être / Spa",
+      "realEstate": "Immobilier",
+      "craftsman": "Artisan / BTP",
+      "retail": "Commerce de détail",
+      "agency": "Agence de communication",
+      "other": "Autre"
+    },
+    "countries": {
+      "FR": "France",
+      "BE": "Belgique",
+      "CH": "Suisse",
+      "LU": "Luxembourg",
+      "MC": "Monaco"
+    },
+    "recap": {
+      "title": "Récapitulatif",
+      "sub": "Un dernier coup d'œil avant le paiement sécurisé",
+      "orderTitle": "Votre commande",
+      "logoAlt": "Votre logo",
+      "logoValidated": "Logo validé",
+      "productName": "Porte-clé connecté NFC",
+      "productDesc": "Imprimé en 3D à votre logo · puce programmée",
+      "contactTitle": "Contact",
+      "shippingTitle": "Livraison",
+      "subtotal": "Sous-total",
+      "trackedShipping": "Livraison suivie",
+      "vat": "TVA non applicable<br></br>art. 293 B du CGI",
+      "securePayment": "Paiement sécurisé Stripe · CB, Apple Pay, Google Pay",
+      "redirecting": "Redirection...",
+      "pay": "Payer {amount}",
+      "consent": "En validant, vous acceptez nos <cgv>CGV</cgv>. Pas de droit de rétractation (Art. L221-28)."
+    }
+  },
+  "nfcLink": {
+    "phoneInvalid": "Numéro de téléphone invalide",
+    "emailInvalid": "Email invalide",
+    "required": "requis",
+    "finalLink": "Lien final :",
+    "types": {
+      "instagram": {
+        "label": "Instagram",
+        "placeholder": "votrecompte ou URL complète",
+        "help": [
+          "Ouvrez l'app Instagram sur votre profil",
+          "Touchez le menu ☰ (en haut à droite)",
+          "« Partager ce profil » → « Copier le lien »",
+          "Collez le lien ici — l'identifiant sera extrait automatiquement"
+        ]
+      },
+      "tiktok": {
+        "label": "TikTok",
+        "placeholder": "votrecompte ou URL complète",
+        "help": [
+          "Ouvrez votre profil TikTok",
+          "Touchez le bouton « Partager » (flèche)",
+          "« Copier le lien »",
+          "Collez-le ici"
+        ]
+      },
+      "linkedin": {
+        "label": "LinkedIn",
+        "placeholder": "votre-profil ou URL complète",
+        "help": [
+          "Ouvrez votre profil LinkedIn",
+          "Cliquez sur « Plus » puis « Copier le lien du profil »",
+          "Collez-le ici"
+        ]
+      },
+      "website": {
+        "label": "Site web",
+        "placeholder": "monsite.fr",
+        "help": [
+          "Collez l'adresse complète de votre site (ex : monsite.fr)",
+          "Pas besoin du https:// — il est ajouté automatiquement"
+        ]
+      },
+      "contact": {
+        "label": "Fiche contact",
+        "placeholder": "",
+        "help": [
+          "Remplissez le nom et au moins un contact (téléphone ou email)",
+          "Au contact du téléphone, une fenêtre « Ajouter aux contacts » s'ouvre",
+          "Le client enregistre tout d'un seul geste — zéro saisie, zéro faute de frappe"
+        ]
+      },
+      "other": {
+        "label": "Autre lien",
+        "placeholder": "https://...",
+        "help": [
+          "Collez n'importe quel lien commençant par https://"
+        ]
+      }
+    },
+    "contact": {
+      "firstName": "Prénom",
+      "lastName": "Nom ou entreprise",
+      "phone": "Téléphone",
+      "email": "Email",
+      "guidance": "Indiquez le nom et au moins un contact — téléphone ou email."
+    },
+    "help": {
+      "contactToggle": "Que contient la fiche contact ?",
+      "linkToggle": "Comment récupérer mon lien {label} ?"
+    },
+    "meter": {
+      "label": "Taille sur la puce NFC",
+      "bytes": "{bytes} / {limit} octets",
+      "over": "Trop d'informations pour la puce. La puce NFC (NTAG213) ne stocke que ~{limit} octets : raccourcissez le nom, ou ne gardez qu'un seul moyen de contact (téléphone <em>ou</em> email).",
+      "under": "La puce NFC a une mémoire limitée (~{limit} octets). Tant que la barre n'est pas pleine, tout rentre."
+    },
+    "verify": {
+      "loading": "Vérification…",
+      "okWebsite": "Site accessible",
+      "okAccount": "Compte trouvé",
+      "notFoundWebsite": "Site introuvable — vérifiez l'adresse",
+      "notFoundAccount": "Compte introuvable — vérifiez l'identifiant",
+      "impossible": "Vérification automatique impossible"
+    }
+  },
+  "customPage": {
+    "meta": {
+      "title": "Sur-mesure — 3BeeStudio",
+      "description": "Décrivez votre projet : cadeau personnalisé, prototype, pièce mécanique… Devis sous 48h."
+    },
+    "eyebrow": "Sur-mesure",
+    "heading": "Une idée ?<br></br><honey>On la fabrique.</honey>",
+    "intro": "Cadeau personnalisé, prototype produit, pièce mécanique, réparation… Décrivez votre projet et recevez un devis <nowrap>sous 48h.</nowrap>",
+    "stats": {
+      "quote": {
+        "value": "48h",
+        "label": "Délai devis"
+      },
+      "prototype": {
+        "value": "7 j",
+        "label": "Prototype"
+      },
+      "delivery": {
+        "value": "5–10 j",
+        "label": "Livraison"
+      }
+    },
+    "how": {
+      "title": "Comment ça se passe ?",
+      "steps": {
+        "describe": {
+          "title": "Décrivez votre projet",
+          "desc": "Type, budget, délai — 2 minutes suffisent."
+        },
+        "quote": {
+          "title": "Devis sous 48h",
+          "desc": "Nous étudions votre demande et vous envoyons une proposition."
+        },
+        "production": {
+          "title": "Production & livraison",
+          "desc": "Fabrication en France, expédié avec suivi."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Plus vous commandez, moins ça coûte",
+      "body": "Une pièce unique ? Une série ? Tout est possible. La première pièce demande un travail de conception et de mise au point, c'est ce qui la rend un peu plus chère. Ensuite, le modèle est prêt : chaque exemplaire suivant coûte beaucoup moins, que vous en commandiez 10 aujourd'hui ou 50 le mois prochain.",
+      "note": "Dites-nous la quantité dans votre demande, on vous chiffre le tout d'un coup."
+    },
+    "benefits": {
+      "freeQuote": "Devis gratuit, sans engagement",
+      "payment": "Paiement sécurisé Stripe",
+      "deposit": "Acompte 50 % · solde à la livraison",
+      "vat": "TVA non applicable · micro-entreprise"
+    },
+    "contactCard": {
+      "title": "Une question ? Écrivez-nous."
+    }
+  },
+  "surMesureForm": {
+    "back": "Retour",
+    "continue": "Continuer",
+    "sending": "Envoi en cours…",
+    "submit": "Envoyer ma demande →",
+    "errors": {
+      "projectType": "Choisissez un type de projet",
+      "description": "Décrivez votre projet en au moins 20 caractères",
+      "budget": "Sélectionnez une fourchette",
+      "deadline": "Sélectionnez un délai",
+      "name": "Votre nom est requis",
+      "email": "Email invalide",
+      "phone": "Numéro de téléphone requis",
+      "shippingName": "Nom du destinataire requis",
+      "shippingAddress": "Adresse requise",
+      "shippingCity": "Ville requise",
+      "shippingPostal": "Code postal requis",
+      "unexpected": "Erreur inattendue",
+      "generic": "Une erreur est survenue"
+    },
+    "projectTypes": {
+      "cadeau": "Cadeau personnalisé",
+      "deco": "Objet déco / design",
+      "prototype": "Prototype produit",
+      "mecanique": "Pièce mécanique / fonctionnelle",
+      "reparation": "Réparation / remplacement",
+      "autre": "Autre projet"
+    },
+    "budget": {
+      "under50": "Moins de 50 €",
+      "50to200": "50 € – 200 €",
+      "200to500": "200 € – 500 €",
+      "500to1000": "500 € – 1 000 €",
+      "over1000": "Plus de 1 000 €"
+    },
+    "deadline": {
+      "urgent": "Urgent (moins de 2 semaines)",
+      "month": "Environ 1 mois",
+      "quarter": "2 à 3 mois",
+      "flexible": "Pas de contrainte"
+    },
+    "step1": {
+      "title": "Votre projet",
+      "sub": "Décrivez-nous ce que vous souhaitez créer",
+      "projectType": "Type de projet",
+      "description": "Décrivez votre projet",
+      "descriptionPlaceholder": "Ex : « Je voudrais un présentoir avec le prénom de ma fille gravé dessus, pour un cadeau d'anniversaire. » ou « Un support de ventilateur cassé sur mon PC, réf. XYZ — j'ai les dimensions. »",
+      "disclaimer": "Tous les projets ne sont pas réalisables en impression 3D. Si votre demande dépasse nos capacités ou ne correspond pas à notre activité, nous nous réservons le droit de la refuser — sans frais ni engagement de votre côté.",
+      "budget": "Budget estimé",
+      "deadline": "Délai souhaité"
+    },
+    "step2": {
+      "title": "Vos coordonnées",
+      "sub": "Pour vous envoyer le devis personnalisé",
+      "name": "Prénom et nom *",
+      "company": "Société (optionnel)",
+      "email": "Email *",
+      "phone": "Téléphone *",
+      "notice": "<strong>Devis sous 48h ouvrées.</strong> Nous analyserons votre projet et vous enverrons une proposition détaillée à cette adresse email."
+    },
+    "step3": {
+      "title": "Adresse de livraison",
+      "sub": "Où souhaitez-vous recevoir votre commande ?",
+      "recipient": "Nom du destinataire *",
+      "address": "Adresse *",
+      "postalCode": "Code postal *",
+      "city": "Ville *",
+      "recap": "Récapitulatif",
+      "recapProject": "Projet",
+      "recapBudget": "Budget",
+      "recapDeadline": "Délai",
+      "recapContact": "Contact"
+    }
+  },
+  "common": {
+    "comingSoon": "Bientôt disponible…"
+  },
+  "suiviMesure": {
+    "meta": {
+      "title": "Suivi de demande — 3BeeStudio"
+    },
+    "submitted": {
+      "eyebrow": "Demande envoyée",
+      "title": "Votre projet est entre nos mains.",
+      "lead": "Nous vous enverrons un devis personnalisé sous <b>48h ouvrées</b> à <b>{email}</b>.",
+      "reference": "Référence"
+    },
+    "paid": {
+      "eyebrow": "Acompte reçu",
+      "title": "Production en cours !",
+      "desc": "Nous fabriquons votre projet. Vous recevrez un email dès l'expédition."
+    },
+    "default": {
+      "eyebrow": "Suivi de demande",
+      "title": "Demande <mono></mono>"
+    },
+    "action": {
+      "eyebrow": "Action requise",
+      "title": "Votre devis est prêt",
+      "deposit": "Acompte :",
+      "total": "Total estimé :",
+      "pay": "Régler mon acompte →"
+    },
+    "timeline": {
+      "heading": "Avancement",
+      "inProgress": "en cours",
+      "track": "Suivre mon colis",
+      "tracking": "Suivi : {number}"
+    },
+    "statuses": {
+      "pending_quote": "Devis en préparation",
+      "quote_sent": "Devis envoyé",
+      "deposit_paid": "Acompte reçu",
+      "in_production": "En production",
+      "shipped": "Expédié",
+      "delivered": "Livré",
+      "cancelled": "Annulé"
+    },
+    "hints": {
+      "pending_quote": "Nous analysons votre projet. Devis personnalisé sous 48h ouvrées.",
+      "quote_sent": "Votre devis est prêt. Réglez l'acompte pour lancer la production.",
+      "deposit_paid": "Acompte reçu — nous lançons la fabrication.",
+      "in_production": "Votre projet est entre nos mains. Nous vous tenons informé.",
+      "shipped": "Votre colis est en route.",
+      "delivered": "Votre commande est arrivée. Merci pour votre confiance !"
+    },
+    "details": {
+      "heading": "Votre projet",
+      "type": "Type",
+      "budget": "Budget",
+      "deadline": "Délai",
+      "company": "Société",
+      "description": "Description"
+    },
+    "contact": {
+      "title": "Une question sur votre projet ?",
+      "sub": "contact@3beestudio.fr — réponse sous 24h"
+    }
+  },
+  "suiviNfc": {
+    "meta": {
+      "title": "Suivi de commande — 3BeeStudio"
+    },
+    "success": {
+      "eyebrow": "Paiement reçu",
+      "title": "Merci pour votre commande.",
+      "lead": "Nous lançons la fabrication de vos porte-clés. Un récapitulatif vient d'être envoyé à <b>{email}</b>.",
+      "reference": "Référence"
+    },
+    "default": {
+      "eyebrow": "Suivi de commande",
+      "title": "Commande <mono></mono>"
+    },
+    "how": {
+      "heading": "Comment ça se passe",
+      "validation": {
+        "title": "Validation sous 24h",
+        "desc": "Nous vérifions votre logo et vos paramètres NFC."
+      },
+      "printing": {
+        "title": "Impression & programmation",
+        "desc": "Chaque porte-clé est imprimé en 3D et programmé à la main dans nos studios."
+      },
+      "shipping": {
+        "title": "Expédition suivie",
+        "desc": "Livraison sous 5 à 10 jours ouvrés, lien de suivi envoyé par email."
+      }
+    },
+    "timeline": {
+      "heading": "Avancement",
+      "inProgress": "en cours",
+      "track": "Suivre mon colis",
+      "tracking": "Suivi : {number}",
+      "pendingPayment": "En attente de confirmation du paiement…"
+    },
+    "statuses": {
+      "pending_payment": "En attente de paiement",
+      "confirmed": "Commande confirmée",
+      "processing": "En traitement",
+      "printing": "Impression en cours",
+      "printed": "Imprimé",
+      "shipped": "Expédié",
+      "delivered": "Livré"
+    },
+    "hints": {
+      "confirmed": "Paiement validé — votre commande entre en production.",
+      "processing": "Nous vérifions votre logo et préparons vos puces NFC.",
+      "printing": "Vos porte-clés sont en cours d'impression 3D dans nos studios.",
+      "printed": "Production terminée — votre colis est en préparation.",
+      "shipped": "Votre colis est en route.",
+      "delivered": "Votre commande est arrivée. Merci pour votre confiance !"
+    },
+    "order": {
+      "heading": "Votre commande",
+      "logoAlt": "Logo {company}",
+      "product": "{quantity} porte-clés NFC personnalisés",
+      "subtotal": "Sous-total",
+      "shipping": "Livraison",
+      "free": "Offerte",
+      "totalPaid": "Total réglé",
+      "vat": "TVA non applicable, art. 293 B du CGI"
+    },
+    "contact": {
+      "title": "Une question sur votre commande ?",
+      "sub": "contact@3beestudio.fr — réponse sous 24h"
+    }
+  },
+  "legal": {
+    "back": "Accueil",
+    "updated": "Mise à jour"
+  },
+  "legalMentions": {
+    "title": "Mentions légales",
+    "lastUpdated": "Juin 2026",
+    "body": "<div class='info-box'><strong>3BeeStudio</strong><br />Micro-entreprise — VALETTE Valentin<br />144 rue de la République, 69220 Belleville-en-Beaujolais<br />SIREN : 931 419 550 · SIRET : 931 419 550 00039<br />Email : <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></div><h2>Éditeur du site</h2><p>Le site <strong>3beestudio.fr</strong> est édité par la micro-entreprise 3BeeStudio, spécialisée dans le design 3D et la fabrication sur mesure d'objets imprimés en France.</p><h2>Hébergement</h2><p>Ce site est hébergé par <strong>Vercel Inc.</strong><br />440 N Barranca Ave #4133, Covina, CA 91723, États-Unis<br /><a href='https://vercel.com' target='_blank' rel='noopener noreferrer'>vercel.com</a></p><h2>Propriété intellectuelle</h2><p>L'ensemble des contenus présents sur ce site (textes, images, logo, design, visuels) sont la propriété exclusive de 3BeeStudio, sauf mention contraire. Toute reproduction ou diffusion sans autorisation écrite préalable est interdite.</p><h2>Responsabilité</h2><p>3BeeStudio s'efforce de maintenir les informations du site à jour et exactes. Toutefois, la responsabilité de l'éditeur ne saurait être engagée en cas d'erreur ou d'omission. Les liens vers des sites tiers sont fournis à titre indicatif.</p><h2>Droit applicable</h2><p>Le présent site et ses contenus sont soumis au droit français. Tout litige relatif à l'utilisation du site sera soumis à la compétence des tribunaux de Villefranche-sur-Saône.</p><h2>Contact</h2><p>Pour toute question relative aux mentions légales :<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></p>"
+  },
+  "legalCgv": {
+    "title": "Conditions Générales de Vente",
+    "lastUpdated": "Juin 2026",
+    "body": "<div class='info-box'><strong>3BeeStudio</strong> — Micro-entreprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais<br />SIREN : 931 419 550 · SIRET : 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a> · 3beestudio.fr</div><h2>Article 1 — Objet</h2><p>Les présentes Conditions Générales de Vente (CGV) régissent les relations contractuelles entre 3BeeStudio et tout client souhaitant acquérir un produit ou service proposé sur le site <strong>3beestudio.fr</strong>. Toute commande implique l'acceptation sans réserve des présentes CGV.</p><h2>Article 2 — Produits et services</h2><p>3BeeStudio propose deux types de commandes :</p><ul><li><strong>Objets de série</strong> : produits disponibles en boutique, expédiés sous 48h à 5 jours ouvrés.</li><li><strong>Créations sur mesure</strong> : objets conçus et fabriqués selon les spécifications du client. Un devis est établi avant toute production. Un acompte de 50% est requis à la commande.</li><li><strong>Porte-clés connectés</strong> : porte-clés 3D personnalisés avec puce NFC intégrée. La destination de la puce NFC est programmée selon le choix indiqué par le client à la commande.</li><li><strong>Vectorisation de logo</strong> : si le logo est fourni dans un format non vectoriel (PNG, JPG), une mise au format vectoriel (SVG) peut être facturée en supplément. Le surcoût est communiqué et accepté avant toute production.</li></ul><p>Tous les objets sont fabriqués en France. Les photos et visuels sont fournis à titre illustratif ; de légères variations de couleur peuvent apparaître selon le filament utilisé.</p><h2>Article 3 — Prix</h2><p>Les prix sont indiqués en euros TTC. 3BeeStudio, en tant que micro-entreprise, n'est pas assujettie à la TVA (article 293 B du CGI). Les prix sont susceptibles d'être modifiés à tout moment ; le prix applicable est celui affiché au moment de la commande.</p><p>Les frais de livraison sont indiqués au moment du paiement et sont à la charge du client, sauf mention contraire lors d'une offre promotionnelle.</p><h2>Article 4 — Commande et paiement</h2><p>Les commandes sont passées directement sur le site. Le paiement est sécurisé via <strong>Stripe</strong> et accepte les cartes bancaires (Visa, Mastercard, American Express) ainsi que les solutions de paiement compatibles.</p><p>Pour les créations sur mesure, la commande est confirmée à réception de l'acompte de 50%. Le solde est réglé à la livraison ou avant expédition.</p><p>3BeeStudio se réserve le droit d'annuler toute commande en cas de problème de disponibilité ou d'erreur manifeste sur le prix.</p><h2>Article 5 — Livraison</h2><ul><li>Objets de série : expédition sous 2 à 5 jours ouvrés.</li><li>Créations sur mesure : délai précisé dans le devis (généralement 7 à 14 jours).</li><li>Livraison en France métropolitaine par transporteur (Colissimo ou équivalent).</li><li>Un numéro de suivi est communiqué par email dès l'expédition.</li></ul><p>En cas de retard de livraison imputable au transporteur, 3BeeStudio ne pourra être tenu responsable mais s'engage à accompagner le client dans la résolution du problème.</p><h2>Article 6 — Droit de rétractation</h2><p>Conformément à l'article L221-18 du Code de la consommation, le client dispose d'un délai de <strong>14 jours</strong> à compter de la réception pour exercer son droit de rétractation, sans justification, pour les produits de série.</p><p><strong>Exception :</strong> le droit de rétractation ne s'applique pas aux produits fabriqués selon les spécifications du client (sur mesure, porte-clés personnalisés), conformément à l'article L221-28 du Code de la consommation.</p><p>Pour exercer ce droit, contactez-nous à <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Les frais de retour sont à la charge du client. Le remboursement est effectué sous 14 jours après réception du retour.</p><h2>Article 7 — Garanties</h2><p>Tous les produits bénéficient de la garantie légale de conformité (articles L217-4 et suivants du Code de la consommation) et de la garantie contre les vices cachés (articles 1641 et suivants du Code civil).</p><p>En cas de produit défectueux, contactez-nous dans les meilleurs délais avec photos à l'appui. Nous procéderons au remplacement ou au remboursement selon le cas.</p><h2>Article 8 — Responsabilité</h2><p>3BeeStudio ne saurait être tenu responsable des dommages indirects liés à l'utilisation des produits. La responsabilité est limitée au montant de la commande concernée.</p><h2>Article 9 — Données personnelles</h2><p>Les données collectées lors de la commande sont utilisées uniquement dans le cadre du traitement et de la livraison de celle-ci. Consultez notre <a href='/politique-de-confidentialite'>Politique de confidentialité</a> pour plus d'informations.</p><h2>Article 10 — Litiges</h2><p>En cas de litige, une solution amiable sera recherchée en priorité. À défaut, le client peut recourir à la médiation via la plateforme européenne de règlement en ligne des litiges : <a href='https://ec.europa.eu/consumers/odr' target='_blank' rel='noopener noreferrer'>ec.europa.eu/consumers/odr</a>.</p><p>Les présentes CGV sont soumises au droit français. Tout litige sera soumis à la compétence des tribunaux de Villefranche-sur-Saône.</p>"
+  },
+  "legalPrivacy": {
+    "title": "Politique de confidentialité",
+    "lastUpdated": "Juin 2026",
+    "body": "<p>3BeeStudio accorde une importance primordiale à la protection de vos données personnelles. Cette politique explique quelles données nous collectons, comment nous les utilisons et vos droits en tant qu'utilisateur.</p><h2>1. Responsable du traitement</h2><div class='info-box'><strong>3BeeStudio</strong> — Micro-entreprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais<br />SIREN : 931 419 550 · SIRET : 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></div><h2>2. Données collectées</h2><h3>Lors d'une commande</h3><ul><li>Nom, prénom, adresse email</li><li>Adresse de livraison</li><li>Données de paiement (traitées directement par Stripe — non stockées par 3BeeStudio)</li><li>Historique des commandes</li></ul><h3>Lors de la navigation</h3><ul><li>Données de navigation anonymisées (pages visitées, durée)</li><li>Adresse IP (anonymisée)</li><li>Type de navigateur et appareil</li></ul><h3>Via le formulaire de contact / newsletter</h3><ul><li>Adresse email</li><li>Contenu du message (formulaire contact)</li></ul><h2>3. Finalités du traitement</h2><ul><li><strong>Traitement des commandes</strong> : gestion, production, expédition, facturation</li><li><strong>Communication</strong> : confirmation de commande, suivi de livraison, SAV</li><li><strong>Newsletter</strong> : envoi de nos actualités (avec consentement explicite)</li><li><strong>Amélioration du site</strong> : analyse d'audience anonyme</li><li><strong>Obligations légales</strong> : conservation des données comptables</li></ul><h2>4. Base légale</h2><ul><li>Exécution du contrat (commandes)</li><li>Consentement (newsletter, cookies non essentiels)</li><li>Obligation légale (données comptables)</li><li>Intérêt légitime (amélioration du service)</li></ul><h2>5. Durée de conservation</h2><ul><li>Données de commande : 5 ans (obligation comptable)</li><li>Données newsletter : jusqu'à désinscription</li><li>Données de navigation : 13 mois maximum</li></ul><h2>6. Partage des données</h2><p>Vos données ne sont jamais vendues. Elles peuvent être partagées uniquement avec :</p><ul><li><strong>Stripe</strong> : paiement sécurisé (<a href='https://stripe.com/fr/privacy' target='_blank' rel='noopener noreferrer'>politique Stripe</a>)</li><li><strong>Transporteurs</strong> : pour la livraison (nom, adresse)</li><li><strong>Vercel</strong> : hébergement du site (<a href='https://vercel.com/legal/privacy-policy' target='_blank' rel='noopener noreferrer'>politique Vercel</a>)</li></ul><h2>7. Cookies</h2><p>Nous utilisons uniquement des cookies strictement nécessaires au bon fonctionnement du site (session, panier). Aucun cookie publicitaire ou de tracking tiers n'est déposé sans votre consentement.</p><h2>8. Vos droits (RGPD)</h2><p>Conformément au RGPD, vous disposez des droits suivants :</p><ul><li><strong>Droit d'accès</strong> : obtenir une copie de vos données</li><li><strong>Droit de rectification</strong> : corriger des données inexactes</li><li><strong>Droit à l'effacement</strong> : supprimer vos données</li><li><strong>Droit à la portabilité</strong> : recevoir vos données dans un format lisible</li><li><strong>Droit d'opposition</strong> : vous opposer à certains traitements</li><li><strong>Droit de retrait du consentement</strong> : à tout moment pour la newsletter</li></ul><p>Pour exercer ces droits : <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Nous répondrons dans un délai de 30 jours. Vous pouvez également introduire une réclamation auprès de la <a href='https://www.cnil.fr' target='_blank' rel='noopener noreferrer'>CNIL</a>.</p><h2>9. Sécurité</h2><p>Nous mettons en œuvre des mesures techniques et organisationnelles pour protéger vos données (connexion HTTPS, accès restreint, hébergement sécurisé). Les données de paiement sont traitées directement par Stripe et ne transitent jamais par nos serveurs.</p><h2>10. Contact DPO</h2><p>Pour toute question relative à vos données personnelles :<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></p>"
+  }
+}

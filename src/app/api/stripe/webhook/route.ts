@@ -30,6 +30,21 @@ export async function POST(req: Request) {
       const session = event.data.object as Stripe.Checkout.Session
       const orderId = session.metadata?.order_id
 
+      // Acompte sur-mesure
+      const customOrderId = session.metadata?.custom_order_id
+      if (customOrderId && session.metadata?.type === 'custom_deposit') {
+        if (session.payment_status === 'paid') {
+          const { error } = await supabaseAdmin
+            .from('custom_orders')
+            .update({ status: 'deposit_paid' })
+            .eq('id', customOrderId)
+            .eq('status', 'quote_sent')
+          if (error) console.error('[webhook] Erreur custom_orders update:', error)
+          else console.log('[webhook] Acompte sur-mesure reçu:', customOrderId)
+        }
+        return NextResponse.json({ received: true })
+      }
+
       if (!orderId) {
         console.error('[webhook] checkout.session.completed sans order_id dans metadata', session.id)
         return NextResponse.json({ received: true })

@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import StatusDot from '@/components/ui/StatusDot'
 
@@ -39,6 +40,7 @@ function TruckIcon() {
 
 
 export default function Hero() {
+  const t = useTranslations('hero')
   return (
     <section className="hex-bg relative -mt-[72px] overflow-hidden">
       {/* Honey glow */}
@@ -68,7 +70,7 @@ export default function Hero() {
           {/* ─── Left: copy ─── */}
           <div className="max-w-2xl">
             <div className="fade-up mb-5">
-              <Eyebrow>Studio d&apos;impression 3D · France</Eyebrow>
+              <Eyebrow>{t('eyebrow')}</Eyebrow>
             </div>
             <h1
               className="fade-up font-sans font-extrabold text-ink-0"
@@ -78,16 +80,17 @@ export default function Hero() {
                 letterSpacing: '-0.04em',
               }}
             >
-              Impression <span className="honey-text pr-1">3D</span>,<br />
-              imaginée et<br />
-              imprimée en France.
+              {t.rich('heading', {
+                honey: (chunks) => <span className="honey-text pr-1">{chunks}</span>,
+                br: () => <br />,
+              })}
             </h1>
 
             <p
               className="fade-up mt-7 text-ink-1"
               style={{ fontSize: 'clamp(1.05rem, 1.6vw, 1.3rem)', lineHeight: 1.55, maxWidth: 500 }}
             >
-              Pièces uniques, séries limitées et porte-clés connectés personnalisés.
+              {t('subtitle')}
             </p>
 
             {/* CTAs */}
@@ -97,13 +100,13 @@ export default function Hero() {
                 className="flex h-[60px] items-center justify-center gap-2 rounded-pill px-10 font-sans font-semibold text-[16px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
                 style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
               >
-                Créer mon porte-clé connecté <ArrowIcon />
+                {t('ctaPrimary')} <ArrowIcon />
               </Link>
               <Link
                 href="/boutique"
                 className="flex h-[60px] items-center justify-center rounded-pill px-10 font-sans font-semibold text-[16px] text-ink-0 border border-[var(--line-2)] bg-bg-3 transition-all active:scale-[0.97] hover:bg-bg-4"
               >
-                Explorer la boutique
+                {t('ctaSecondary')}
               </Link>
             </div>
 
@@ -113,9 +116,9 @@ export default function Hero() {
               style={{ background: 'rgba(20,20,24,0.6)', backdropFilter: 'blur(12px)', borderRadius: 20 }}
             >
               {([
-                { Icon: PinIcon, label: 'Fabriqué en France' },
-                { Icon: ShieldIcon, label: 'Paiement sécurisé' },
-                { Icon: TruckIcon, label: 'Livré en 5–10 j' },
+                { Icon: PinIcon, label: t('trust.france') },
+                { Icon: ShieldIcon, label: t('trust.payment') },
+                { Icon: TruckIcon, label: t('trust.delivery') },
               ] as const).map(({ Icon, label }) => (
                 <span key={label} className="flex items-center gap-2 text-[13px] font-medium text-ink-1">
                   <span className="flex text-amber"><Icon /></span>
@@ -125,7 +128,7 @@ export default function Hero() {
               <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0 pl-4 border-l border-[var(--line)]">
                 <StatusDot />
                 <span className="font-mono text-ink-2" style={{ fontSize: 11, letterSpacing: '0.05em' }}>
-                  STUDIO OUVERT
+                  {t('studioOpen')}
                 </span>
               </div>
             </div>
@@ -203,7 +206,7 @@ export default function Hero() {
 
       {/* Indice de scroll */}
       <div aria-hidden className="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex">
-        <span className="font-mono text-ink-3" style={{ fontSize: 9, letterSpacing: '0.22em' }}>DÉCOUVRIR</span>
+        <span className="font-mono text-ink-3" style={{ fontSize: 9, letterSpacing: '0.22em' }}>{t('scroll')}</span>
         <svg
           width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#F59E0B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
           style={{ animation: 'scroll-cue 2.2s ease-in-out infinite' }}

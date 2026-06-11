@@ -1,9 +1,10 @@
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 
 interface Tile {
-  label: string
+  id: string
   kind: string
   accent?: boolean
   span: string
@@ -11,18 +12,20 @@ interface Tile {
 }
 
 const TILES: Omit<Tile, 'index'>[] = [
-  { label: 'Lampe Hexalux',   kind: 'CUSTOM', accent: true,  span: 'col-span-2 row-span-2 lg:col-span-2 lg:row-span-2' },
-  { label: 'Trophée Eldur',   kind: 'SHOP',                  span: 'col-span-1 row-span-1' },
-  { label: 'Maison Bouchet',  kind: 'CUSTOM',                span: 'col-span-1 row-span-1' },
-  { label: 'Capsule Studio R', kind: 'SHOP', accent: true,   span: 'col-span-2 row-span-1 lg:col-span-3 lg:row-span-1' },
+  { id: 'hexalux', kind: 'CUSTOM', accent: true,  span: 'col-span-2 row-span-2 lg:col-span-2 lg:row-span-2' },
+  { id: 'eldur',   kind: 'SHOP',                  span: 'col-span-1 row-span-1' },
+  { id: 'bouchet', kind: 'CUSTOM',                span: 'col-span-1 row-span-1' },
+  { id: 'capsule', kind: 'SHOP', accent: true,    span: 'col-span-2 row-span-1 lg:col-span-3 lg:row-span-1' },
 ]
 
-function PortfolioTile({ label, kind, accent = false, span, index }: Tile) {
+function PortfolioTile({ id, kind, accent = false, span, index }: Tile) {
+  const t = useTranslations('portfolioSection')
+  const label = t(`tiles.${id}`)
   const patternId = `ptile-${index}`
   return (
     <Link
       href="/portfolio"
-      aria-label={`Voir le projet ${label}`}
+      aria-label={t('tileAria', { label })}
       className={`group relative overflow-hidden flex flex-col justify-end p-5 transition-all duration-300 hover:-translate-y-1 ${span}`}
       style={{
         borderRadius: 24,
@@ -47,30 +50,31 @@ function PortfolioTile({ label, kind, accent = false, span, index }: Tile) {
 
       <div className="relative">
         <div className="text-[15px] font-semibold text-ink-0 transition-colors group-hover:text-amber-soft">{label}</div>
-        <div className="font-mono text-ink-2 mt-1" style={{ fontSize: 10, letterSpacing: '0.05em' }}>2025 · COMMANDE</div>
+        <div className="font-mono text-ink-2 mt-1" style={{ fontSize: 10, letterSpacing: '0.05em' }}>{t('tileMeta')}</div>
       </div>
     </Link>
   )
 }
 
 export default function Portfolio() {
+  const t = useTranslations('portfolioSection')
   return (
     <section className="py-20 lg:py-28 border-t border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Reveal className="flex items-end justify-between mb-8">
           <div>
-            <div className="mb-3"><Eyebrow>Portfolio</Eyebrow></div>
+            <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
             <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
-              Projets récents.
+              {t('heading')}
             </h2>
           </div>
           <Link href="/portfolio" className="font-mono text-amber whitespace-nowrap hover:text-amber-soft transition-colors" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
-            TOUT VOIR →
+            {t('viewAll')}
           </Link>
         </Reveal>
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-5 auto-rows-[150px] lg:auto-rows-[210px]">
-          {TILES.map((t, i) => <PortfolioTile key={t.label} {...t} index={i} />)}
+          {TILES.map((tile, i) => <PortfolioTile key={tile.id} {...tile} index={i} />)}
         </div>
 
         <div className="mt-10 flex justify-center">
@@ -78,7 +82,7 @@ export default function Portfolio() {
             href="/portfolio"
             className="flex h-[54px] items-center justify-center rounded-pill px-10 font-sans font-semibold text-[15px] text-ink-0 border border-[var(--line-2)] bg-bg-3 transition-all active:scale-[0.97] hover:bg-bg-4"
           >
-            Explorer le portfolio
+            {t('explore')}
           </Link>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 
@@ -19,13 +20,14 @@ function PlayIcon() {
 }
 
 function VideoCard({ title, views, accent = false, index }: VideoCardProps) {
+  const t = useTranslations('videoStrip')
   const patternId = `tri-${index}`
   return (
     <a
       href={TIKTOK_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`Voir « ${title} » sur TikTok`}
+      aria-label={t('cardAria', { title })}
       className="group relative block overflow-hidden flex-shrink-0 w-[168px] h-[296px] lg:w-full lg:h-[360px] transition-transform duration-300 hover:-translate-y-1"
       style={{
         borderRadius: 24,
@@ -78,18 +80,19 @@ const videos = [
 ] as const
 
 export default function VideoStrip() {
+  const t = useTranslations('videoStrip')
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Reveal className="flex items-end justify-between mb-8">
           <div>
-            <div className="mb-3"><Eyebrow>Studio · TikTok</Eyebrow></div>
+            <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
             <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
-              Voir naître les pièces.
+              {t('heading')}
             </h2>
           </div>
           <a href={TIKTOK_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-amber whitespace-nowrap hover:text-amber-soft transition-colors" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
-            VOIR TOUT →
+            {t('viewAll')}
           </a>
         </Reveal>
 
