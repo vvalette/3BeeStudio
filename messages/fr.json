@@ -247,7 +247,8 @@
       "noSvg": "Pas de SVG ?",
       "svgInfo": "On peut le créer à partir de votre image PNG ou JPG. Écrivez-nous à <mail>contact@3beestudio.fr</mail>.",
       "linkTitle": "Votre lien",
-      "linkHint": "Ce qui s'ouvre quand on approche le téléphone du porte-clé"
+      "linkHint": "Ce qui s'ouvre quand on approche le téléphone du porte-clé",
+      "formatLabel": "Votre logo au format SVG · max 2 Mo"
     },
     "quantity": {
       "title": "Quantité",

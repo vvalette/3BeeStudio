@@ -60,6 +60,51 @@ type Quantity = z.infer<ReturnType<typeof buildQuantitySchema>>
 type Contact = z.infer<ReturnType<typeof buildContactSchema>>
 interface FormData extends Config, Quantity, Contact { logo_url: string }
 
+// ─── NoSvgTip ─────────────────────────────────────────────────────────────────
+
+function NoSvgTip({ label, info }: { label: string; info: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function handleEnter() {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setOpen(true)
+  }
+  function handleLeave() {
+    closeTimer.current = setTimeout(() => setOpen(false), 120)
+  }
+
+  return (
+    <div className="relative mt-5" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v) }}
+        className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-ink-3 hover:text-ink-1 transition-colors cursor-pointer"
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        {label}
+      </button>
+
+      {open && (
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-[260px] rounded-xl border border-[var(--line-amber)] bg-bg-3 px-4 py-3 text-xs leading-relaxed text-ink-2 shadow-[var(--shadow-pop)]"
+          style={{ pointerEvents: 'auto' }}
+          onMouseEnter={handleEnter}
+          onMouseLeave={handleLeave}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {info}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-[var(--line-amber)]" />
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function NfcOrderForm() {
@@ -378,25 +423,18 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
                 <p className="text-[15px] font-semibold text-ink-0">
                   {isDragActive ? t('config.dropHere') : t('config.dropPrompt')}
                 </p>
-                <p className="mt-3 font-mono text-[10px] text-amber-soft">{t('config.formatLabel')}</p>
-                <div className="mt-5 flex w-full max-w-[260px] items-center gap-2.5">
-                  <span className="h-px flex-1 bg-[var(--line)]" />
-                  <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-3">{t('config.noSvg')}</span>
-                  <span className="h-px flex-1 bg-[var(--line)]" />
-                </div>
-                <p className="mt-2.5 max-w-[280px] text-xs leading-relaxed text-ink-2">
-                  {t.rich('config.svgInfo', {
-                    mail: (chunks) => (
-                      <a
-                        href="mailto:contact@3beestudio.fr"
-                        onClick={(e) => e.stopPropagation()}
-                        className="font-semibold text-amber underline decoration-amber/40 underline-offset-2 transition-colors hover:decoration-amber"
-                      >
-                        {chunks}
-                      </a>
-                    ),
-                  })}
-                </p>
+                <p className="mt-3 text-[12px] text-ink-2 text-center max-w-[220px]">{t('config.formatLabel')}</p>
+                <NoSvgTip label={t('config.noSvg')} info={t.rich('config.svgInfo', {
+                  mail: (chunks) => (
+                    <a
+                      href="mailto:contact@3beestudio.fr"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-semibold text-amber underline decoration-amber/40 underline-offset-2 transition-colors hover:decoration-amber"
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                })} />
               </>
             )}
           </div>

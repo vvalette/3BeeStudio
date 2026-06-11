@@ -247,7 +247,8 @@
       "noSvg": "No SVG?",
       "svgInfo": "We can create one from your PNG or JPG image. Write to us at <mail>contact@3beestudio.fr</mail>.",
       "linkTitle": "Your link",
-      "linkHint": "What opens when a phone is tapped against the keychain"
+      "linkHint": "What opens when a phone is tapped against the keychain",
+      "formatLabel": "Your logo in SVG format · max 2 MB"
     },
     "quantity": {
       "title": "Quantity",
