@@ -45,7 +45,7 @@
 ### 📱 Porte-clé connecté (`/nfc`)
 - Mockup porte-clé animé
 - Destinations NFC possibles (un lien au choix)
-- Grille tarifaire volume (dès 10 pièces)
+- Grille tarifaire volume (dès 5 pièces)
 - Formulaire de devis multi-step (logo upload, URL, quantité)
 - FAQ
 

@@ -24,7 +24,7 @@
 
 ### B. Porte-Clés NFC (Produit Phare B2B)
 - Logo client imprimé en 3D + puce NFC intégrée
-- Commandes en volume (10 à 250+ unités)
+- Commandes en volume (5 à 250+ unités)
 - ✅ Panier moyen très élevé, facturation TVA, clients pro
 
 ### C. Sur-Mesure

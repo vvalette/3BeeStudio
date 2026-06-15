@@ -2,8 +2,13 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
 import NfcOrderForm from '@/components/nfc/NfcOrderForm'
+import NfcFaq from '@/components/nfc/NfcFaq'
+import JsonLd from '@/components/seo/JsonLd'
+import { buildAlternates } from '@/lib/seo'
+import { nfcProductSchema } from '@/lib/schema'
+import type { Locale } from '@/i18n/routing'
 
-type Props = { params: Promise<{ locale: string }> }
+type Props = { params: Promise<{ locale: Locale }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
@@ -11,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
+    alternates: buildAlternates('/nfc', locale),
   }
 }
 
@@ -18,6 +24,8 @@ export default function NfcPage() {
   const t = useTranslations('nfcPage')
   return (
     <main className="relative min-h-[calc(100dvh-72px)] overflow-hidden bg-bg-0">
+
+      <JsonLd data={nfcProductSchema(t('meta.title'), t('meta.description'))} />
 
       {/* Ambient glow */}
       <div
@@ -90,6 +98,8 @@ export default function NfcPage() {
         <div id="commander" className="scroll-mt-[88px]">
           <NfcOrderForm />
         </div>
+
+        <NfcFaq />
       </div>
     </main>
   )

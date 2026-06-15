@@ -3,8 +3,10 @@ import { getTranslations } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
 import SurMesureForm from '@/components/surMesure/SurMesureForm'
 import Eyebrow from '@/components/ui/Eyebrow'
+import { buildAlternates } from '@/lib/seo'
+import type { Locale } from '@/i18n/routing'
 
-type Props = { params: Promise<{ locale: string }> }
+type Props = { params: Promise<{ locale: Locale }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
@@ -12,6 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
+    alternates: buildAlternates('/custom', locale),
   }
 }
 
