@@ -13,8 +13,16 @@ export default function NewsletterBlock() {
     e.preventDefault()
     if (!email) return
     setStatus('loading')
-    await new Promise((r) => setTimeout(r, 800))
-    setStatus('success')
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      setStatus(res.ok ? 'success' : 'error')
+    } catch {
+      setStatus('error')
+    }
   }
 
   return (
@@ -34,7 +42,11 @@ export default function NewsletterBlock() {
             <span className="text-ink-1" style={{ fontSize: 15 }}>{t('success')}</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mx-auto flex gap-2 p-2 border border-[var(--line)] bg-bg-2 max-w-md" style={{ borderRadius: 999 }}>
+          <div className="flex flex-col items-center gap-3">
+            {status === 'error' && (
+              <p className="text-red-400 text-sm">{t('error')}</p>
+            )}
+          <form onSubmit={handleSubmit} className="mx-auto flex gap-2 p-2 border border-[var(--line)] bg-bg-2 max-w-md w-full" style={{ borderRadius: 999 }}>
             <input
               type="email"
               value={email}
@@ -53,6 +65,7 @@ export default function NewsletterBlock() {
               {status === 'loading' ? '…' : t('submit')}
             </button>
           </form>
+          </div>
         )}
       </div>
     </section>

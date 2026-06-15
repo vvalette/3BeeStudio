@@ -43,9 +43,22 @@ export async function POST(req: Request) {
   }
 
   const data = parsed.data
-  const { unitPrice, shipping, total } = calcOrder(data.quantity)
+  const { unitPrice, shipping, subtotal } = calcOrder(data.quantity)
 
-  // 1. Créer la commande en base (paiement intégral → deposit_amount = total)
+  // Vérifie si l'email est abonné newsletter avec une promo encore disponible
+  const { data: sub } = await supabaseAdmin
+    .from('newsletter_subscriptions')
+    .select('id, promo_used')
+    .eq('email', data.email)
+    .eq('promo_used', false)
+    .maybeSingle()
+
+  const hasNewsletterDiscount = sub !== null
+  // -10 % sur le sous-total produits uniquement, les frais de port sont inchangés
+  const discountedSubtotal = hasNewsletterDiscount ? Math.round(subtotal * 0.9) : subtotal
+  const finalTotal = discountedSubtotal + shipping
+
+  // 1. Créer la commande en base
   const { data: order, error: dbError } = await supabaseAdmin
     .from('orders')
     .insert({
@@ -57,8 +70,8 @@ export async function POST(req: Request) {
       nfc_url: data.nfc_url,
       logo_url: data.logo_url,
       unit_price: unitPrice,
-      total_amount: total,
-      deposit_amount: total,
+      total_amount: finalTotal,
+      deposit_amount: finalTotal,
       status: 'pending_payment',
       shipping_name: data.shipping_name,
       shipping_address: data.shipping_address,
@@ -74,6 +87,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
   }
 
+  // Consomme la promo dès la création de la session (engagement de paiement)
+  if (hasNewsletterDiscount && sub) {
+    await supabaseAdmin
+      .from('newsletter_subscriptions')
+      .update({ promo_used: true })
+      .eq('id', sub.id)
+  }
+
   // 2. Session Stripe Checkout — paiement intégral
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
   const session = await stripe.checkout.sessions.create({
@@ -87,10 +108,13 @@ export async function POST(req: Request) {
           currency: 'eur',
           product_data: {
             name: 'Porte-clé connecté NFC personnalisé',
-            description: `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)}`,
+            description: hasNewsletterDiscount
+              ? `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)} · ✨ -10% abonné`
+              : `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)}`,
             images: [data.logo_url],
           },
-          unit_amount: unitPrice,
+          // Prix unitaire déjà réduit → Stripe affiche le bon montant par ligne
+          unit_amount: hasNewsletterDiscount ? Math.round(unitPrice * 0.9) : unitPrice,
         },
         quantity: data.quantity,
       },

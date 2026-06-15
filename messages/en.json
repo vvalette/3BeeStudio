@@ -185,7 +185,8 @@
     "description": "Monthly drop, limited editions, -10% on your first order.",
     "placeholder": "email@studio.fr",
     "submit": "Subscribe",
-    "success": "Perfect! We'll save the previews for you."
+    "success": "Welcome to the hive! Your -10% is activated on your first order. You'll be among the first to hear about new drops and limited series.",
+    "error": "Something went wrong. Please try again."
   },
   "nfcPage": {
     "meta": {
@@ -345,6 +346,7 @@
       "contactTitle": "Contact",
       "shippingTitle": "Delivery",
       "subtotal": "Subtotal",
+      "newsletterDiscount": "-10% first order (subscriber)",
       "trackedShipping": "Tracked shipping",
       "vat": "VAT not applicable<br></br>art. 293 B of the French Tax Code",
       "securePayment": "Secure Stripe payment · Card, Apple Pay, Google Pay",

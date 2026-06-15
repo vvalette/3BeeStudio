@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -713,6 +713,19 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
 }) {
   const t = useTranslations('nfcForm')
   const { unitPrice, subtotal, shipping, total } = calcOrder(formData.quantity)
+  const [hasNewsletterDiscount, setHasNewsletterDiscount] = useState(false)
+
+  useEffect(() => {
+    if (!formData.email) return
+    fetch(`/api/newsletter/check?email=${encodeURIComponent(formData.email)}`)
+      .then((r) => r.json())
+      .then((d: { hasDiscount: boolean }) => setHasNewsletterDiscount(d.hasDiscount))
+      .catch(() => {})
+  }, [formData.email])
+
+  const discountedSubtotal = hasNewsletterDiscount ? Math.round(subtotal * 0.9) : subtotal
+  const finalTotal = discountedSubtotal + shipping
+  const discountAmount = subtotal - discountedSubtotal
   const code = formData.shipping_country
   const countryLabel = (COUNTRY_CODES as readonly string[]).includes(code) ? t(`countries.${code}`) : code
 
@@ -811,8 +824,17 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
             <span className="text-ink-2">
               {t('recap.subtotal')} <span className="font-mono text-xs text-ink-3">{formData.quantity} × {formatPrice(unitPrice)}</span>
             </span>
-            <span className="font-mono text-ink-1">{formatPrice(subtotal)}</span>
+            <span className={`font-mono ${hasNewsletterDiscount ? 'text-ink-3 line-through text-xs' : 'text-ink-1'}`}>{formatPrice(subtotal)}</span>
           </div>
+          {hasNewsletterDiscount && (
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span>✨</span>
+                <span>{t('recap.newsletterDiscount')}</span>
+              </span>
+              <span className="font-mono font-semibold text-emerald-400">−{formatPrice(discountAmount)}</span>
+            </div>
+          )}
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-ink-2">{t('recap.trackedShipping')}</span>
             {shipping === 0 ? (
@@ -829,7 +851,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber/80">{t('quantity.total')}</p>
             <p className="mt-1 text-[34px] font-extrabold leading-none text-ink-0" style={{ letterSpacing: '-0.03em' }}>
-              {formatPrice(total)}
+              {formatPrice(finalTotal)}
             </p>
           </div>
           <p className="text-right text-[11px] leading-relaxed text-ink-3">
@@ -872,7 +894,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
               {t('recap.redirecting')}
             </>
           ) : (
-            <>{t('recap.pay', { amount: formatPrice(total) })} <ArrowRight /></>
+            <>{t('recap.pay', { amount: formatPrice(finalTotal) })} <ArrowRight /></>
           )}
         </button>
       </div>

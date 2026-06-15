@@ -3,6 +3,7 @@ import { render } from '@react-email/components'
 import OrderConfirmation from '@/emails/OrderConfirmation'
 import CustomOrderConfirmation from '@/emails/CustomOrderConfirmation'
 import CustomOrderAdmin from '@/emails/CustomOrderAdmin'
+import NewsletterWelcome from '@/emails/NewsletterWelcome'
 import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
 import type { CustomOrder } from '@/types/custom-order'
@@ -83,4 +84,63 @@ export async function sendCustomOrderAdminNotification(order: CustomOrder): Prom
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
   console.log('[resend] Notification admin sur-mesure — id:', data?.id)
+}
+
+// Cache en mémoire pour éviter un appel API à chaque inscription
+let _audienceId: string | null | undefined = undefined
+
+async function getAudienceId(): Promise<string | null> {
+  if (_audienceId !== undefined) return _audienceId
+
+  // Priorité : variable d'env explicite
+  if (process.env.RESEND_AUDIENCE_ID) {
+    _audienceId = process.env.RESEND_AUDIENCE_ID
+    return _audienceId
+  }
+
+  // Auto-découverte : prend la première audience du compte
+  const { data, error } = await resend.audiences.list()
+  if (error || !data?.data?.length) {
+    console.warn('[resend] Aucune audience trouvée — contacts non ajoutés')
+    _audienceId = null
+    return null
+  }
+
+  _audienceId = data.data[0].id
+  console.log('[resend] Audience auto-découverte:', _audienceId)
+  return _audienceId
+}
+
+export async function addToNewsletterAudience(email: string): Promise<void> {
+  const audienceId = await getAudienceId()
+  if (!audienceId) return
+
+  const { error } = await resend.contacts.create({
+    audienceId,
+    email,
+    unsubscribed: false,
+  })
+
+  if (error) {
+    // Non-bloquant : l'inscription Supabase a déjà réussi
+    console.warn('[resend] Ajout contact audience échoué:', error.message)
+  }
+}
+
+export async function sendNewsletterWelcome(email: string): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from = getFrom()
+
+  const html = await render(NewsletterWelcome({ appUrl }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: email,
+    subject: '🐝 Bienvenue dans la ruche — votre avant-première vous attend',
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.log('[resend] Email bienvenue newsletter — id:', data?.id, '→', email)
 }

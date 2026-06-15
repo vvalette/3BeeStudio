@@ -56,7 +56,7 @@
   "nfcSection": {
     "eyebrow": "Porte-clé connecté",
     "heading": "Le porte-clé connecté<br></br>qui parle pour vous.",
-    "subtitle": "Un porte-clé imprimé en 3D à votre logo, puce NFC intégrée.<br></br>Votre client approche son téléphone — votre lien s'ouvre, sans application.",
+    "subtitle": "Un porte-clé imprimé en 3D à votre logo, puce NFC intégrée.<br></br>Votre client approche son téléphone. Votre lien s'ouvre, sans application.",
     "keychainAlt": "Porte-clé 3D personnalisé avec votre logo",
     "keychainTag": "PORTE CLÉ AVEC VOTRE LOGO",
     "urlCaption": "EXEMPLE : votre page instagram",
@@ -185,7 +185,8 @@
     "description": "Drop mensuel, séries limitées, -10% sur la première commande.",
     "placeholder": "email@studio.fr",
     "submit": "Je m'abonne",
-    "success": "Parfait ! On vous réserve les avant-premières."
+    "success": "Bienvenue dans la ruche ! Votre -10% est activé sur votre première commande. Vous serez parmi les premiers informés des nouveautés, drops et séries limitées.",
+    "error": "Une erreur est survenue. Réessayez."
   },
   "nfcPage": {
     "meta": {
@@ -345,6 +346,7 @@
       "contactTitle": "Contact",
       "shippingTitle": "Livraison",
       "subtotal": "Sous-total",
+      "newsletterDiscount": "-10% 1ère commande abonné",
       "trackedShipping": "Livraison suivie",
       "vat": "TVA non applicable<br></br>art. 293 B du CGI",
       "securePayment": "Paiement sécurisé Stripe · CB, Apple Pay, Google Pay",
