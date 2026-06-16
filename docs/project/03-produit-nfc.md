@@ -7,17 +7,23 @@
 Porte-clé imprimé en 3D avec logo client + **languette NFC NTAG213** programmée.
 Approcher un smartphone ouvre instantanément le lien choisi par le client.
 
-**Argument clé : l'URL est modifiable à tout moment sans refaire le porte-clé.**
+**Argument clé : un seul geste (tap) remplace QR code, carte de visite et saisie manuelle.**
 
 ## Destinations possibles (une seule à la fois)
 - Profil Instagram, TikTok ou LinkedIn
 - Site web ou portfolio
-- Numéro de téléphone (`tel:`)
-- Email (`mailto:`)
+- **Fiche contact (vCard)** : nom + téléphone et/ou email écrits sur la puce → « Ajouter aux contacts » au tap
+  (téléphone et email seuls ont été retirés : la fiche contact les remplace avantageusement)
 - Tout autre lien HTTPS
 
-> **Roadmap Phase 3** : page dédiée multi-liens (type digital business card) hébergée par 3BeeStudio,
-> permettant de regrouper plusieurs liens sur une même page et de les modifier depuis un dashboard.
+> **Contrainte technique vCard** : la puce NTAG213 ne stocke que ~132 octets utiles. Le formulaire affiche
+> un compteur d'octets en direct et bloque la commande si la fiche dépasse. Au-delà → orienter vers la
+> future option « fiche contact hébergée » (premium).
+
+> **Option payante (roadmap)** : fiche contact personnalisée multi-liens (type digital business card)
+> **hébergée par 3BeeStudio** — regroupe plusieurs liens (Instagram, email, téléphone, site…) sur une
+> page de marque, modifiable depuis un dashboard client. Proposée en **option premium avec abonnement**
+> (coût d'hébergement récurrent). Voir [ROADMAP](../todo/ROADMAP.md).
 
 ## Composants & Coûts
 
@@ -28,16 +34,30 @@ Approcher un smartphone ouvre instantanément le lien choisi par le client.
 | Programmation NFC | 0€ (app NFC Tools, 10s/unité) | Android |
 | Impression logo | inclus | Bambu Lab |
 
-**Coût de revient total : ~1€/unité** à 100 unités
+**Coût de revient total : ~1€/porte-clé** à 100 unités
 
 ## Pricing (HT, micro-entreprise — pas de TVA)
 
-| Quantité | Prix/unité | Total | Marge brute |
-|----------|-----------|-------|-------------|
-| 10 u | 18€ | 180€ | ~94% |
-| 50 u | 14€ | 700€ | ~93% |
-| 100 u | 11€ | 1 100€ | ~91% |
-| 250+ u | 9€ | 2 250€+ | ~89% |
+> **Logique de prix** : cible ~**0,50 € net/porte-clé** dans la poche au gros volume.
+> Net ≈ prix × (1 − ~13 % charges micro) − ~1 € de coût de revient.
+> Le setup logo (35 € vectorisation) est facturé en plus si nécessaire.
+
+### Frais de port (facturés en plus, inclus dans le total)
+| Quantité | Port |
+|----------|------|
+| 5–49 | 4,90 € |
+| 50–99 | 6,90 € |
+| **100+** | **Offert** |
+
+Le port est ajouté au sous-total ; le client règle le **total intégral** (port compris) à la commande.
+
+| Quantité | Prix/porte-clé | Total | Net estimé /pc |
+|----------|---------------|-------|----------------|
+| 5–9 | 2,90 € | dès 14,50 € | ~1,52 € |
+| 10–49 | 2,50 € | dès 25 € | ~1,18 € |
+| 50–99 | 2,20 € | dès 110 € | ~0,91 € |
+| 100–249 | 1,90 € | dès 190 € | ~0,65 € |
+| 250+ | 1,70 € | dès 425 € | ~0,48 € |
 
 Setup logo si vectorisation nécessaire : **35€ one-time**
 
@@ -74,4 +94,4 @@ Setup logo si vectorisation nécessaire : **35€ one-time**
 3. Grille tarifaire volume
 4. Formulaire de devis (entreprise, secteur, quantité, logo upload, URL cible)
 5. Logos clients dès premières références
-6. FAQ : "Et si je change de réseau social ?" / "Compatible tous téléphones ?"
+6. FAQ : "Compatible tous téléphones ?" / "Comment fonctionne la puce NFC ?"

@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
 /* ── Social SVG icons ── */
 function TikTokIcon() {
@@ -43,35 +44,36 @@ const socials = [
 
 const columns = [
   {
-    title: 'BOUTIQUE',
+    titleKey: 'boutique.title',
     links: [
-      { label: 'Tous les objets',  href: '/boutique' },
-      { label: 'Objets déco',      href: '/boutique' },
-      { label: 'Lampes',           href: '/boutique' },
-      { label: 'Séries limitées',  href: '/boutique' },
+      { labelKey: 'boutique.all',     href: '/boutique' },
+      { labelKey: 'boutique.deco',    href: '/boutique' },
+      { labelKey: 'boutique.lamps',   href: '/boutique' },
+      { labelKey: 'boutique.limited', href: '/boutique' },
     ],
   },
   {
-    title: 'PORTE-CLÉ CONNECTÉ',
+    titleKey: 'nfc.title',
     links: [
-      { label: 'Découvrir le produit', href: '/nfc' },
-      { label: 'Comment ça marche',    href: '/nfc' },
-      { label: 'Tarifs & devis',       href: '/nfc' },
-      { label: 'Commander',            href: '/nfc#commander' },
+      { labelKey: 'nfc.discover', href: '/nfc' },
+      { labelKey: 'nfc.how',      href: '/nfc' },
+      { labelKey: 'nfc.pricing',  href: '/nfc' },
+      { labelKey: 'nfc.order',    href: '/nfc#commander' },
     ],
   },
   {
-    title: 'SUR-MESURE',
+    titleKey: 'custom.title',
     links: [
-      { label: 'Lancer un projet', href: '/sur-mesure' },
-      { label: 'Notre process',    href: '/sur-mesure' },
-      { label: 'Portfolio',        href: '/portfolio' },
-      { label: 'Nous contacter',   href: '/contact' },
+      { labelKey: 'custom.start',     href: '/custom' },
+      { labelKey: 'custom.process',   href: '/custom' },
+      { labelKey: 'custom.portfolio', href: '/portfolio' },
+      { labelKey: 'custom.contact',   href: '/contact' },
     ],
   },
 ] as const
 
 export default function SiteFooter() {
+  const t = useTranslations('footer')
   return (
     <footer className="border-t border-[var(--line)]" style={{ background: '#050506' }}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -93,8 +95,8 @@ export default function SiteFooter() {
             </Link>
 
             <p className="text-ink-2 mb-6 leading-relaxed" style={{ fontSize: 14, maxWidth: 260 }}>
-              Studio de design 3D et fabrication sur mesure.<br />
-              Imaginé et imprimé en France. 🇫🇷
+              {t('tagline1')}<br />
+              {t('tagline2')} 🇫🇷
             </p>
 
             {/* Social icons */}
@@ -117,19 +119,19 @@ export default function SiteFooter() {
 
           {/* Nav columns */}
           {columns.map((col) => (
-            <div key={col.title}>
+            <div key={col.titleKey}>
               <div className="font-mono text-ink-3 mb-5" style={{ fontSize: 10, letterSpacing: '0.12em' }}>
-                {col.title}
+                {t(col.titleKey)}
               </div>
               <ul className="flex flex-col gap-3">
-                {col.links.map(({ label, href }) => (
-                  <li key={label}>
+                {col.links.map(({ labelKey, href }) => (
+                  <li key={labelKey}>
                     <Link
                       href={href}
                       className="text-ink-2 hover:text-amber transition-colors"
                       style={{ fontSize: 14 }}
                     >
-                      {label}
+                      {t(labelKey)}
                     </Link>
                   </li>
                 ))}
@@ -140,17 +142,31 @@ export default function SiteFooter() {
 
         {/* ── Bottom bar ── */}
         <div className="border-t border-[var(--line)] py-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-mono text-ink-3" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
-            © 2026 · 3BEESTUDIO · TOUS DROITS RÉSERVÉS
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="font-mono text-ink-3" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
+              {t('rights')}
+            </span>
+            <a
+              href="https://fr.trustpilot.com/review/3beestudio.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 font-mono text-ink-3 hover:text-[#00B67A] transition-colors cursor-pointer"
+              style={{ fontSize: 10, letterSpacing: '0.04em' }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M12 0L14.6 8H23.4L16.4 12.9L19 21L12 16.1L5 21L7.6 12.9L0.6 8H9.4L12 0Z" />
+              </svg>
+              Trustpilot
+            </a>
+          </div>
           <div className="flex flex-wrap gap-5">
             {([
-              { label: 'Mentions légales',           href: '/mentions-legales' },
-              { label: 'CGV',                        href: '/cgv' },
-              { label: 'Politique de confidentialité', href: '/politique-de-confidentialite' },
-            ] as const).map(({ label, href }) => (
-              <Link key={label} href={href} className="font-mono text-ink-3 hover:text-ink-1 transition-colors" style={{ fontSize: 10, letterSpacing: '0.04em' }}>
-                {label}
+              { labelKey: 'legal.mentions', href: '/mentions-legales' },
+              { labelKey: 'legal.cgv',      href: '/cgv' },
+              { labelKey: 'legal.privacy',  href: '/politique-de-confidentialite' },
+            ] as const).map(({ labelKey, href }) => (
+              <Link key={labelKey} href={href} className="font-mono text-ink-3 hover:text-ink-1 transition-colors" style={{ fontSize: 10, letterSpacing: '0.04em' }}>
+                {t(labelKey)}
               </Link>
             ))}
           </div>

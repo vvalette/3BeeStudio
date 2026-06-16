@@ -1,0 +1,742 @@
+{
+  "nav": {
+    "nfc": "Connected keychain",
+    "custom": "Custom orders",
+    "portfolio": "Portfolio",
+    "contact": "Contact us",
+    "home": "3BeeStudio — home",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "footer": {
+    "tagline1": "3D design studio and made-to-order manufacturing.",
+    "tagline2": "Designed and printed in France.",
+    "boutique": {
+      "title": "SHOP",
+      "all": "All items",
+      "deco": "Decor items",
+      "lamps": "Lamps",
+      "limited": "Limited editions"
+    },
+    "nfc": {
+      "title": "CONNECTED KEYCHAIN",
+      "discover": "Discover the product",
+      "how": "How it works",
+      "pricing": "Pricing & quotes",
+      "order": "Order"
+    },
+    "custom": {
+      "title": "CUSTOM ORDERS",
+      "start": "Start a project",
+      "process": "Our process",
+      "portfolio": "Portfolio",
+      "contact": "Contact us"
+    },
+    "rights": "© 2026 · 3BEESTUDIO · ALL RIGHTS RESERVED",
+    "legal": {
+      "mentions": "Legal notice",
+      "cgv": "Terms of sale",
+      "privacy": "Privacy policy"
+    }
+  },
+  "hero": {
+    "eyebrow": "3D printing studio · France",
+    "heading": "<honey>3D</honey> printing,<br></br>designed and<br></br>printed in France.",
+    "subtitle": "One-of-a-kind pieces, limited editions and personalised connected keychains.",
+    "ctaPrimary": "Create my connected keychain",
+    "ctaSecondary": "Explore the shop",
+    "trust": {
+      "france": "Made in France",
+      "payment": "Secure payment",
+      "delivery": "Delivered in 5–10 days"
+    },
+    "studioOpen": "STUDIO OPEN",
+    "scroll": "DISCOVER"
+  },
+  "nfcSection": {
+    "eyebrow": "Connected keychain",
+    "heading": "The connected keychain<br></br>that speaks for you.",
+    "subtitle": "A 3D-printed keychain with your logo and a built-in NFC chip.<br></br>Your customer taps their phone. Your link opens, no app needed.",
+    "keychainAlt": "Custom 3D keychain with your logo",
+    "keychainTag": "KEYCHAIN WITH YOUR LOGO",
+    "urlCaption": "EXAMPLE: your instagram page",
+    "mock": {
+      "bio": "3D Studio · Lyon 🇫🇷",
+      "posts": "posts",
+      "followers": "followers",
+      "following": "following",
+      "follow": "Follow"
+    },
+    "pitchTitle": "Your digital identity, always within reach.",
+    "pitchDesc": "Tap a smartphone and instantly open your page, with no app or QR code.",
+    "destinations": {
+      "social": "Instagram, TikTok or LinkedIn",
+      "website": "Your website or portfolio",
+      "contact": "A contact card (added in 1 tap)",
+      "other": "Any other link"
+    },
+    "destinationsTitle": "Point it to whatever you want",
+    "orderCta": "Order my connected keychain",
+    "priceLine": "From <amber>€1.70</amber> per unit · minimum order 5 · free shipping from 100",
+    "demoButton": "Watch the connected keychain demo",
+    "features": {
+      "noApp": "No app",
+      "noQr": "No QR code",
+      "noBattery": "No battery",
+      "madeInFrance": "Printed in France"
+    }
+  },
+  "customCta": {
+    "eyebrow": "Custom orders",
+    "heading": "An idea?<br></br><honey>We make it.</honey>",
+    "description": "Personalised gift, product prototype, mechanical parts, repair of broken objects, and more...<br></br>Quote within 48h, prototype within 7 days.",
+    "cta": "Describe my project",
+    "stats": {
+      "imagination": {
+        "label": "IMAGINATION"
+      },
+      "quote": {
+        "value": "48h",
+        "label": "QUOTE"
+      },
+      "prototype": {
+        "value": "7d",
+        "label": "PROTOTYPE"
+      },
+      "delivery": {
+        "value": "5–7d",
+        "label": "DELIVERY"
+      }
+    },
+    "steps": {
+      "01": {
+        "title": "The studio listens to you",
+        "desc": "No endless forms — a direct conversation with the maker. First 3D render in hand within 48h."
+      },
+      "02": {
+        "title": "Prototype & iteration",
+        "desc": "Test print, detailed photos, feedback. We refine until the piece is perfect."
+      },
+      "03": {
+        "title": "Production & delivery",
+        "desc": "Short-run production or one-off piece. Shipped within 5–7 days across France."
+      }
+    }
+  },
+  "videoStrip": {
+    "eyebrow": "Studio · TikTok",
+    "heading": "Watch the pieces come to life.",
+    "viewAll": "VIEW ALL →",
+    "cardAria": "Watch « {title} » on TikTok"
+  },
+  "portfolioSection": {
+    "eyebrow": "Portfolio",
+    "heading": "Recent projects.",
+    "viewAll": "VIEW ALL →",
+    "explore": "Explore the portfolio",
+    "tileAria": "View the {label} project",
+    "tileMeta": "2025 · ORDER",
+    "tiles": {
+      "hexalux": "Hexalux Lamp",
+      "eldur": "Eldur Trophy",
+      "bouchet": "Bouchet House",
+      "capsule": "Studio R Capsule"
+    }
+  },
+  "productsGrid": {
+    "eyebrow": "Shop",
+    "heading": "Our signature pieces.",
+    "subtitle": "Hand-printed objects from our studios. Every piece is one of a kind.",
+    "viewAll": "VIEW ALL →",
+    "comingSoon": "Coming soon",
+    "bannerTitle": "The shop is arriving<br></br><honey>very soon.</honey>",
+    "bannerDesc": "In the meantime, contact us directly to place a custom order.",
+    "material": "PLA · MATTE BLACK",
+    "inStock": "IN STOCK",
+    "favorite": "Add to favourites",
+    "unfavorite": "Remove from favourites",
+    "filters": {
+      "all": "All",
+      "deco": "Decor",
+      "lamps": "Lamps",
+      "games": "Games",
+      "audio": "Audio",
+      "plants": "Plants"
+    },
+    "products": {
+      "hiveVase": {
+        "name": "Hive Vase 01",
+        "tag": "New"
+      },
+      "apexLamp": {
+        "name": "Apex Lamp"
+      },
+      "studioKing": {
+        "name": "Studio King",
+        "tag": "Limited edition"
+      },
+      "pollenPot": {
+        "name": "Pollen Pot S"
+      },
+      "sonusMini": {
+        "name": "Sonus Mini"
+      }
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Testimonials",
+    "heading": "They trust us."
+  },
+  "newsletter": {
+    "eyebrow": "Honey Drop",
+    "heading": "New releases, in preview.",
+    "description": "Monthly drop, limited editions, -10% on your first order.",
+    "placeholder": "email@studio.fr",
+    "submit": "Subscribe",
+    "success": "Welcome to the hive! Your -10% is activated on your first order. You'll be among the first to hear about new drops and limited series.",
+    "error": "Something went wrong. Please try again."
+  },
+  "nfcPage": {
+    "meta": {
+      "title": "Custom NFC keychains for business",
+      "description": "Custom NFC keychains with your company logo, 3D printed in France. Programmed chip (website, vCard, socials), from 5 units. Free shipping from 100."
+    },
+    "heading": "<honey>NFC connected</honey> keychain",
+    "subtitle": "3D printed · Custom logo · Programmed NFC chip",
+    "trust": {
+      "france": "Made in France",
+      "payment": "Secure Stripe payment",
+      "validation": "Validation within 24h",
+      "delivery": "Delivered in 5–10 business days"
+    },
+    "faq": {
+      "heading": "Frequently asked questions",
+      "items": [
+        {
+          "q": "What is the minimum order quantity?",
+          "a": "Orders start at 5 keychains. The unit price decreases with volume, down to €1.70 per unit from 250 pieces."
+        },
+        {
+          "q": "Which logo formats do you accept?",
+          "a": "PNG, JPG or SVG. If your logo isn't vector-based, we can vectorise it (any extra cost is communicated and approved before production)."
+        },
+        {
+          "q": "What does the NFC chip do?",
+          "a": "When tapped with a smartphone, it instantly opens the destination of your choice: website, contact card (vCard), social profile or Google review page. The destination is programmed according to your choice at order time."
+        },
+        {
+          "q": "Can the chip destination be changed after delivery?",
+          "a": "The destination is programmed at order time. An editable redirect option (hosted by 3BeeStudio) can be offered separately; it is not part of the base offer."
+        },
+        {
+          "q": "Which phones are compatible?",
+          "a": "Almost all recent smartphones: iPhone (XS and newer, automatic reading) and NFC-enabled Android devices. No app to install."
+        },
+        {
+          "q": "What are the delivery times?",
+          "a": "Keychains are 3D printed in France. Allow 5 to 10 business days. Shipping is free from 100 units."
+        },
+        {
+          "q": "Does the keychain need a battery?",
+          "a": "No, no battery is required. NFC (Near Field Communication) technology is passive: the chip is powered by the electromagnetic field emitted by the phone when it reads it. The keychain works indefinitely, with no maintenance or charging."
+        }
+      ]
+    }
+  },
+  "nfcForm": {
+    "next": "Next",
+    "back": "Back",
+    "edit": "Edit",
+    "errors": {
+      "upload": "Upload error",
+      "order": "Error while ordering",
+      "destinationRequired": "Enter a destination",
+      "destinationInvalid": "Invalid destination",
+      "vcardTooLong": "Contact card too long for the NFC chip — shorten it",
+      "quantityRequired": "Quantity required",
+      "quantityMin": "Minimum 5 keychains",
+      "nameRequired": "Name required",
+      "emailInvalid": "Invalid email",
+      "phoneInvalid": "Invalid phone number",
+      "sectorRequired": "Sector required",
+      "addressRequired": "Address required",
+      "cityRequired": "City required",
+      "postalInvalid": "Invalid postal code",
+      "countryRequired": "Country required"
+    },
+    "progress": {
+      "logo": "Logo",
+      "quantity": "Quantity",
+      "contact": "Contact",
+      "payment": "Payment",
+      "back": "Return to this step"
+    },
+    "config": {
+      "title": "Configuration",
+      "sub": "Your logo and the NFC chip destination",
+      "logoTitle": "Your logo",
+      "logoHint": "SVG file — required for 3D modelling",
+      "rejectTooLarge": "File too large (max 2 MB). Re-export your SVG from your design software.",
+      "rejectType": "This format isn't supported here. Only have a PNG or JPG? Write to us at contact@3beestudio.fr and we'll vectorise it for you.",
+      "rejectGeneric": "File rejected. Make sure it's a .svg file (max 2 MB).",
+      "previewAlt": "Logo preview",
+      "uploaded": "Logo added",
+      "clickToChange": "Click to change",
+      "uploading": "Uploading...",
+      "dropHere": "Drop your logo here",
+      "dropPrompt": "Drag & drop or click",
+      "maxSize": "Max 2 MB",
+      "noSvg": "No SVG?",
+      "svgInfo": "We can create one from your PNG or JPG image. Write to us at <mail>contact@3beestudio.fr</mail>.",
+      "linkTitle": "Your link",
+      "linkHint": "What opens when a phone is tapped against the keychain",
+      "formatLabel": "Your logo in SVG format · max 2 MB"
+    },
+    "quantity": {
+      "title": "Quantity",
+      "sub": "The price per keychain drops automatically with volume",
+      "label": "Number of keychains",
+      "popular": "Popular",
+      "or": "or enter",
+      "customPlaceholder": "Other quantity (min. 5)",
+      "unitPrice": "Unit price",
+      "subtotal": "Subtotal ({qty} keychains)",
+      "shipping": "Shipping",
+      "free": "Free",
+      "total": "Total to pay",
+      "freeShippingHint": "Only <amber>{count}</amber> more keychains for free shipping"
+    },
+    "contact": {
+      "title": "Contact & delivery",
+      "sub": "Your details and where to send your order",
+      "coordsTitle": "Your details",
+      "coordsHint": "To confirm the order",
+      "company": "Company name",
+      "companyPlaceholder": "Your company name",
+      "email": "Business email",
+      "phone": "Phone",
+      "sector": "Industry",
+      "sectorPlaceholder": "Choose an industry",
+      "addressTitle": "Delivery address",
+      "addressHint": "Where to send your order",
+      "recipient": "Recipient name",
+      "recipientPlaceholder": "First name Last name or company name",
+      "address": "Address",
+      "addressPlaceholder": "Street number and name",
+      "address2": "Additional info (optional)",
+      "address2Placeholder": "Building, floor, entry code…",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country",
+      "countryPlaceholder": "Choose a country"
+    },
+    "sectors": {
+      "restaurant": "Restaurant / Food",
+      "beauty": "Hair salon / Beauty",
+      "wellness": "Wellness / Spa",
+      "realEstate": "Real estate",
+      "craftsman": "Craftsman / Construction",
+      "retail": "Retail",
+      "agency": "Communications agency",
+      "other": "Other"
+    },
+    "countries": {
+      "FR": "France",
+      "BE": "Belgium",
+      "CH": "Switzerland",
+      "LU": "Luxembourg",
+      "MC": "Monaco"
+    },
+    "recap": {
+      "title": "Summary",
+      "sub": "One last look before secure payment",
+      "orderTitle": "Your order",
+      "logoAlt": "Your logo",
+      "logoValidated": "Logo validated",
+      "productName": "NFC connected keychain",
+      "productDesc": "3D printed with your logo · programmed chip",
+      "contactTitle": "Contact",
+      "shippingTitle": "Delivery",
+      "subtotal": "Subtotal",
+      "newsletterDiscount": "-10% first order (subscriber)",
+      "trackedShipping": "Tracked shipping",
+      "vat": "VAT not applicable<br></br>art. 293 B of the French Tax Code",
+      "securePayment": "Secure Stripe payment · Card, Apple Pay, Google Pay",
+      "redirecting": "Redirecting...",
+      "pay": "Pay {amount}",
+      "consent": "By confirming, you accept our <cgv>Terms of Sale</cgv>. No right of withdrawal (Art. L221-28)."
+    }
+  },
+  "nfcLink": {
+    "phoneInvalid": "Invalid phone number",
+    "emailInvalid": "Invalid email",
+    "required": "required",
+    "finalLink": "Final link:",
+    "types": {
+      "instagram": {
+        "label": "Instagram",
+        "placeholder": "yourhandle or full URL",
+        "help": [
+          "Open the Instagram app on your profile",
+          "Tap the menu ☰ (top right)",
+          "\"Share this profile\" → \"Copy link\"",
+          "Paste the link here — the handle will be extracted automatically"
+        ]
+      },
+      "tiktok": {
+        "label": "TikTok",
+        "placeholder": "yourhandle or full URL",
+        "help": [
+          "Open your TikTok profile",
+          "Tap the \"Share\" button (arrow)",
+          "\"Copy link\"",
+          "Paste it here"
+        ]
+      },
+      "linkedin": {
+        "label": "LinkedIn",
+        "placeholder": "your-profile or full URL",
+        "help": [
+          "Open your LinkedIn profile",
+          "Click \"More\" then \"Copy link to profile\"",
+          "Paste it here"
+        ]
+      },
+      "website": {
+        "label": "Website",
+        "placeholder": "mysite.com",
+        "help": [
+          "Paste the full address of your site (e.g. mysite.com)",
+          "No need for https:// — it's added automatically"
+        ]
+      },
+      "contact": {
+        "label": "Contact card",
+        "placeholder": "",
+        "help": [
+          "Fill in the name and at least one contact (phone or email)",
+          "When tapped with a phone, an \"Add to contacts\" window opens",
+          "The customer saves everything in one tap — no typing, no typos"
+        ]
+      },
+      "other": {
+        "label": "Other link",
+        "placeholder": "https://...",
+        "help": [
+          "Paste any link starting with https://"
+        ]
+      }
+    },
+    "contact": {
+      "firstName": "First name",
+      "lastName": "Last name or company",
+      "phone": "Phone",
+      "email": "Email",
+      "guidance": "Enter the name and at least one contact — phone or email."
+    },
+    "help": {
+      "contactToggle": "What's in the contact card?",
+      "linkToggle": "How do I get my {label} link?"
+    },
+    "meter": {
+      "label": "Size on the NFC chip",
+      "bytes": "{bytes} / {limit} bytes",
+      "over": "Too much information for the chip. The NFC chip (NTAG213) only stores ~{limit} bytes: shorten the name, or keep just one contact method (phone <em>or</em> email).",
+      "under": "The NFC chip has limited memory (~{limit} bytes). As long as the bar isn't full, everything fits."
+    },
+    "verify": {
+      "loading": "Verifying…",
+      "okWebsite": "Site reachable",
+      "okAccount": "Account found",
+      "notFoundWebsite": "Site not found — check the address",
+      "notFoundAccount": "Account not found — check the handle",
+      "impossible": "Automatic verification not possible"
+    }
+  },
+  "customPage": {
+    "meta": {
+      "title": "Bespoke 3D printing in France",
+      "description": "Bespoke 3D printing in France: personalised gift, prototype, mechanical or spare part. Describe your project, quote within 48h."
+    },
+    "eyebrow": "Custom orders",
+    "heading": "An idea?<br></br><honey>We make it.</honey>",
+    "intro": "Personalised gift, product prototype, mechanical part, repair… Describe your project and get a quote <nowrap>within 48h.</nowrap>",
+    "stats": {
+      "quote": {
+        "value": "48h",
+        "label": "Quote time"
+      },
+      "prototype": {
+        "value": "7 d",
+        "label": "Prototype"
+      },
+      "delivery": {
+        "value": "5–10 d",
+        "label": "Delivery"
+      }
+    },
+    "how": {
+      "title": "How does it work?",
+      "steps": {
+        "describe": {
+          "title": "Describe your project",
+          "desc": "Type, budget, timeline — 2 minutes is enough."
+        },
+        "quote": {
+          "title": "Quote within 48h",
+          "desc": "We review your request and send you a proposal."
+        },
+        "production": {
+          "title": "Production & delivery",
+          "desc": "Made in France, shipped with tracking."
+        }
+      }
+    },
+    "pricing": {
+      "title": "The more you order, the less it costs",
+      "body": "A one-off piece? A series? Anything is possible. The first piece requires design and fine-tuning work, which is what makes it a little more expensive. After that, the model is ready: each additional unit costs much less, whether you order 10 today or 50 next month.",
+      "note": "Tell us the quantity in your request, and we'll quote it all at once."
+    },
+    "benefits": {
+      "freeQuote": "Free quote, no commitment",
+      "payment": "Secure Stripe payment",
+      "deposit": "50% deposit · balance on delivery",
+      "vat": "VAT not applicable · micro-enterprise"
+    },
+    "contactCard": {
+      "title": "A question? Write to us."
+    }
+  },
+  "surMesureForm": {
+    "back": "Back",
+    "continue": "Continue",
+    "sending": "Sending…",
+    "submit": "Send my request →",
+    "errors": {
+      "projectType": "Choose a project type",
+      "description": "Describe your project in at least 20 characters",
+      "budget": "Select a budget range",
+      "deadline": "Select a timeline",
+      "name": "Your name is required",
+      "email": "Invalid email",
+      "phone": "Phone number required",
+      "shippingName": "Recipient name required",
+      "shippingAddress": "Address required",
+      "shippingCity": "City required",
+      "shippingPostal": "Postal code required",
+      "unexpected": "Unexpected error",
+      "generic": "An error occurred"
+    },
+    "projectTypes": {
+      "cadeau": "Personalised gift",
+      "deco": "Decor / design object",
+      "prototype": "Product prototype",
+      "mecanique": "Mechanical / functional part",
+      "reparation": "Repair / replacement",
+      "autre": "Other project"
+    },
+    "budget": {
+      "under50": "Under €50",
+      "50to200": "€50 – €200",
+      "200to500": "€200 – €500",
+      "500to1000": "€500 – €1,000",
+      "over1000": "Over €1,000"
+    },
+    "deadline": {
+      "urgent": "Urgent (under 2 weeks)",
+      "month": "About 1 month",
+      "quarter": "2 to 3 months",
+      "flexible": "No constraint"
+    },
+    "step1": {
+      "title": "Your project",
+      "sub": "Tell us what you'd like to create",
+      "projectType": "Project type",
+      "description": "Describe your project",
+      "descriptionPlaceholder": "E.g. \"I'd like a display stand with my daughter's name engraved on it, for a birthday gift.\" or \"A broken fan mount on my PC, ref. XYZ — I have the dimensions.\"",
+      "disclaimer": "Not all projects can be made with 3D printing. If your request exceeds our capabilities or doesn't match our activity, we reserve the right to decline it — at no cost or commitment to you.",
+      "budget": "Estimated budget",
+      "deadline": "Desired timeline"
+    },
+    "step2": {
+      "title": "Your details",
+      "sub": "So we can send you the custom quote",
+      "name": "First and last name *",
+      "company": "Company (optional)",
+      "email": "Email *",
+      "phone": "Phone *",
+      "notice": "<strong>Quote within 48 business hours.</strong> We'll review your project and send a detailed proposal to this email address."
+    },
+    "step3": {
+      "title": "Delivery address",
+      "sub": "Where would you like to receive your order?",
+      "recipient": "Recipient name *",
+      "address": "Address *",
+      "postalCode": "Postal code *",
+      "city": "City *",
+      "recap": "Summary",
+      "recapProject": "Project",
+      "recapBudget": "Budget",
+      "recapDeadline": "Timeline",
+      "recapContact": "Contact"
+    }
+  },
+  "common": {
+    "comingSoon": "Coming soon…"
+  },
+  "suiviMesure": {
+    "meta": {
+      "title": "Request tracking — 3BeeStudio"
+    },
+    "submitted": {
+      "eyebrow": "Request sent",
+      "title": "Your project is in our hands.",
+      "lead": "We'll send you a custom quote within <b>48 business hours</b> at <b>{email}</b>.",
+      "reference": "Reference"
+    },
+    "paid": {
+      "eyebrow": "Deposit received",
+      "title": "Production under way!",
+      "desc": "We're making your project. You'll receive an email as soon as it ships."
+    },
+    "default": {
+      "eyebrow": "Request tracking",
+      "title": "Request <mono></mono>"
+    },
+    "action": {
+      "eyebrow": "Action required",
+      "title": "Your quote is ready",
+      "deposit": "Deposit:",
+      "total": "Estimated total:",
+      "pay": "Pay my deposit →"
+    },
+    "timeline": {
+      "heading": "Progress",
+      "inProgress": "in progress",
+      "track": "Track my parcel",
+      "tracking": "Tracking: {number}"
+    },
+    "statuses": {
+      "pending_quote": "Quote in preparation",
+      "quote_sent": "Quote sent",
+      "deposit_paid": "Deposit received",
+      "in_production": "In production",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "hints": {
+      "pending_quote": "We're reviewing your project. Custom quote within 48 business hours.",
+      "quote_sent": "Your quote is ready. Pay the deposit to start production.",
+      "deposit_paid": "Deposit received — we're starting production.",
+      "in_production": "Your project is in our hands. We'll keep you posted.",
+      "shipped": "Your parcel is on its way.",
+      "delivered": "Your order has arrived. Thank you for your trust!"
+    },
+    "details": {
+      "heading": "Your project",
+      "type": "Type",
+      "budget": "Budget",
+      "deadline": "Timeline",
+      "company": "Company",
+      "description": "Description"
+    },
+    "contact": {
+      "title": "A question about your project?",
+      "sub": "contact@3beestudio.fr — reply within 24h"
+    }
+  },
+  "suiviNfc": {
+    "meta": {
+      "title": "Order tracking — 3BeeStudio"
+    },
+    "success": {
+      "eyebrow": "Payment received",
+      "title": "Thank you for your order.",
+      "lead": "We're starting production of your keychains. A summary has just been sent to <b>{email}</b>.",
+      "reference": "Reference"
+    },
+    "default": {
+      "eyebrow": "Order tracking",
+      "title": "Order <mono></mono>"
+    },
+    "how": {
+      "heading": "How it works",
+      "validation": {
+        "title": "Validation within 24h",
+        "desc": "We check your logo and your NFC settings."
+      },
+      "printing": {
+        "title": "Printing & programming",
+        "desc": "Each keychain is 3D printed and programmed by hand in our studios."
+      },
+      "shipping": {
+        "title": "Tracked shipping",
+        "desc": "Delivery in 5 to 10 business days, tracking link sent by email."
+      }
+    },
+    "timeline": {
+      "heading": "Progress",
+      "inProgress": "in progress",
+      "track": "Track my parcel",
+      "tracking": "Tracking: {number}",
+      "pendingPayment": "Waiting for payment confirmation…"
+    },
+    "statuses": {
+      "pending_payment": "Awaiting payment",
+      "confirmed": "Order confirmed",
+      "processing": "Processing",
+      "printing": "Printing in progress",
+      "printed": "Printed",
+      "shipped": "Shipped",
+      "delivered": "Delivered"
+    },
+    "hints": {
+      "confirmed": "Payment confirmed — your order is going into production.",
+      "processing": "We're checking your logo and preparing your NFC chips.",
+      "printing": "Your keychains are being 3D printed in our studios.",
+      "printed": "Production complete — your parcel is being prepared.",
+      "shipped": "Your parcel is on its way.",
+      "delivered": "Your order has arrived. Thank you for your trust!"
+    },
+    "order": {
+      "heading": "Your order",
+      "logoAlt": "Logo {company}",
+      "product": "{quantity} personalised NFC keychains",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "free": "Free",
+      "totalPaid": "Total paid",
+      "vat": "VAT not applicable, art. 293 B of the French Tax Code"
+    },
+    "contact": {
+      "title": "A question about your order?",
+      "sub": "contact@3beestudio.fr — reply within 24h"
+    }
+  },
+  "legal": {
+    "back": "Home",
+    "updated": "Updated"
+  },
+  "legalMentions": {
+    "title": "Legal notice",
+    "lastUpdated": "June 2026",
+    "body": "<div class='info-box'><strong>3BeeStudio</strong><br />Sole proprietorship (micro-enterprise) — VALETTE Valentin<br />144 rue de la République, 69220 Belleville-en-Beaujolais, France<br />SIREN: 931 419 550 · SIRET: 931 419 550 00039<br />Email: <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></div><h2>Site publisher</h2><p>The site <strong>3beestudio.fr</strong> is published by the micro-enterprise 3BeeStudio, specialising in 3D design and made-to-order manufacturing of objects printed in France.</p><h2>Hosting</h2><p>This site is hosted by <strong>Vercel Inc.</strong><br />440 N Barranca Ave #4133, Covina, CA 91723, United States<br /><a href='https://vercel.com' target='_blank' rel='noopener noreferrer'>vercel.com</a></p><h2>Intellectual property</h2><p>All content on this site (text, images, logo, design, visuals) is the exclusive property of 3BeeStudio, unless otherwise stated. Any reproduction or distribution without prior written authorisation is prohibited.</p><p>The 3D models designed by 3BeeStudio, whether distributed as STL files or in any other digital format, are original works protected by copyright law. Any exact reproduction, faithful copy, redistribution, or commercial use without prior written authorisation is strictly prohibited and may constitute an act of counterfeiting. While creative inspiration is freely permitted, closely reproducing an original 3BeeStudio model, in whole or in part, may give rise to civil and criminal liability.</p><h2>Liability</h2><p>3BeeStudio strives to keep the site's information up to date and accurate. However, the publisher cannot be held liable for any error or omission. Links to third-party sites are provided for information purposes only.</p><h2>Applicable law</h2><p>This site and its content are governed by French law. Any dispute relating to the use of the site will be submitted to the jurisdiction of the courts of Villefranche-sur-Saône.</p><h2>Third-party brands</h2><p>Products offered by 3BeeStudio are independent accessories designed and manufactured by us. Any third-party brand names mentioned in product descriptions are used solely for descriptive purposes to indicate product compatibility. 3BeeStudio is not affiliated with, approved, sponsored, or endorsed by these brands. All brand names belong to their respective owners.</p><h2>Contact</h2><p>For any question regarding this legal notice:<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></p>"
+  },
+  "legalCgv": {
+    "title": "Terms and Conditions of Sale",
+    "lastUpdated": "June 2026",
+    "body": "<div class='info-box'><strong>3BeeStudio</strong> — Micro-enterprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais, France<br />SIREN: 931 419 550 · SIRET: 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a> · 3beestudio.fr</div><h2>Article 1 — Purpose</h2><p>These Terms and Conditions of Sale (T&Cs) govern the contractual relationship between 3BeeStudio and any customer wishing to purchase a product or service offered on the site <strong>3beestudio.fr</strong>. Any order implies unreserved acceptance of these T&Cs.</p><h2>Article 2 — Products and services</h2><p>3BeeStudio offers two types of orders:</p><ul><li><strong>Stock items</strong>: products available in the shop, shipped within 48h to 5 business days.</li><li><strong>Custom creations</strong>: objects designed and made to the customer's specifications. A quote is issued before any production. A 50% deposit is required when ordering.</li><li><strong>Connected keychains</strong>: custom 3D keychains with a built-in NFC chip. The NFC chip destination is programmed according to the choice indicated by the customer when ordering.</li><li><strong>Logo vectorisation</strong>: if the logo is supplied in a non-vector format (PNG, JPG), conversion to a vector format (SVG) may be charged as an extra. The additional cost is communicated and accepted before any production.</li></ul><p>All objects are made in France. Photos and visuals are provided for illustration only; slight colour variations may appear depending on the filament used.</p><h2>Article 3 — Prices</h2><p>Prices are shown in euros, all taxes included. As a micro-enterprise, 3BeeStudio is not subject to VAT (article 293 B of the French Tax Code). Prices may be changed at any time; the applicable price is the one displayed at the time of the order.</p><p>Shipping costs are indicated at the time of payment and are payable by the customer, unless otherwise stated during a promotional offer.</p><h2>Article 4 — Order and payment</h2><p>Orders are placed directly on the site. Payment is secured via <strong>Stripe</strong> and accepts bank cards (Visa, Mastercard, American Express) as well as compatible payment solutions.</p><p>For custom creations, the order is confirmed upon receipt of the 50% deposit. The balance is paid on delivery or before shipping.</p><p>3BeeStudio reserves the right to cancel any order in the event of an availability issue or an obvious error in the price.</p><h2>Article 5 — Delivery</h2><ul><li>Stock items: shipped within 2 to 5 business days.</li><li>Custom creations: lead time specified in the quote (generally 7 to 14 days).</li><li>Delivery within mainland France by carrier (Colissimo or equivalent).</li><li>A tracking number is provided by email as soon as the order ships.</li></ul><p>In the event of a delivery delay attributable to the carrier, 3BeeStudio cannot be held responsible but undertakes to support the customer in resolving the issue.</p><h2>Article 6 — Right of withdrawal</h2><p>In accordance with article L221-18 of the French Consumer Code, the customer has a period of <strong>14 days</strong> from receipt to exercise their right of withdrawal, without justification, for stock products.</p><p><strong>Exception:</strong> the right of withdrawal does not apply to products made to the customer's specifications (custom, personalised keychains), in accordance with article L221-28 of the French Consumer Code.</p><p>To exercise this right, contact us at <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Return costs are payable by the customer. The refund is made within 14 days of receiving the return.</p><h2>Article 7 — Warranties</h2><p>All products benefit from the legal warranty of conformity (articles L217-4 et seq. of the French Consumer Code) and the warranty against hidden defects (articles 1641 et seq. of the French Civil Code).</p><p>In the event of a defective product, contact us as soon as possible with supporting photos. We will proceed with replacement or refund depending on the case.</p><h2>Article 8 — Liability</h2><p>3BeeStudio cannot be held responsible for indirect damage related to the use of the products. Liability is limited to the amount of the order concerned.</p><h2>Article 9 — Personal data</h2><p>The data collected when ordering is used solely for processing and delivering the order. See our <a href='/en/politique-de-confidentialite'>Privacy policy</a> for more information.</p><h2>Article 10 — Disputes</h2><p>In the event of a dispute, an amicable solution will be sought as a priority. Failing that, the customer may resort to mediation via the European online dispute resolution platform: <a href='https://ec.europa.eu/consumers/odr' target='_blank' rel='noopener noreferrer'>ec.europa.eu/consumers/odr</a>.</p><p>These T&Cs are governed by French law. Any dispute will be submitted to the jurisdiction of the courts of Villefranche-sur-Saône.</p>"
+  },
+  "legalPrivacy": {
+    "title": "Privacy policy",
+    "lastUpdated": "June 2026",
+    "body": "<p>3BeeStudio places the utmost importance on protecting your personal data. This policy explains what data we collect, how we use it and your rights as a user.</p><h2>1. Data controller</h2><div class='info-box'><strong>3BeeStudio</strong> — Micro-enterprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais, France<br />SIREN: 931 419 550 · SIRET: 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></div><h2>2. Data collected</h2><h3>When placing an order</h3><ul><li>First name, last name, email address</li><li>Delivery address</li><li>Payment data (processed directly by Stripe, not stored by 3BeeStudio)</li><li>Order history</li></ul><h3>While browsing</h3><ul><li>Anonymised browsing data (pages visited, duration)</li><li>IP address (anonymised)</li><li>Browser and device type</li></ul><h3>Via the contact form / newsletter</h3><ul><li>Email address</li><li>Message content (contact form)</li></ul><h2>3. Purposes of processing</h2><ul><li><strong>Order processing</strong>: management, production, shipping, invoicing</li><li><strong>Communication</strong>: order confirmation, delivery tracking, after-sales service</li><li><strong>Newsletter</strong>: sending our news (with explicit consent)</li><li><strong>Site improvement</strong>: anonymous audience analysis</li><li><strong>Legal obligations</strong>: retention of accounting data</li></ul><h2>4. Legal basis</h2><ul><li>Performance of the contract (orders)</li><li>Consent (newsletter, non-essential cookies)</li><li>Legal obligation (accounting data)</li><li>Legitimate interest (service improvement)</li></ul><h2>5. Retention period</h2><ul><li>Order data: 5 years (accounting obligation)</li><li>Newsletter data: until unsubscription</li><li>Browsing data: 13 months maximum</li></ul><h2>6. Data sharing</h2><p>Your data is never sold. It may be shared only with:</p><ul><li><strong>Stripe</strong>: secure payment (<a href='https://stripe.com/privacy' target='_blank' rel='noopener noreferrer'>Stripe policy</a>)</li><li><strong>Carriers</strong>: for delivery (name, address)</li><li><strong>Vercel</strong>: site hosting (<a href='https://vercel.com/legal/privacy-policy' target='_blank' rel='noopener noreferrer'>Vercel policy</a>)</li></ul><h2>7. Cookies</h2><p>We use only cookies strictly necessary for the proper functioning of the site (session, cart). No advertising or third-party tracking cookie is placed without your consent.</p><h2>8. Your rights (GDPR)</h2><p>In accordance with the GDPR, you have the following rights:</p><ul><li><strong>Right of access</strong>: obtain a copy of your data</li><li><strong>Right to rectification</strong>: correct inaccurate data</li><li><strong>Right to erasure</strong>: delete your data</li><li><strong>Right to portability</strong>: receive your data in a readable format</li><li><strong>Right to object</strong>: object to certain processing</li><li><strong>Right to withdraw consent</strong>: at any time for the newsletter</li></ul><p>To exercise these rights: <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. We will respond within 30 days. You may also lodge a complaint with the <a href='https://www.cnil.fr' target='_blank' rel='noopener noreferrer'>CNIL</a> (French data protection authority).</p><h2>9. Security</h2><p>We implement technical and organisational measures to protect your data (HTTPS connection, restricted access, secure hosting). Payment data is processed directly by Stripe and never passes through our servers.</p><h2>10. DPO contact</h2><p>For any question regarding your personal data:<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a></p>"
+  },
+  "homePage": {
+    "meta": {
+      "title": "Custom NFC keychains & bespoke 3D printing",
+      "description": "French 3D printing studio. Custom NFC keychains with your logo (B2B), series objects and bespoke creations. Made in France, quote within 48h."
+    }
+  }
+}

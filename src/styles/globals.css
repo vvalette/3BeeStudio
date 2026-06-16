@@ -199,6 +199,31 @@
   50%      { opacity: 1; }
 }
 
+/* Trait SVG qui se dessine (confirmation de commande) —
+   l'élément définit stroke-dasharray/offset, l'animation ramène l'offset à 0. */
+@keyframes draw-stroke {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Chevron d'invitation au scroll en bas du hero. */
+@keyframes scroll-cue {
+  0%, 100% { transform: translateY(0);   opacity: 0.45; }
+  50%      { transform: translateY(6px); opacity: 1; }
+}
+
+/* Onde NFC qui se propage depuis le point de contact (effet « tap »). */
+@keyframes nfc-ripple {
+  0%   { transform: scale(0.45); opacity: 0.55; }
+  70%  { opacity: 0; }
+  100% { transform: scale(2.1);  opacity: 0; }
+}
+
+/* Les arcs NFC qui s'illuminent en cascade (transmission). */
+@keyframes nfc-arc {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

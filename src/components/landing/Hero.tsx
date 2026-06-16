@@ -1,5 +1,6 @@
-import Link from 'next/link'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import StatusDot from '@/components/ui/StatusDot'
 
@@ -11,18 +12,37 @@ function ArrowIcon() {
   )
 }
 
-function StarIcon() {
+function PinIcon() {
   return (
-    <svg width="11" height="11" viewBox="0 0 10 10" fill="#FBBF24" aria-hidden>
-      <path d="M5 0 L6.18 3.64 H10 L6.91 5.89 L8.09 9.53 L5 7.28 L1.91 9.53 L3.09 5.89 L0 3.64 H3.82 Z" />
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M13 6.5c0 3.5-5 8-5 8s-5-4.5-5-8a5 5 0 0110 0z" /><circle cx="8" cy="6.5" r="1.8" />
+    </svg>
+  )
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M8 1.5l5.5 2v4c0 3.2-2.3 5.6-5.5 7-3.2-1.4-5.5-3.8-5.5-7v-4l5.5-2z" />
+      <path d="M5.5 8l1.8 1.8L10.8 6" />
+    </svg>
+  )
+}
+
+function TruckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1.5 3.5h8v8h-8v-8zM9.5 6h3l2 2.5v3h-5V6z" />
+      <circle cx="4.5" cy="12.5" r="1.4" /><circle cx="11.5" cy="12.5" r="1.4" />
     </svg>
   )
 }
 
 
 export default function Hero() {
+  const t = useTranslations('hero')
   return (
-    <section className="hex-bg relative overflow-hidden">
+    <section className="hex-bg relative -mt-[72px] overflow-hidden">
       {/* Honey glow */}
       <div
         aria-hidden
@@ -49,6 +69,9 @@ export default function Hero() {
 
           {/* ─── Left: copy ─── */}
           <div className="max-w-2xl">
+            <div className="fade-up mb-5">
+              <Eyebrow>{t('eyebrow')}</Eyebrow>
+            </div>
             <h1
               className="fade-up font-sans font-extrabold text-ink-0"
               style={{
@@ -57,61 +80,55 @@ export default function Hero() {
                 letterSpacing: '-0.04em',
               }}
             >
-              Impression <span className="honey-text pr-1">3D</span>,<br />
-              imaginée et<br />
-              imprimée en France.
+              {t.rich('heading', {
+                honey: (chunks) => <span className="honey-text pr-1">{chunks}</span>,
+                br: () => <br />,
+              })}
             </h1>
 
             <p
               className="fade-up mt-7 text-ink-1"
               style={{ fontSize: 'clamp(1.05rem, 1.6vw, 1.3rem)', lineHeight: 1.55, maxWidth: 500 }}
             >
-              Pièces uniques, séries limitées et porte-clés connectés personnalisés.
+              {t('subtitle')}
             </p>
 
             {/* CTAs */}
             <div className="fade-up mt-10 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/boutique"
+                href="/nfc"
                 className="flex h-[60px] items-center justify-center gap-2 rounded-pill px-10 font-sans font-semibold text-[16px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
                 style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
               >
-                Explorer la boutique <ArrowIcon />
+                {t('ctaPrimary')} <ArrowIcon />
               </Link>
               <Link
-                href="/sur-mesure"
+                href="/boutique"
                 className="flex h-[60px] items-center justify-center rounded-pill px-10 font-sans font-semibold text-[16px] text-ink-0 border border-[var(--line-2)] bg-bg-3 transition-all active:scale-[0.97] hover:bg-bg-4"
               >
-                Lancer un projet sur mesure
+                {t('ctaSecondary')}
               </Link>
             </div>
 
             {/* Trust strip */}
             <div
-              className="fade-up mt-10 inline-flex items-center gap-5 rounded-md border border-[var(--line)] p-5"
+              className="fade-up mt-10 inline-flex flex-wrap items-center gap-x-5 gap-y-2.5 border border-[var(--line)] px-5 py-4"
               style={{ background: 'rgba(20,20,24,0.6)', backdropFilter: 'blur(12px)', borderRadius: 20 }}
             >
-              <div className="flex flex-shrink-0">
-                {(['#3F2E1A', '#7C5410', '#F59E0B', '#FBBF24'] as const).map((color, i) => (
-                  <div
-                    key={i}
-                    className="h-8 w-8 rounded-full border-2 border-bg-0 flex-shrink-0"
-                    style={{ background: color, marginLeft: i ? -9 : 0 }}
-                  />
-                ))}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex gap-0.5 mb-1">
-                  {Array.from({ length: 5 }).map((_, i) => <StarIcon key={i} />)}
-                </div>
-                <div className="font-sans text-ink-1" style={{ fontSize: 13 }}>
-                  4.9 · <span className="font-mono">2 400+</span> objets livrés
-                </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0 pl-3 border-l border-[var(--line)]">
+              {([
+                { Icon: PinIcon, label: t('trust.france') },
+                { Icon: ShieldIcon, label: t('trust.payment') },
+                { Icon: TruckIcon, label: t('trust.delivery') },
+              ] as const).map(({ Icon, label }) => (
+                <span key={label} className="flex items-center gap-2 text-[13px] font-medium text-ink-1">
+                  <span className="flex text-amber"><Icon /></span>
+                  {label}
+                </span>
+              ))}
+              <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0 pl-4 border-l border-[var(--line)]">
                 <StatusDot />
                 <span className="font-mono text-ink-2" style={{ fontSize: 11, letterSpacing: '0.05em' }}>
-                  ATELIER OUVERT
+                  {t('studioOpen')}
                 </span>
               </div>
             </div>
@@ -185,6 +202,17 @@ export default function Hero() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Indice de scroll */}
+      <div aria-hidden className="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex">
+        <span className="font-mono text-ink-3" style={{ fontSize: 9, letterSpacing: '0.22em' }}>{t('scroll')}</span>
+        <svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#F59E0B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+          style={{ animation: 'scroll-cue 2.2s ease-in-out infinite' }}
+        >
+          <path d="M3 5l4 4 4-4" />
+        </svg>
       </div>
     </section>
   )

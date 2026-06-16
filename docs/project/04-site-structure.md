@@ -45,7 +45,7 @@
 ### 📱 Porte-clé connecté (`/nfc`)
 - Mockup porte-clé animé
 - Destinations NFC possibles (un lien au choix)
-- Grille tarifaire volume (dès 10 pièces)
+- Grille tarifaire volume (dès 5 pièces)
 - Formulaire de devis multi-step (logo upload, URL, quantité)
 - FAQ
 
@@ -86,6 +86,6 @@ Formulaire 4 étapes :
 ### Politique de confidentialité (`/politique-de-confidentialite`)
 - RGPD complet, droits utilisateurs, Stripe, cookies
 
-## Roadmap future (Phase 3)
-- Portail client pour modifier l'URL du porte-clé connecté sans contacter 3BeeStudio
-- Page dédiée multi-liens (digital business card) hébergée par 3BeeStudio
+## Roadmap future — option payante (abonnement)
+- Fiche contact personnalisée multi-liens (digital business card) **hébergée par 3BeeStudio**
+- Dashboard client pour gérer sa page, proposé en **option premium avec abonnement** (hébergement récurrent)

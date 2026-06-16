@@ -1,32 +1,37 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { X, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/i18n/navigation'
+import LocaleSwitcher from './LocaleSwitcher'
+import CartButton from '@/components/boutique/CartButton'
 
 const navLinks = [
-  { href: '/boutique',   label: 'Boutique' },
-  { href: '/nfc',        label: 'Porte-clé connecté' },
-  { href: '/sur-mesure', label: 'Sur-mesure' },
-  { href: '/portfolio',  label: 'Portfolio' },
+  { href: '/nfc',       key: 'nfc' },
+  { href: '/custom',    key: 'custom' },
+  { href: '/portfolio', key: 'portfolio' },
 ] as const
 
-export default function Navbar() {
+type Props = {
+  showLocaleSwitcher?: boolean
+  showCart?: boolean
+}
+
+export default function Navbar({ showLocaleSwitcher = false, showCart = true }: Props) {
+  const t = useTranslations('nav')
   const pathname = usePathname()
   const [open, setOpen]         = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
-  // Ajoute un fond plus opaque après 40px de scroll
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Bloque le scroll body quand menu mobile ouvert
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -47,12 +52,12 @@ export default function Navbar() {
       >
         <nav className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8">
 
-          {/* ── Logo texte ── */}
+          {/* ── Logo ── */}
           <Link
             href="/"
             onClick={() => setOpen(false)}
             className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber rounded-lg"
-            aria-label="3BeeStudio — accueil"
+            aria-label={t('home')}
           >
             <Image
               src="/images/logo-name-only.png"
@@ -67,7 +72,7 @@ export default function Navbar() {
 
           {/* ── Desktop links ── */}
           <ul className="hidden items-center gap-0.5 md:flex">
-            {navLinks.map(({ href, label }) => (
+            {navLinks.map(({ href, key }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -78,8 +83,7 @@ export default function Navbar() {
                       : 'text-ink-2 hover:text-ink-0'
                   )}
                 >
-                  {label}
-                  {/* Active indicator dot */}
+                  {t(key)}
                   {isActive(href) && (
                     <span
                       className="absolute bottom-1 left-1/2 -translate-x-1/2 block h-[3px] w-[3px] rounded-full bg-amber"
@@ -91,22 +95,26 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* ── Right ── */}
-          <div className="flex items-center gap-3">
+          {/* ── Right : switcher + CTA + burger ── */}
+          <div className="flex items-center gap-2.5">
+            {showLocaleSwitcher && <LocaleSwitcher />}
+
+            {showCart && <CartButton />}
+
             <Link
               href="/contact"
               className="hidden md:inline-flex h-10 items-center gap-1.5 rounded-pill px-5 text-[13px] font-semibold text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-110"
               style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
             >
-              Nous contacter
+              {t('contact')}
             </Link>
 
             {/* Burger mobile */}
             <button
-              aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={open ? t('closeMenu') : t('openMenu')}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--line)] bg-bg-2 text-ink-1 transition-colors hover:bg-bg-3 hover:text-ink-0 md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--line)] bg-bg-2 text-ink-1 transition-colors hover:bg-bg-3 hover:text-ink-0 md:hidden cursor-pointer"
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -114,19 +122,18 @@ export default function Navbar() {
         </nav>
       </header>
 
-      {/* ── Mobile overlay menu ── */}
+      {/* ── Mobile overlay ── */}
       {open && (
         <div
           className="fixed inset-0 z-40 flex flex-col md:hidden"
           style={{ background: 'var(--bg-0)', paddingTop: 72 }}
         >
-          {/* Glow */}
           <div aria-hidden className="pointer-events-none absolute inset-0"
             style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.10), transparent 60%)' }}
           />
 
           <nav className="relative flex flex-col flex-1 justify-center px-8 gap-2">
-            {navLinks.map(({ href, label }, i) => (
+            {navLinks.map(({ href, key }, i) => (
               <Link
                 key={href}
                 href={href}
@@ -138,7 +145,7 @@ export default function Navbar() {
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 <span className="font-sans font-bold" style={{ fontSize: 28, letterSpacing: '-0.02em' }}>
-                  {label}
+                  {t(key)}
                 </span>
                 <span className="font-mono text-ink-3 group-hover:text-amber transition-colors" style={{ fontSize: 11 }}>
                   0{i + 1}
@@ -147,15 +154,20 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* Bottom CTA */}
-          <div className="relative px-8 pb-10">
+          {/* Switcher + CTA bottom */}
+          <div className="relative px-8 pb-10 space-y-3">
+            {showLocaleSwitcher && (
+              <div className="flex justify-center">
+                <LocaleSwitcher />
+              </div>
+            )}
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
               className="flex h-[54px] w-full items-center justify-center rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97]"
               style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
             >
-              Nous contacter
+              {t('contact')}
             </Link>
           </div>
         </div>

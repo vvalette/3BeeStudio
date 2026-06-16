@@ -7,7 +7,7 @@ interface StepData {
 }
 
 const STEPS: StepData[] = [
-  { n: '01', title: "L'atelier vous écoute",    desc: "Pas de formulaire à rallonge — une conversation directe avec l'artisan. Premier rendu 3D en main sous 48h." },
+  { n: '01', title: "Le studio vous écoute",    desc: "Pas de formulaire à rallonge — une conversation directe avec l'artisan. Premier rendu 3D en main sous 48h." },
   { n: '02', title: 'Prototype & itération',   desc: 'Impression test, photos détaillées, retours. On affine jusqu\'à la pièce parfaite.' },
   { n: '03', title: 'Production & livraison',  desc: 'Production en série courte ou pièce unique. Expédié sous 5–7 jours en France.' },
 ]

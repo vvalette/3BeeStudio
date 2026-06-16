@@ -8,6 +8,7 @@ coverage/
 
 # Next.js
 .next/
+.next-build/
 out/
 
 # Production
@@ -16,6 +17,7 @@ build/
 # ⚠️ SECRETS — ne jamais commiter
 .env
 .env.local
+.mcp.json
 .env.development.local
 .env.test.local
 .env.production.local

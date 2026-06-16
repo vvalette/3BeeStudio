@@ -9,6 +9,6 @@ export function formatPrice(amountCents: number, currency = 'EUR'): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency,
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
   }).format(amountCents / 100)
 }
