@@ -77,7 +77,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (product.stripe_product_id) {
     const stripeProductUpdates: Record<string, unknown> = {}
     if (d.name !== undefined)        stripeProductUpdates.name        = d.name
-    if (d.description !== undefined) stripeProductUpdates.description = d.description || ''
+    if (d.description !== undefined) stripeProductUpdates.description = d.description || null
     if (d.images !== undefined)      stripeProductUpdates.images      = d.images.slice(0, 8)
     if (d.active !== undefined)      stripeProductUpdates.active      = d.active
 

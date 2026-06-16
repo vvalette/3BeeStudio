@@ -1,6 +1,6 @@
 import {
   Html, Head, Body, Container, Section, Text, Link, Hr,
-} from '@react-email/components'
+} from 'react-email'
 import type { CustomOrder } from '@/types/custom-order'
 import { CUSTOM_STATUS_LABELS } from '@/types/custom-order'
 
