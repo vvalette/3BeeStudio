@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { render } from '@react-email/components'
+import { render } from 'react-email'
 import OrderConfirmation from '@/emails/OrderConfirmation'
 import CustomOrderConfirmation from '@/emails/CustomOrderConfirmation'
 import CustomOrderAdmin from '@/emails/CustomOrderAdmin'

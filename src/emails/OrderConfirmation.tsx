@@ -10,7 +10,7 @@ import {
   Hr,
   Row,
   Column,
-} from '@react-email/components'
+} from 'react-email'
 
 interface Props {
   company: string

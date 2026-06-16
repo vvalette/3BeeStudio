@@ -1,6 +1,6 @@
 import {
   Html, Head, Preview, Body, Container, Section, Text, Link, Hr, Row, Column,
-} from '@react-email/components'
+} from 'react-email'
 import type { ShopOrder } from '@/types/shop-order'
 
 interface Props {
