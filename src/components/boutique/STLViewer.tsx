@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, Center, Environment, Bounds } from '@react-three/drei'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 
 function STLMesh({ url }: { url: string }) {
   const geometry = useLoader(STLLoader, url)
@@ -18,8 +19,18 @@ function STLMesh({ url }: { url: string }) {
   )
 }
 
+function ThreeMFMesh({ url }: { url: string }) {
+  const group = useLoader(ThreeMFLoader, url)
+  return (
+    <Center>
+      <primitive object={group} />
+    </Center>
+  )
+}
+
 function Scene({ url }: { url: string }) {
   const [autoRotate, setAutoRotate] = useState(true)
+  const is3mf = url.toLowerCase().endsWith('.3mf')
   return (
     <>
       <ambientLight intensity={0.6} />
@@ -27,7 +38,7 @@ function Scene({ url }: { url: string }) {
       <directionalLight position={[-10, -10, -5]} intensity={0.3} />
       <Suspense fallback={null}>
         <Bounds fit clip observe margin={1.4}>
-          <STLMesh url={url} />
+          {is3mf ? <ThreeMFMesh url={url} /> : <STLMesh url={url} />}
         </Bounds>
         <Environment preset="studio" />
       </Suspense>
@@ -61,7 +72,6 @@ export default function STLViewer({ url, height = 380, fill = false }: { url: st
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >
-      {/* Badge */}
       <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-pill border border-amber/30 bg-bg-0/80 px-2.5 py-1 backdrop-blur-sm">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
@@ -69,7 +79,6 @@ export default function STLViewer({ url, height = 380, fill = false }: { url: st
         <span className="font-mono text-[10px] font-medium text-amber">Modèle 3D interactif</span>
       </div>
 
-      {/* Hint */}
       <div className="absolute bottom-3 right-3 z-10 rounded-pill border border-[var(--line)] bg-bg-0/80 px-2.5 py-1 backdrop-blur-sm">
         <span className="text-[10px] text-ink-3">🖱 Faire glisser pour tourner · Molette pour zoomer</span>
       </div>

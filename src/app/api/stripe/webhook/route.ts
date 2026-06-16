@@ -44,13 +44,23 @@ export async function POST(req: Request) {
             .single()
 
           if (error) console.error('[webhook] Erreur shop_orders update:', error)
-          else {
+          else if (updatedShop) {
             console.log('[webhook] Commande boutique confirmée:', shopOrderId)
-            if (updatedShop) {
-              await sendShopOrderConfirmation(updatedShop as ShopOrder).catch((err) =>
-                console.error('[webhook] Email boutique non bloquant:', err),
-              )
+
+            // Décrément du stock — uniquement ici, car .eq('status','pending_payment')
+            // garantit qu'on entre dans ce bloc une seule fois par commande (idempotent).
+            const shopOrder = updatedShop as ShopOrder
+            for (const item of shopOrder.items ?? []) {
+              await supabaseAdmin
+                .rpc('decrement_shop_stock', { p_product_id: item.product_id, p_qty: item.quantity })
+                .then(({ error: rpcErr }) => {
+                  if (rpcErr) console.error('[webhook] Erreur décrément stock:', item.product_id, rpcErr)
+                })
             }
+
+            await sendShopOrderConfirmation(shopOrder).catch((err) =>
+              console.error('[webhook] Email boutique non bloquant:', err),
+            )
           }
         }
         return NextResponse.json({ received: true })

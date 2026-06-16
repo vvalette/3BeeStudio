@@ -11,12 +11,14 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
 
 ## Stockage de fichiers — règle critique
 > ⚠️ Ce projet utilise **Supabase Storage**, PAS Vercel Blob (qui n'est pas configuré).
-- Upload logos NFC → bucket Supabase `logos` via `/api/upload/logo` (SVG uniquement, sanitisé XSS)
-- Tout nouvel upload (images produits, fichiers STL…) → Supabase Storage, client `supabaseAdmin.storage`
-- Ne jamais suggérer `@vercel/blob` ou `put()` de Vercel Blob — non installé, non configuré
+- Buckets Supabase Storage utilisés (client `supabaseAdmin.storage`) :
+  - `logos` → logos NFC via `/api/upload/logo` (SVG uniquement, sanitisé XSS)
+  - `product-images` → images produits boutique via `/api/admin/upload/product-image`
+  - `stl-files` → modèles 3D STL produits via `/api/admin/upload/stl`
+- Tout nouvel upload → Supabase Storage, jamais `@vercel/blob` ni `put()` de Vercel Blob (non installé, non configuré)
 
 ## État du projet (juin 2026)
-Deux flux de commande **complets et fonctionnels** :
+Trois flux de commande **complets et fonctionnels** :
 
 **NFC (porte-clés connectés)**
 - Formulaire multi-step (logo upload → lien NFC → contact → récap → Stripe Checkout)
@@ -31,9 +33,16 @@ Deux flux de commande **complets et fonctionnels** :
 - Emails : confirmation client + notification admin interne
 - `/sur-mesure` redirige vers `/custom`
 
-**Admin** : `/admin/commandes` — dashboard combiné NFC + sur-mesure, stats, tabs, filtres, tri, bulk delete
+**Boutique (objets de série)**
+- Catalogue `/boutique` + fiche produit `/boutique/[slug]` (markdown, viewer 3D STL/3MF, contenu FR/EN)
+- Panier + checkout Stripe `/boutique/commande`, paiement intégral + frais de port calculés
+- Webhook Stripe → statut `confirmed` + décrément de stock atomique + email de confirmation
+- Page suivi `/boutique/suivi/[orderId]`
+- Admin produits : `/admin/boutique` (CRUD, upload images + STL, gestion stock, EN)
 
-Pages **placeholder** (Phase 2) : `/boutique`, `/portfolio`, `/contact`
+**Admin** : nav dédiée — `/admin/commandes` (dashboard global NFC + sur-mesure + boutique, CA global, stats, tabs, filtres, tri, bulk delete), pages dédiées `/admin/nfc`, `/admin/sur-mesure`, `/admin/boutique`, `/admin/testimonials`
+
+Pages **placeholder** (Phase 2) : `/portfolio`, `/contact`
 
 ## Design system
 - **Fonts** : `Manrope` (sans, 300–800) + `JetBrains Mono` (mono, 400–600) via `next/font/google`
@@ -53,7 +62,7 @@ Pages **placeholder** (Phase 2) : `/boutique`, `/portfolio`, `/contact`
 3. **Mobile-first** — audience TikTok/Instagram
 4. **Aucun fichier numérique vendu** — livrable toujours physique
 5. Flux Stripe NFC = **paiement intégral** (Checkout Session) — pas d'acompte sur le flux actuel
-6. Langue du site : **français** — une version anglaise est prévue (internationalisation à planifier), ne pas hardcoder des chaînes non-extractibles
+6. **i18n implémentée** (next-intl) : FR par défaut + EN (`localePrefix: 'as-needed'` → `/` FR, `/en/` EN). Toute chaîne visible passe par `messages/fr.json` + `messages/en.json` — ne jamais hardcoder de texte non-extractible
 7. **`cursor-pointer`** obligatoire sur tous les éléments interactifs (boutons, sélecteurs, options)
 8. **Navbar `fixed h-[72px]`** — le `<main>` du layout a `pt-[72px]`, ne jamais doubler dans les pages
 
@@ -89,3 +98,4 @@ min-h des pages : min-h-[calc(100dvh-72px)]
 | [`docs/project/08-strategie-seo.md`](docs/project/08-strategie-seo.md) | Stratégie SEO détaillée — phases, actions manuelles (GSC, Google Business), état fait/à faire |
 | [`docs/todo/TODO.md`](docs/todo/TODO.md) | Tâches sprint — état réel (✅ = fait) |
 | [`docs/todo/ROADMAP.md`](docs/todo/ROADMAP.md) | Feuille de route phases 1→4 |
+| [`docs/AVANT_PROD.md`](docs/AVANT_PROD.md) | Checklist mise en prod : audit, fixes appliqués, actions manuelles (env, Stripe Live, migrations, SEO) |

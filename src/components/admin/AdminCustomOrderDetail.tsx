@@ -61,10 +61,9 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
     setQuoteLoading(true)
     setQuoteError(null)
     try {
-      const adminPassword = (document.cookie.match(/admin_token=([^;]+)/) ?? [])[1] ?? ''
       const res = await fetch(`/api/custom/${order.id}/quote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deposit_amount: depositCents, total_amount: totalCents }),
       })
       const json = await res.json() as { error?: string }

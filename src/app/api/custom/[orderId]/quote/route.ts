@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
+import { isAuthenticated } from '@/lib/auth'
 import { Resend } from 'resend'
 import type { CustomOrder } from '@/types/custom-order'
 
@@ -21,9 +22,8 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ orderId: string }> }
 ) {
-  // Vérification du mot de passe admin (même header que l'admin panel)
-  const auth = req.headers.get('x-admin-password')
-  if (auth !== process.env.ADMIN_SECRET) {
+  // Auth admin via cookie httpOnly (identique aux autres routes /api/admin/*)
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 

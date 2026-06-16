@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import type { ShopProduct } from '@/types/shop-product'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
+import { buildAlternates } from '@/lib/seo'
+import type { Locale } from '@/i18n/routing'
 import type { Metadata } from 'next'
 import AddToCartForm from '@/components/boutique/AddToCartForm'
 import BoutiqueProductMedia from '@/components/boutique/BoutiqueProductMedia'
@@ -13,14 +15,24 @@ export const revalidate = 60
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string; locale: Locale }>
 }): Promise<Metadata> {
-  const { slug } = await params
-  const { data } = await supabase.from('shop_products').select('name, description').eq('slug', slug).single()
+  const { slug, locale } = await params
+  const { data } = await supabase
+    .from('shop_products')
+    .select('name, name_en, description, description_en')
+    .eq('slug', slug)
+    .single()
   if (!data) return {}
+
+  const isEn = locale === 'en'
+  const name = (isEn && data.name_en) ? data.name_en : data.name
+  const description = (isEn && data.description_en) ? data.description_en : data.description
+
   return {
-    title: `${data.name} — Boutique 3BeeStudio`,
-    description: data.description,
+    title: `${name} — Boutique 3BeeStudio`,
+    description,
+    alternates: buildAlternates(`/boutique/${slug}`, locale),
   }
 }
 
@@ -161,12 +173,7 @@ export default async function ProductPage({
 
               </div>
             </div>
-            {/* Mention légale */}
-            <p className="text-[11px] text-ink-3 leading-relaxed border-t border-[var(--line)] pt-4">
-              Accessoire indépendant conçu et fabriqué par 3BeeStudio. Les noms de marques tiers éventuellement mentionnés sont utilisés uniquement à titre descriptif pour indiquer la compatibilité du produit. 3BeeStudio n&apos;est ni affilié, ni approuvé, ni sponsorisé par ces marques.
-            </p>
-
-          </div>
+</div>
         </div>
       </div>
     </main>

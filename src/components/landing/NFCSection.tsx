@@ -7,6 +7,7 @@ import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 import VideoModal from '@/components/ui/VideoModal'
+import NFCKeychain3D from '@/components/landing/NFCKeychain3D'
 
 // Remplacer par l'URL de la vraie vidéo (MP4 ou YouTube)
 const VIDEO_SRC = ''
@@ -27,47 +28,69 @@ function CheckIcon() {
   )
 }
 
+/* Symbole NFC sans contact — arcs propres qui s'illuminent en cascade. */
 function NFCWaves() {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="7" cy="12" r="2" fill="#FBBF24" />
-      <path d="M10.5 9A4.5 4.5 0 0 1 10.5 15" stroke="#FBBF24" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M13.5 7A7.5 7.5 0 0 1 13.5 17" stroke="#F59E0B" strokeWidth="1.3" strokeLinecap="round" opacity="0.65" />
-      <path d="M16.5 5A10.5 10.5 0 0 1 16.5 19" stroke="#F59E0B" strokeWidth="1" strokeLinecap="round" opacity="0.35" />
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M9 8 A6 6 0 0 1 9 16" stroke="#FBBF24" strokeWidth="1.9" strokeLinecap="round"
+        style={{ animation: 'nfc-arc 1.8s ease-in-out infinite', animationDelay: '0s' }} />
+      <path d="M12 6 A8.5 8.5 0 0 1 12 18" stroke="#F59E0B" strokeWidth="1.7" strokeLinecap="round"
+        style={{ animation: 'nfc-arc 1.8s ease-in-out infinite', animationDelay: '0.22s' }} />
+      <path d="M15 4.5 A11 11 0 0 1 15 19.5" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round"
+        style={{ animation: 'nfc-arc 1.8s ease-in-out infinite', animationDelay: '0.44s' }} />
     </svg>
   )
 }
 
 const destinationKeys = ['social', 'website', 'contact', 'other'] as const
 
+/* Icônes par type de destination. */
+function DestinationIcon({ name }: { name: (typeof destinationKeys)[number] }) {
+  const common = {
+    width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none',
+    stroke: '#FBBF24', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+  }
+  switch (name) {
+    case 'social':
+      return (
+        <svg {...common} aria-hidden>
+          <rect x="3" y="3" width="18" height="18" rx="5" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="17" cy="7" r="1.1" fill="#FBBF24" stroke="none" />
+        </svg>
+      )
+    case 'website':
+      return (
+        <svg {...common} aria-hidden>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
+        </svg>
+      )
+    case 'contact':
+      return (
+        <svg {...common} aria-hidden>
+          <rect x="3" y="5" width="18" height="14" rx="2.5" />
+          <circle cx="9" cy="11" r="2" />
+          <path d="M6 16c0-1.7 1.3-3 3-3s3 1.3 3 3M15 10h3M15 13.5h3" />
+        </svg>
+      )
+    case 'other':
+      return (
+        <svg {...common} aria-hidden>
+          <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.5 1.5" />
+          <path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.5" />
+        </svg>
+      )
+  }
+}
+
 /* ── Keychain disc with embossed logo ── */
 function Keychain() {
   const t = useTranslations('nfcSection')
   return (
     <div className="relative flex flex-col items-center" style={{ animation: 'float 6s ease-in-out infinite' }}>
-      {/* Ring loop */}
-      <div
-        className="rounded-full border-2 border-[var(--line-amber)]"
-        style={{ width: 16, height: 16, marginBottom: -4, background: 'transparent', borderColor: 'rgba(245,158,11,0.5)' }}
-      />
-      {/* Disc */}
-      <div
-        className="relative flex items-center justify-center rounded-full"
-        style={{
-          width: 132, height: 132,
-          background: 'radial-gradient(circle at 50% 35%, #2A1C08, #0A0A0B)',
-          border: '1px solid var(--line-amber)',
-          boxShadow: '0 0 40px rgba(245,158,11,0.25), inset 0 1px 0 rgba(255,255,255,0.06)',
-        }}
-      >
-        <Image
-          src="/images/logo-bee-only.png"
-          alt={t('keychainAlt')}
-          width={104}
-          height={104}
-          className="object-contain mix-blend-lighten drop-shadow-[0_0_18px_rgba(245,158,11,0.4)]"
-        />
-      </div>
+      {/* Modèle 3D */}
+      <NFCKeychain3D url="/stl/3beestudio_badge_final.3mf" />
       {/* Tag */}
       <div className="mt-4 flex items-center gap-1.5 rounded-pill border border-[var(--line-amber)] px-3 py-1.5"
         style={{ background: 'rgba(10,8,1,0.7)', backdropFilter: 'blur(8px)' }}>
@@ -184,15 +207,28 @@ export default function NFCSection() {
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center w-full gap-6 sm:gap-0">
               <div className="flex-1 flex justify-end sm:pr-8"><Keychain /></div>
 
-              {/* Connection — centré absolument entre les deux éléments */}
-              <div className="flex items-center justify-center flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full border border-[var(--line-amber)]"
-                  style={{ background: 'rgba(10,8,1,0.7)', backdropFilter: 'blur(8px)', animation: 'pulse-dot 2.4s ease-in-out infinite' }}>
+              {/* Connection — point de contact NFC avec ondes qui se propagent */}
+              <div className="relative flex items-center justify-center flex-shrink-0" style={{ width: 56, height: 56 }}>
+                {[0, 0.8, 1.6].map((delay) => (
+                  <span
+                    key={delay}
+                    aria-hidden
+                    className="absolute rounded-full border"
+                    style={{
+                      width: 50, height: 50,
+                      borderColor: 'rgba(245,158,11,0.55)',
+                      animation: 'nfc-ripple 2.4s ease-out infinite',
+                      animationDelay: `${delay}s`,
+                    }}
+                  />
+                ))}
+                <div className="relative flex items-center justify-center h-12 w-12 rounded-full border border-[var(--line-amber)]"
+                  style={{ background: 'rgba(10,8,1,0.85)', backdropFilter: 'blur(8px)', boxShadow: '0 0 18px rgba(245,158,11,0.4)' }}>
                   <NFCWaves />
                 </div>
               </div>
 
-              <div className="flex-1 flex justify-start sm:pl-8"><PhoneMockup /></div>
+              <div className="flex-1 flex justify-start sm:pl-12"><PhoneMockup /></div>
             </div>
 
             {/* URL caption */}
@@ -205,30 +241,74 @@ export default function NFCSection() {
 
           {/* ── Right: pitch + order ── */}
           <div className="flex flex-col gap-5">
-            <div className="flex-1 rounded-xl border border-[var(--line)] bg-bg-2 p-7" style={{ borderRadius: 24 }}>
-              <p className="font-sans font-semibold text-ink-0 mb-1.5" style={{ fontSize: 17 }}>
-                {t('pitchTitle')}
-              </p>
-              <p className="text-ink-2 mb-6" style={{ fontSize: 14, lineHeight: 1.55 }}>
+            <div
+              className="relative flex-1 overflow-hidden border p-7"
+              style={{
+                borderRadius: 24,
+                borderColor: 'var(--line-amber)',
+                background: 'linear-gradient(160deg, #2A1C08 0%, #100A02 60%)',
+              }}
+            >
+              {/* Déco hexagonale en fil de fer (cohérence section sur-mesure) */}
+              <svg aria-hidden className="absolute pointer-events-none" style={{ right: -36, top: -48, opacity: 0.4 }} width="240" height="240" viewBox="0 0 240 240">
+                <defs>
+                  <linearGradient id="nfc-card-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stopColor="#FBBF24" stopOpacity="0.6" />
+                    <stop offset="1" stopColor="#F59E0B" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M120 20 L200 60 L200 140 L120 180 L40 140 L40 60 Z" fill="none" stroke="url(#nfc-card-grad)" strokeWidth="0.8" />
+                <path d="M120 50 L175 78 L175 132 L120 160 L65 132 L65 78 Z" fill="none" stroke="url(#nfc-card-grad)" strokeWidth="0.6" />
+                <path d="M120 80 L150 96 L150 124 L120 140 L90 124 L90 96 Z" fill="none" stroke="url(#nfc-card-grad)" strokeWidth="0.4" />
+                <circle cx="120" cy="20" r="2" fill="#F59E0B" />
+                <circle cx="200" cy="60" r="2" fill="#F59E0B" />
+              </svg>
+
+              {/* Accent + titre */}
+              <div className="relative mb-1.5 flex items-center gap-2.5">
+                <span aria-hidden className="block h-4 w-1 rounded-full" style={{ background: 'linear-gradient(180deg, #FBBF24, #B45309)', boxShadow: '0 0 8px rgba(245,158,11,0.5)' }} />
+                <p className="font-sans font-semibold text-ink-0" style={{ fontSize: 17 }}>
+                  {t('pitchTitle')}
+                </p>
+              </div>
+              <p className="relative text-ink-2 mb-5 pl-3.5" style={{ fontSize: 14, lineHeight: 1.55 }}>
                 {t('pitchDesc')}
               </p>
-              <ul className="flex flex-col gap-3.5">
+
+              {/* Destinations — grille de mini-cartes */}
+              <p className="relative mb-3 font-mono uppercase tracking-[0.14em] text-amber/70" style={{ fontSize: 10.5 }}>
+                {t('destinationsTitle')}
+              </p>
+              <div className="relative grid grid-cols-2 gap-2.5">
                 {destinationKeys.map((key) => (
-                  <li key={key} className="flex items-center gap-3">
-                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-bg-3 border border-[var(--line-amber)]">
-                      <CheckIcon />
+                  <div
+                    key={key}
+                    className="flex items-center gap-2.5 rounded-lg border border-[var(--line-amber)] p-2.5 transition-colors hover:border-amber/50"
+                    style={{ background: 'rgba(10,8,1,0.5)' }}
+                  >
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(245,158,11,0.1)' }}>
+                      <DestinationIcon name={key} />
                     </span>
-                    <span className="text-ink-1" style={{ fontSize: 14 }}>{t(`destinations.${key}`)}</span>
-                  </li>
+                    <span className="text-ink-1 leading-snug" style={{ fontSize: 12 }}>{t(`destinations.${key}`)}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              {/* Réassurance */}
+              <div className="relative mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--line-amber)] pt-4">
+                {(['noApp', 'noQr', 'noBattery', 'madeInFrance'] as const).map((f) => (
+                  <span key={f} className="flex items-center gap-1.5 text-ink-2" style={{ fontSize: 11.5 }}>
+                    <CheckIcon /> {t(`features.${f}`)}
+                  </span>
+                ))}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2.5">
               <Link
                 href="/nfc#commander"
                 className="flex h-[54px] w-full items-center justify-center gap-2 rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
-                style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+                style={{ background: 'var(--btn-primary-bg)', boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset' }}
               >
                 {t('orderCta')} <ArrowIcon />
               </Link>
