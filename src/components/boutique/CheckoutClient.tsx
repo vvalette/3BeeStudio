@@ -70,8 +70,6 @@ export default function CheckoutClient({ forcedItems }: Props) {
       return
     }
 
-    // Vide le panier seulement en mode panier (pas buy-now)
-    if (!isBuyNow) cart.clear()
     window.location.href = data.checkout_url
   }
 
