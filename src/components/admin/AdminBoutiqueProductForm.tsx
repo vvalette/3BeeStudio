@@ -6,6 +6,7 @@ import { useDropzone } from 'react-dropzone'
 import type { ShopProduct } from '@/types/shop-product'
 import { generateSlug } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
+import ImageCropModal from './ImageCropModal'
 
 interface Props {
   product?: ShopProduct
@@ -16,25 +17,52 @@ interface Props {
 function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs: string[]) => void }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cropQueue, setCropQueue] = useState<{ src: string; file: File }[]>([])
+
+  async function uploadBlob(blob: Blob, originalFile: File): Promise<string | null> {
+    const form = new FormData()
+    const ext  = 'webp'
+    form.append('file', new File([blob], `${originalFile.name.replace(/\.[^.]+$/, '')}.${ext}`, { type: 'image/webp' }))
+    const res  = await fetch('/api/admin/upload/product-image', { method: 'POST', body: form })
+    const data = await res.json()
+    if (!res.ok) { setError(data.error ?? 'Erreur upload'); return null }
+    return data.url
+  }
 
   const onDrop = useCallback(async (accepted: File[]) => {
     if (!accepted.length) return
     setError(null)
+    const files = accepted.slice(0, 6 - images.length)
+    if (!files.length) return
+
+    // Ouvre le crop sur le premier fichier, les suivants sont mis en queue
+    const queue = files.map((file) => ({ src: URL.createObjectURL(file), file }))
+    setCropQueue(queue)
+  }, [images.length])
+
+  async function handleCropConfirm(blob: Blob) {
+    const current = cropQueue[0]
+    if (!current) return
+
     setUploading(true)
+    const url = await uploadBlob(blob, current.file)
+    URL.revokeObjectURL(current.src)
 
-    const newUrls: string[] = []
-    for (const file of accepted.slice(0, 6 - images.length)) {
-      const form = new FormData()
-      form.append('file', file)
-      const res = await fetch('/api/admin/upload/product-image', { method: 'POST', body: form })
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Erreur upload'); break }
-      newUrls.push(data.url)
-    }
+    const remaining = cropQueue.slice(1)
+    setCropQueue(remaining)
 
-    if (newUrls.length) onChange([...images, ...newUrls])
+    if (url) onChange([...images, url])
     setUploading(false)
-  }, [images, onChange])
+
+    // S'il reste des images en queue, le prochain modal s'ouvre automatiquement
+  }
+
+  function handleCropCancel() {
+    // Annule l'image courante, passe à la suivante
+    const current = cropQueue[0]
+    if (current) URL.revokeObjectURL(current.src)
+    setCropQueue((q) => q.slice(1))
+  }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -101,6 +129,15 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
       )}
 
       {error && <p className="text-[12px] text-red-400">{error}</p>}
+
+      {/* Modal de crop — s'ouvre pour chaque image sélectionnée */}
+      {cropQueue.length > 0 && (
+        <ImageCropModal
+          src={cropQueue[0].src}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
+      )}
     </div>
   )
 }
