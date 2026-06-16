@@ -65,6 +65,7 @@ Pages **placeholder** (Phase 2) : `/portfolio`, `/contact`
 6. **i18n implémentée** (next-intl) : FR par défaut + EN (`localePrefix: 'as-needed'` → `/` FR, `/en/` EN). Toute chaîne visible passe par `messages/fr.json` + `messages/en.json` — ne jamais hardcoder de texte non-extractible
 7. **`cursor-pointer`** obligatoire sur tous les éléments interactifs (boutons, sélecteurs, options)
 8. **Navbar `fixed h-[72px]`** — le `<main>` du layout a `pt-[72px]`, ne jamais doubler dans les pages
+9. **Formulaires — données neutres obligatoires** : les placeholders doivent être 100% fictifs et génériques (ex: `Jean Dupont`, `75001`, `Paris`, `vous@exemple.fr`). Interdit : prénoms/noms réels, adresses réelles, codes postaux réels, villes personnelles du développeur. Tous les champs contact/adresse ont `autoComplete="off"` pour éviter les suggestions navigateur.
 
 ## Navbar & espacement (règle critique)
 ```

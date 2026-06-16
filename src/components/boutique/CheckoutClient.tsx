@@ -93,7 +93,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
 
       {/* Formulaire */}
-      <form onSubmit={handleSubmit} className="space-y-6 order-2 lg:order-1">
+      <form onSubmit={handleSubmit} autoComplete="off" className="space-y-6 order-2 lg:order-1">
 
         {/* Contact */}
         <fieldset className="space-y-4">

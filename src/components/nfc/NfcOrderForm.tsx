@@ -634,13 +634,13 @@ function StepContact({ defaultValues, onBack, onNext }: {
       <SubSection title={t('contact.coordsTitle')} hint={t('contact.coordsHint')}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('contact.company')} error={errors.company?.message}>
-            <Input {...register('company')} placeholder={t('contact.companyPlaceholder')} autoFocus />
+            <Input {...register('company')} placeholder={t('contact.companyPlaceholder')} autoComplete="off" autoFocus />
           </Field>
           <Field label={t('contact.email')} error={errors.email?.message}>
-            <Input {...register('email')} type="email" placeholder="contact@entreprise.fr" />
+            <Input {...register('email')} type="email" placeholder="contact@entreprise.fr" autoComplete="off" />
           </Field>
           <Field label={t('contact.phone')} error={errors.phone?.message}>
-            <Input {...register('phone')} type="tel" placeholder="06 12 34 56 78" />
+            <Input {...register('phone')} type="tel" placeholder="06 12 34 56 78" autoComplete="off" />
           </Field>
           <Field label={t('contact.sector')} error={errors.sector?.message}>
             <Controller
@@ -663,20 +663,20 @@ function StepContact({ defaultValues, onBack, onNext }: {
       <SubSection title={t('contact.addressTitle')} hint={t('contact.addressHint')}>
         <div className="grid gap-4">
           <Field label={t('contact.recipient')} error={errors.shipping_name?.message}>
-            <Input {...register('shipping_name')} placeholder={t('contact.recipientPlaceholder')} />
+            <Input {...register('shipping_name')} placeholder={t('contact.recipientPlaceholder')} autoComplete="off" />
           </Field>
           <Field label={t('contact.address')} error={errors.shipping_address?.message}>
-            <Input {...register('shipping_address')} placeholder={t('contact.addressPlaceholder')} />
+            <Input {...register('shipping_address')} placeholder={t('contact.addressPlaceholder')} autoComplete="off" />
           </Field>
           <Field label={t('contact.address2')} error={errors.shipping_address2?.message}>
-            <Input {...register('shipping_address2')} placeholder={t('contact.address2Placeholder')} />
+            <Input {...register('shipping_address2')} placeholder={t('contact.address2Placeholder')} autoComplete="off" />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('contact.postalCode')} error={errors.shipping_postal_code?.message}>
-              <Input {...register('shipping_postal_code')} placeholder="75001" />
+              <Input {...register('shipping_postal_code')} placeholder="75001" autoComplete="off" />
             </Field>
             <Field label={t('contact.city')} error={errors.shipping_city?.message}>
-              <Input {...register('shipping_city')} placeholder="Paris" />
+              <Input {...register('shipping_city')} placeholder="Paris" autoComplete="off" />
             </Field>
           </div>
           <Field label={t('contact.country')} error={errors.shipping_country?.message}>

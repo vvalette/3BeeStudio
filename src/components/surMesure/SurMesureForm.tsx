@@ -256,19 +256,19 @@ export default function SurMesureForm() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('step2.name')} error={errors.name?.message}>
-                <input {...register('name')} className={inputCls} placeholder="Valentin Dupont" />
+                <input {...register('name')} className={inputCls} placeholder="Jean Dupont" autoComplete="off" />
               </Field>
               <Field label={t('step2.company')} error={errors.company?.message}>
-                <input {...register('company')} className={inputCls} placeholder="3BeeStudio" />
+                <input {...register('company')} className={inputCls} placeholder="Acme Corp" autoComplete="off" />
               </Field>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('step2.email')} error={errors.email?.message}>
-                <input {...register('email')} type="email" className={inputCls} placeholder="vous@exemple.fr" />
+                <input {...register('email')} type="email" className={inputCls} placeholder="vous@exemple.fr" autoComplete="off" />
               </Field>
               <Field label={t('step2.phone')} error={errors.phone?.message}>
-                <input {...register('phone')} type="tel" className={inputCls} placeholder="+33 6 00 00 00 00" />
+                <input {...register('phone')} type="tel" className={inputCls} placeholder="+33 6 00 00 00 00" autoComplete="off" />
               </Field>
             </div>
 
@@ -286,19 +286,19 @@ export default function SurMesureForm() {
             <StepTitle num="03" title={t('step3.title')} sub={t('step3.sub')} />
 
             <Field label={t('step3.recipient')} error={errors.shipping_name?.message}>
-              <input {...register('shipping_name')} className={inputCls} placeholder="Valentin Dupont" />
+              <input {...register('shipping_name')} className={inputCls} placeholder="Jean Dupont" autoComplete="off" />
             </Field>
 
             <Field label={t('step3.address')} error={errors.shipping_address?.message}>
-              <input {...register('shipping_address')} className={inputCls} placeholder="144 rue de la République" />
+              <input {...register('shipping_address')} className={inputCls} placeholder="12 rue de la Paix" autoComplete="off" />
             </Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t('step3.postalCode')} error={errors.shipping_postal_code?.message}>
-                <input {...register('shipping_postal_code')} className={inputCls} placeholder="69220" />
+                <input {...register('shipping_postal_code')} className={inputCls} placeholder="75001" autoComplete="off" />
               </Field>
               <Field label={t('step3.city')} error={errors.shipping_city?.message}>
-                <input {...register('shipping_city')} className={inputCls} placeholder="Belleville-en-Beaujolais" />
+                <input {...register('shipping_city')} className={inputCls} placeholder="Paris" autoComplete="off" />
               </Field>
             </div>
 
