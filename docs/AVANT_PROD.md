@@ -12,8 +12,9 @@
 **Stripe (passage en Live)**
 
 - [ ] `STRIPE_SECRET_KEY` → clé `sk_live_...`
-- [ ] `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `pk_live_...`
 - [ ] `STRIPE_WEBHOOK_SECRET` → nouveau `whsec_...` de l'endpoint de prod (différent du test)
+
+> ℹ️ Pas de `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` : le Checkout se fait par **redirection vers la page hébergée Stripe** (`session.url`), aucune clé publishable côté client n'est requise.
 
 **Supabase (projet prod)**
 
@@ -32,7 +33,7 @@
 - [ ] `ADMIN_PASSWORD` → mot de passe fort, différent du dev
 - [ ] Bloc `BOXTAL_*` → ⚠️ test end-to-end Boxtal pas encore réalisé (voir mémoire projet)
 
-> ℹ️ **Note Resend — audience newsletter** : il n'existe **qu'une seule audience générique** côté Resend (pas d'audience par environnement). `RESEND_AUDIENCE_ID` est **optionnel** : si non défini, l'inscription newsletter fonctionne sans ajout à une audience. Si tu veux que les inscrits soient ajoutés à l'audience générique, renseigne son ID (Dashboard Resend → Audiences).
+> ℹ️ **Note Resend — audience newsletter** : il n'existe **qu'une seule audience générique** côté Resend. Aucune variable d'env à renseigner : le code **auto-découvre cette audience unique** (`audiences.list()` → premier id) et y ajoute l'inscrit. Si le compte n'a aucune audience, l'inscription newsletter réussit quand même (ajout au contact simplement ignoré, non bloquant).
 
 ### 2. Stripe — config Live
 

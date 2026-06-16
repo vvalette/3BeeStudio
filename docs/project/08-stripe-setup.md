@@ -6,10 +6,10 @@ Sur [dashboard.stripe.com](https://dashboard.stripe.com) → **Développeurs →
 
 | Variable | Clé | Rôle |
 |---|---|---|
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` | Côté navigateur (Stripe.js) |
 | `STRIPE_SECRET_KEY` | `sk_test_...` | Côté serveur uniquement |
 
-> En développement, toujours utiliser les clés **test** (`pk_test_` / `sk_test_`).
+> Le Checkout se fait par **redirection vers la page hébergée Stripe** (`session.url`) : pas de Stripe.js côté navigateur, donc **aucune clé publishable** (`pk_...`) n'est nécessaire.
+> En développement, toujours utiliser la clé **test** (`sk_test_`).
 
 ---
 
@@ -67,11 +67,10 @@ Dans [vercel.com](https://vercel.com) → ton projet → **Settings → Environm
 
 | Variable | Valeur |
 |---|---|
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` |
 | `STRIPE_SECRET_KEY` | `sk_live_...` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` (depuis le dashboard Stripe, voir ci-dessous) |
 
-> En production, utilise les clés **live** (`pk_live_` / `sk_live_`).
+> En production, utilise la clé **live** (`sk_live_`). Pas de clé publishable nécessaire (Checkout par redirection).
 
 ### Créer le webhook sur le dashboard Stripe
 
@@ -89,7 +88,7 @@ Dans [vercel.com](https://vercel.com) → ton projet → **Settings → Environm
 
 | | Local | Vercel (prod) |
 |---|---|---|
-| Clés | `sk_test_` / `pk_test_` | `sk_live_` / `pk_live_` |
+| Clés | `sk_test_` (serveur) | `sk_live_` (serveur) |
 | Webhook secret | Via `stripe listen` (CLI) | Via dashboard Stripe → endpoint |
-| Endpoint webhook | `localhost:3000/api/stripe/webhook` | `https://3beestudio.fr/api/stripe/webhook` |
+| Endpoint webhook | `localhost:3001/api/stripe/webhook` | `https://3beestudio.fr/api/stripe/webhook` |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | `https://3beestudio.fr` |

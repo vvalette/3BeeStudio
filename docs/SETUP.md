@@ -186,7 +186,7 @@ Portail de gestion des commandes en production :
 ### 4. Stripe — passer en mode live
 
 1. Dans le dashboard Stripe : activer le compte (soumettre les infos KYB)
-2. Récupérer `sk_live_…` et `pk_live_…`
+2. Récupérer `sk_live_…` (clé secrète serveur ; pas de clé publishable, Checkout par redirection)
 3. Mettre à jour dans Vercel
 
 ### 5. Supabase — migrations en production

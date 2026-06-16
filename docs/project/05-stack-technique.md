@@ -88,10 +88,9 @@ src/
 ## Variables d'Environnement (.env.local)
 
 ```env
-# Stripe
+# Stripe (Checkout par redirection → pas de clé publishable)
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co

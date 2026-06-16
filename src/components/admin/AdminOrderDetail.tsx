@@ -33,7 +33,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
   const router = useRouter()
 
   const status = order.status as OrderStatus
-  const suiviUrl = `${process.env.NEXT_PUBLIC_APP_URL}/suivi/${order.id}`
+  const suiviUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'}/suivi/${order.id}`
 
   function copy(text: string, key: 'nfc' | 'link') {
     navigator.clipboard.writeText(text)

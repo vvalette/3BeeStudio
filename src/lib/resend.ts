@@ -94,13 +94,7 @@ let _audienceId: string | null | undefined = undefined
 async function getAudienceId(): Promise<string | null> {
   if (_audienceId !== undefined) return _audienceId
 
-  // Priorité : variable d'env explicite
-  if (process.env.RESEND_AUDIENCE_ID) {
-    _audienceId = process.env.RESEND_AUDIENCE_ID
-    return _audienceId
-  }
-
-  // Auto-découverte : prend la première audience du compte
+  // Une seule audience générique côté Resend → on prend la première du compte.
   const { data, error } = await resend.audiences.list()
   if (error || !data?.data?.length) {
     console.warn('[resend] Aucune audience trouvée — contacts non ajoutés')

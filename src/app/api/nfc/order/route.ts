@@ -96,7 +96,7 @@ export async function POST(req: Request) {
   }
 
   // 2. Session Stripe Checkout — paiement intégral
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     locale: 'fr',
