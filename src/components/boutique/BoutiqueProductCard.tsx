@@ -54,17 +54,27 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
       onPointerDown={handlePointerDown}
       onClick={() => { if (!wasDrag.current) router.push(`/boutique/${product.slug}`) }}
     >
-      {/* Visuel — STL si dispo, sinon image, sinon placeholder */}
+      {/* Visuel — photo en priorité, STL si pas de photo, placeholder sinon */}
       <div className="relative w-full overflow-hidden bg-bg-2" style={{ height: 220 }}>
-        {product.stl_url ? (
+        {product.images[0] ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {product.stl_url && (
+              <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-pill border border-[var(--line)] bg-bg-0/80 px-2 py-0.5 backdrop-blur-sm font-mono text-[10px] text-ink-2">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                3D
+              </span>
+            )}
+          </>
+        ) : product.stl_url ? (
           <STLViewerWrapper url={product.stl_url} height={220} />
-        ) : product.images[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
         ) : (
           <div className="flex h-full items-center justify-center text-ink-3">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8">
