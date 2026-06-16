@@ -12,6 +12,7 @@ import CartButton from '@/components/boutique/CartButton'
 const navLinks = [
   { href: '/nfc',       key: 'nfc' },
   { href: '/custom',    key: 'custom' },
+  { href: '/boutique',  key: 'boutique' },
   { href: '/portfolio', key: 'portfolio' },
 ] as const
 
