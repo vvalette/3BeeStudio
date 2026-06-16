@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendOrderConfirmation } from '@/lib/resend'
+import { sendOrderConfirmation, sendShopOrderConfirmation } from '@/lib/resend'
 import type { Order } from '@/types/order'
+import type { ShopOrder } from '@/types/shop-order'
 import Stripe from 'stripe'
 
 export async function POST(req: Request) {
@@ -29,6 +30,31 @@ export async function POST(req: Request) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
       const orderId = session.metadata?.order_id
+
+      // Commande boutique
+      const shopOrderId = session.metadata?.shop_order_id
+      if (shopOrderId && session.metadata?.type === 'shop_order') {
+        if (session.payment_status === 'paid') {
+          const { data: updatedShop, error } = await supabaseAdmin
+            .from('shop_orders')
+            .update({ status: 'confirmed' })
+            .eq('id', shopOrderId)
+            .eq('status', 'pending_payment')
+            .select()
+            .single()
+
+          if (error) console.error('[webhook] Erreur shop_orders update:', error)
+          else {
+            console.log('[webhook] Commande boutique confirmée:', shopOrderId)
+            if (updatedShop) {
+              await sendShopOrderConfirmation(updatedShop as ShopOrder).catch((err) =>
+                console.error('[webhook] Email boutique non bloquant:', err),
+              )
+            }
+          }
+        }
+        return NextResponse.json({ received: true })
+      }
 
       // Acompte sur-mesure
       const customOrderId = session.metadata?.custom_order_id

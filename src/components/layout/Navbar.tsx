@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import LocaleSwitcher from './LocaleSwitcher'
+import CartButton from '@/components/boutique/CartButton'
 
 const navLinks = [
   { href: '/nfc',       key: 'nfc' },
@@ -16,9 +17,10 @@ const navLinks = [
 
 type Props = {
   showLocaleSwitcher?: boolean
+  showCart?: boolean
 }
 
-export default function Navbar({ showLocaleSwitcher = false }: Props) {
+export default function Navbar({ showLocaleSwitcher = false, showCart = true }: Props) {
   const t = useTranslations('nav')
   const pathname = usePathname()
   const [open, setOpen]         = useState(false)
@@ -96,6 +98,8 @@ export default function Navbar({ showLocaleSwitcher = false }: Props) {
           {/* ── Right : switcher + CTA + burger ── */}
           <div className="flex items-center gap-2.5">
             {showLocaleSwitcher && <LocaleSwitcher />}
+
+            {showCart && <CartButton />}
 
             <Link
               href="/contact"

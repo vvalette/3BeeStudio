@@ -4,6 +4,8 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
+import CartProvider from '@/components/boutique/CartProvider'
+import CartDrawer from '@/components/boutique/CartDrawer'
 import { routing } from '@/i18n/routing'
 import '@/styles/globals.css'
 
@@ -82,8 +84,11 @@ export default async function LocaleLayout({ children, params }: Props) {
     >
       <body className="bg-bg-0 text-ink-0 font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Navbar showLocaleSwitcher />
-          <main className="pt-[72px]">{children}</main>
+          <CartProvider>
+            <Navbar showLocaleSwitcher />
+            <main className="pt-[72px]">{children}</main>
+            <CartDrawer />
+          </CartProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -4,9 +4,11 @@ import OrderConfirmation from '@/emails/OrderConfirmation'
 import CustomOrderConfirmation from '@/emails/CustomOrderConfirmation'
 import CustomOrderAdmin from '@/emails/CustomOrderAdmin'
 import NewsletterWelcome from '@/emails/NewsletterWelcome'
+import ShopOrderConfirmation from '@/emails/ShopOrderConfirmation'
 import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
 import type { CustomOrder } from '@/types/custom-order'
+import type { ShopOrder } from '@/types/shop-order'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -125,6 +127,24 @@ export async function addToNewsletterAudience(email: string): Promise<void> {
     // Non-bloquant : l'inscription Supabase a déjà réussi
     console.warn('[resend] Ajout contact audience échoué:', error.message)
   }
+}
+
+export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from = getFrom()
+
+  const html = await render(ShopOrderConfirmation({ order, appUrl }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: order.email,
+    subject: `✅ Commande boutique #${order.id.slice(0, 8).toUpperCase()} confirmée — 3BeeStudio`,
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.log('[resend] Confirmation boutique — id:', data?.id, '→', order.email)
 }
 
 export async function sendNewsletterWelcome(email: string): Promise<void> {

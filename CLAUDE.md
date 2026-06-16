@@ -9,6 +9,12 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
 - Stack : **Next.js 15** · Tailwind CSS v4 · TypeScript · Vercel · Stripe · Supabase · Resend
 - Dev : `npm run dev` → port **3001**
 
+## Stockage de fichiers — règle critique
+> ⚠️ Ce projet utilise **Supabase Storage**, PAS Vercel Blob (qui n'est pas configuré).
+- Upload logos NFC → bucket Supabase `logos` via `/api/upload/logo` (SVG uniquement, sanitisé XSS)
+- Tout nouvel upload (images produits, fichiers STL…) → Supabase Storage, client `supabaseAdmin.storage`
+- Ne jamais suggérer `@vercel/blob` ou `put()` de Vercel Blob — non installé, non configuré
+
 ## État du projet (juin 2026)
 Deux flux de commande **complets et fonctionnels** :
 

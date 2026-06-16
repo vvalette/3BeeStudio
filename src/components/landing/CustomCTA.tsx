@@ -23,7 +23,7 @@ const steps = ['01', '02', '03'] as const
 export default function CustomCTA() {
   const t = useTranslations('customCta')
   return (
-    <section className="py-20 lg:py-28 border-t border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
+    <section className="py-20 lg:py-28" style={{ background: 'var(--bg-0)' }}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <Reveal>
         <div

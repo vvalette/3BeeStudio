@@ -13,9 +13,12 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@react-email/components": "^0.0.31",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@stripe/react-stripe-js": "^3.1.0",
     "@stripe/stripe-js": "^5.5.0",
     "@supabase/supabase-js": "^2.48.0",
+    "@types/three": "^0.184.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.469.0",
@@ -26,9 +29,11 @@
     "react-dropzone": "^14.3.5",
     "react-email": "^3.0.6",
     "react-hook-form": "^7.54.0",
+    "react-markdown": "^10.1.0",
     "resend": "^4.2.0",
     "stripe": "^17.7.0",
     "tailwind-merge": "^2.6.0",
+    "three": "^0.184.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

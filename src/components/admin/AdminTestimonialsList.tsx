@@ -2,18 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-
-function Tip({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="relative group/tip">
-      {children}
-      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-md bg-bg-4 border border-[var(--line)] text-ink-1 font-mono whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity" style={{ fontSize: 10, letterSpacing: '0.04em' }}>
-        {label}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[var(--line)]" />
-      </div>
-    </div>
-  )
-}
+import Tooltip from '@/components/ui/Tooltip'
 
 interface Testimonial {
   id: string
@@ -196,7 +185,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
               <p className="text-ink-1 text-sm leading-relaxed">&ldquo;{item.body}&rdquo;</p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <Tip label={item.visible ? 'Masquer' : 'Afficher'}>
+              <Tooltip content={item.visible ? 'Masquer' : 'Afficher'}>
                 <button
                   onClick={() => toggleVisible(item)}
                   className="w-8 h-8 rounded-md border border-[var(--line)] bg-bg-3 text-ink-2 hover:text-amber hover:border-[var(--line-amber)] transition-all flex items-center justify-center cursor-pointer"
@@ -214,8 +203,8 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
                     </svg>
                   )}
                 </button>
-              </Tip>
-              <Tip label="Supprimer">
+              </Tooltip>
+              <Tooltip content="Supprimer">
                 <button
                   onClick={() => deleteItem(item.id)}
                   className="w-8 h-8 rounded-md border border-[var(--line)] bg-bg-3 text-ink-2 hover:text-red-400 hover:border-red-400/40 transition-all flex items-center justify-center cursor-pointer"
@@ -225,7 +214,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
-              </Tip>
+              </Tooltip>
             </div>
           </div>
         ))}
