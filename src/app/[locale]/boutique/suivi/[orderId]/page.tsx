@@ -7,6 +7,7 @@ import type { ShopOrder, ShopOrderStatus } from '@/types/shop-order'
 import { SHOP_STATUS_LABELS, SHOP_STATUS_STEPS } from '@/types/shop-order'
 import { SHOP_STATUS_PILL } from '@/lib/status-ui'
 import { formatPrice } from '@/lib/utils'
+import CartClearer from '@/components/boutique/CartClearer'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -93,6 +94,7 @@ export default async function SuiviBoutiquePage({
 
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-6 pb-12">
+      {isJustPaid && <CartClearer />}
       <div className="mx-auto max-w-xl space-y-6">
 
         {/* En-tête */}
