@@ -1,40 +1,60 @@
 'use client'
 
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ShopProduct } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import STLViewerWrapper from './STLViewerWrapper'
 
-const AUTO_DELAY = 3500 // ms avant de passer au slide photo
+const SLIDE_DURATION = 3500
+
+type Slide = { type: '3d' } | { type: 'photo'; index: number }
 
 export default function BoutiqueProductCard({ product }: { product: ShopProduct }) {
-  const router     = useRouter()
-  const wasDrag    = useRef(false)
-  const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const router  = useRouter()
+  const wasDrag = useRef(false)
 
-  const hasImages  = product.images.length > 0
-  const has3D      = !!product.stl_url
-  const hasSwitch  = has3D && hasImages
+  const has3D     = !!product.stl_url
+  const hasImages = product.images.length > 0
 
-  // Vue active : 'photo' ou '3d'
-  const [view, setView] = useState<'3d' | 'photo'>(has3D ? '3d' : 'photo')
+  // Séquence : 3D en premier (si dispo), puis toutes les photos
+  const slides: Slide[] = [
+    ...(has3D ? [{ type: '3d' } as Slide] : []),
+    ...product.images.map((_, i) => ({ type: 'photo', index: i } as Slide)),
+  ]
+  const total = slides.length
 
-  const switchTo = useCallback((next: '3d' | 'photo', cancelAuto = true) => {
-    if (cancelAuto && timerRef.current) {
-      clearTimeout(timerRef.current)
-      timerRef.current = null
+  const [activeIdx, setActiveIdx] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const manualRef   = useRef(false) // l'utilisateur a interagi → stop boucle
+
+  function startLoop() {
+    if (total <= 1) return
+    intervalRef.current = setInterval(() => {
+      setActiveIdx((i) => (i + 1) % total)
+    }, SLIDE_DURATION)
+  }
+
+  function stopLoop() {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
     }
-    setView(next)
-  }, [])
+  }
 
-  // Auto-glissement 3D → photo après AUTO_DELAY
   useEffect(() => {
-    if (!hasSwitch) return
-    timerRef.current = setTimeout(() => setView('photo'), AUTO_DELAY)
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [hasSwitch])
+    startLoop()
+    return stopLoop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total])
 
+  function goTo(idx: number) {
+    manualRef.current = true
+    stopLoop()
+    setActiveIdx(idx)
+  }
+
+  const active = slides[activeIdx]
   const outOfStock = product.stock !== null && product.stock === 0
 
   function handlePointerDown(e: React.PointerEvent) {
@@ -75,32 +95,34 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
       {/* Visuel */}
       <div className="relative w-full overflow-hidden bg-bg-2" style={{ height: 220 }}>
 
-        {/* Couche 3D */}
+        {/* Couches empilées — toutes montées, opacité gère la visibilité */}
         {has3D && (
           <div
             className="absolute inset-0 transition-opacity duration-700"
-            style={{ opacity: view === '3d' ? 1 : 0, pointerEvents: view === '3d' ? 'auto' : 'none' }}
+            style={{ opacity: active.type === '3d' ? 1 : 0, pointerEvents: active.type === '3d' ? 'auto' : 'none' }}
           >
             <STLViewerWrapper url={product.stl_url!} height={220} />
           </div>
         )}
 
-        {/* Couche photo */}
-        {hasImages && (
+        {product.images.map((src, i) => (
           <div
+            key={i}
             className="absolute inset-0 transition-opacity duration-700"
-            style={{ opacity: view === 'photo' ? 1 : 0, pointerEvents: view === 'photo' ? 'auto' : 'none' }}
+            style={{
+              opacity: active.type === 'photo' && active.index === i ? 1 : 0,
+              pointerEvents: active.type === 'photo' && active.index === i ? 'auto' : 'none',
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={product.images[0]}
+              src={src}
               alt={product.name}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
-        )}
+        ))}
 
-        {/* Placeholder si ni photo ni 3D */}
         {!has3D && !hasImages && (
           <div className="flex h-full items-center justify-center text-ink-3">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8">
@@ -111,35 +133,41 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
           </div>
         )}
 
-        {/* Indicateurs / toggle manuel — visible uniquement si les deux existent */}
-        {hasSwitch && (
+        {/* Indicateurs */}
+        {total > 1 && (
           <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
-            <button
-              type="button"
-              aria-label="Voir le modèle 3D"
-              onClick={(e) => { e.stopPropagation(); switchTo('3d') }}
-              className={[
-                'cursor-pointer flex items-center justify-center rounded-full border transition-all duration-200',
-                view === '3d'
-                  ? 'w-6 h-5 border-amber bg-amber/20 text-amber'
-                  : 'w-5 h-5 border-[var(--line)] bg-bg-0/70 text-ink-3 hover:border-amber/50 hover:text-ink-1',
-              ].join(' ')}
-            >
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-label="Voir la photo"
-              onClick={(e) => { e.stopPropagation(); switchTo('photo') }}
-              className={[
-                'cursor-pointer rounded-full border transition-all duration-200',
-                view === 'photo'
-                  ? 'w-6 h-[6px] border-amber bg-amber'
-                  : 'w-[6px] h-[6px] border-[var(--line)] bg-bg-0/70 hover:border-amber/50',
-              ].join(' ')}
-            />
+            {slides.map((slide, i) => {
+              const isCurrent = i === activeIdx
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={slide.type === '3d' ? 'Voir le modèle 3D' : `Photo ${i}`}
+                  onClick={(e) => { e.stopPropagation(); goTo(i) }}
+                  className="cursor-pointer flex items-center justify-center transition-all duration-200"
+                >
+                  {slide.type === '3d' ? (
+                    <span className={[
+                      'flex items-center justify-center rounded-full border transition-all duration-200',
+                      isCurrent
+                        ? 'w-6 h-5 border-amber bg-amber/20 text-amber'
+                        : 'w-5 h-5 border-[var(--line)] bg-bg-0/70 text-ink-3 hover:border-amber/50',
+                    ].join(' ')}>
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                      </svg>
+                    </span>
+                  ) : (
+                    <span className={[
+                      'block rounded-full border transition-all duration-200',
+                      isCurrent
+                        ? 'w-4 h-[6px] border-amber bg-amber'
+                        : 'w-[6px] h-[6px] border-[var(--line)] bg-bg-0/70 hover:border-amber/50',
+                    ].join(' ')} />
+                  )}
+                </button>
+              )
+            })}
           </div>
         )}
 
