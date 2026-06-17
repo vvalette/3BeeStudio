@@ -6,7 +6,7 @@ import type { ShopProduct } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import STLViewerWrapper from './STLViewerWrapper'
 
-const SLIDE_DURATION = 3500
+const SLIDE_DURATION = 5000
 
 type Slide = { type: '3d' } | { type: 'photo'; index: number }
 

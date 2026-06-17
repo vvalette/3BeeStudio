@@ -64,11 +64,12 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
     setCropQueue((q) => q.slice(1))
   }
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
-    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/avif': [] },
+    accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/avif': [], 'image/heic': [], 'image/heif': [] },
     maxFiles: 6 - images.length,
     disabled: uploading || images.length >= 6,
+    noClick: true,
   })
 
   function removeImage(url: string) {
@@ -121,10 +122,19 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
           )}
           <div>
             <p className="text-sm font-medium">
-              {isDragActive ? 'Déposer ici' : uploading ? 'Upload en cours…' : 'Glisser ou cliquer pour ajouter des images'}
+              {isDragActive ? 'Déposer ici' : uploading ? 'Upload en cours…' : 'Glisser une image ou'}
             </p>
-            <p className="text-[11px]">JPG, PNG, WebP, AVIF · max 5 Mo · {6 - images.length} image{6 - images.length > 1 ? 's' : ''} restante{6 - images.length > 1 ? 's' : ''}</p>
+            <p className="text-[11px]">JPG, PNG, WebP · max 5 Mo · {6 - images.length} image{6 - images.length > 1 ? 's' : ''} restante{6 - images.length > 1 ? 's' : ''}</p>
           </div>
+          {!uploading && (
+            <button
+              type="button"
+              onClick={open}
+              className="rounded-lg border border-[var(--line-amber)] bg-amber/10 px-3 py-1.5 text-xs font-medium text-amber hover:bg-amber/20 transition-colors cursor-pointer"
+            >
+              Choisir depuis l'appareil
+            </button>
+          )}
         </div>
       )}
 
