@@ -204,11 +204,12 @@ export default function NFCSection() {
             <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 35% 40%, rgba(245,158,11,0.16), transparent 65%)' }} />
 
             {/* Scene: keychain → tap → phone */}
-            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center w-full gap-6 sm:gap-0">
-              <div className="flex-1 flex justify-end sm:pr-8"><Keychain /></div>
+            <div className="relative z-10 flex items-center justify-center w-full sm:flex-row">
+              {/* Keychain — caché sur mobile */}
+              <div className="hidden sm:flex flex-1 justify-end sm:pr-8"><Keychain /></div>
 
-              {/* Connection — point de contact NFC avec ondes qui se propagent */}
-              <div className="relative flex items-center justify-center flex-shrink-0" style={{ width: 56, height: 56 }}>
+              {/* Connecteur NFC — caché sur mobile */}
+              <div className="hidden sm:relative sm:flex items-center justify-center flex-shrink-0" style={{ width: 56, height: 56 }}>
                 {[0, 0.8, 1.6].map((delay) => (
                   <span
                     key={delay}
@@ -228,7 +229,8 @@ export default function NFCSection() {
                 </div>
               </div>
 
-              <div className="flex-1 flex justify-start sm:pl-12"><PhoneMockup /></div>
+              {/* Téléphone — centré sur mobile, aligné à gauche sur desktop */}
+              <div className="sm:flex-1 flex sm:justify-start sm:pl-12"><PhoneMockup /></div>
             </div>
 
             {/* URL caption */}
