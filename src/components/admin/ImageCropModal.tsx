@@ -25,14 +25,26 @@ async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> 
     i.src = imageSrc
   })
 
+  // Limite la taille du canvas à 1920px (mémoire mobile)
+  const MAX = 1920
+  const scale = Math.min(1, MAX / Math.max(pixelCrop.width, pixelCrop.height))
+  const w = Math.round(pixelCrop.width * scale)
+  const h = Math.round(pixelCrop.height * scale)
+
   const canvas = document.createElement('canvas')
-  canvas.width  = pixelCrop.width
-  canvas.height = pixelCrop.height
+  canvas.width  = w
+  canvas.height = h
   const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height)
+  ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, w, h)
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Canvas toBlob failed')), 'image/webp', 0.92)
+    // WebP n'est pas encodable depuis canvas sur iOS Safari — fallback JPEG
+    canvas.toBlob((blob) => {
+      if (blob) { resolve(blob); return }
+      canvas.toBlob((jpegBlob) => {
+        jpegBlob ? resolve(jpegBlob) : reject(new Error('Impossible de convertir l\'image'))
+      }, 'image/jpeg', 0.92)
+    }, 'image/webp', 0.92)
   })
 }
 
@@ -42,6 +54,7 @@ export default function ImageCropModal({ src, onConfirm, onCancel }: Props) {
   const [ratioIdx, setRatioIdx]   = useState(0)
   const [croppedArea, setCroppedArea] = useState<Area | null>(null)
   const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState<string | null>(null)
 
   const selectedRatio = RATIOS[ratioIdx]
 
@@ -51,10 +64,13 @@ export default function ImageCropModal({ src, onConfirm, onCancel }: Props) {
 
   async function handleConfirm() {
     if (!croppedArea) return
+    setError(null)
     setLoading(true)
     try {
       const blob = await getCroppedBlob(src, croppedArea)
       onConfirm(blob)
+    } catch {
+      setError('Erreur lors du recadrage — essaie avec une autre photo.')
     } finally {
       setLoading(false)
     }
@@ -123,6 +139,10 @@ export default function ImageCropModal({ src, onConfirm, onCancel }: Props) {
           />
           <span className="text-[11px] text-ink-3 w-8 text-right">{zoom.toFixed(1)}×</span>
         </div>
+
+        {error && (
+          <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>
+        )}
 
         {/* Actions */}
         <div className="flex justify-end gap-2">
