@@ -3,59 +3,6 @@ import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 
-interface Tile {
-  id: string
-  kind: string
-  accent?: boolean
-  span: string
-  index: number
-}
-
-const TILES: Omit<Tile, 'index'>[] = [
-  { id: 'hexalux', kind: 'CUSTOM', accent: true,  span: 'col-span-2 row-span-2 lg:col-span-2 lg:row-span-2' },
-  { id: 'eldur',   kind: 'SHOP',                  span: 'col-span-1 row-span-1' },
-  { id: 'bouchet', kind: 'CUSTOM',                span: 'col-span-1 row-span-1' },
-  { id: 'capsule', kind: 'SHOP', accent: true,    span: 'col-span-2 row-span-1 lg:col-span-3 lg:row-span-1' },
-]
-
-function PortfolioTile({ id, kind, accent = false, span, index }: Tile) {
-  const t = useTranslations('portfolioSection')
-  const label = t(`tiles.${id}`)
-  const patternId = `ptile-${index}`
-  return (
-    <Link
-      href="/portfolio"
-      aria-label={t('tileAria', { label })}
-      className={`group relative overflow-hidden flex flex-col justify-end p-5 transition-all duration-300 hover:-translate-y-1 ${span}`}
-      style={{
-        borderRadius: 24,
-        background: accent ? 'linear-gradient(160deg, #2A1C08, #0E0801)' : 'linear-gradient(160deg, #1A1A1F, #08080A)',
-        border: accent ? '1px solid var(--line-amber)' : '1px solid var(--line)',
-      }}
-    >
-      <svg aria-hidden className="absolute inset-0 w-full h-full transition-opacity group-hover:opacity-60" style={{ opacity: 0.4 }}>
-        <defs>
-          <pattern id={patternId} width="22" height="26" patternUnits="userSpaceOnUse">
-            <path d="M11 2 L20 24 L2 24 Z" fill="none" stroke={accent ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.4" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill={`url(#${patternId})`} />
-      </svg>
-
-      <div className="absolute top-4 right-4">
-        <div className="font-mono text-ink-1 px-2 py-1 rounded-full border border-[rgba(255,255,255,0.1)]" style={{ fontSize: 9, letterSpacing: '0.08em', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}>
-          {kind}
-        </div>
-      </div>
-
-      <div className="relative">
-        <div className="text-[15px] font-semibold text-ink-0 transition-colors group-hover:text-amber-soft">{label}</div>
-        <div className="font-mono text-ink-2 mt-1" style={{ fontSize: 10, letterSpacing: '0.05em' }}>{t('tileMeta')}</div>
-      </div>
-    </Link>
-  )
-}
-
 export default function Portfolio() {
   const t = useTranslations('portfolioSection')
   return (
@@ -73,18 +20,96 @@ export default function Portfolio() {
           </Link>
         </Reveal>
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-5 auto-rows-[150px] lg:auto-rows-[210px]">
-          {TILES.map((tile, i) => <PortfolioTile key={tile.id} {...tile} index={i} />)}
-        </div>
-
-        <div className="mt-10 flex justify-center">
-          <Link
-            href="/portfolio"
-            className="flex h-[54px] items-center justify-center rounded-pill px-10 font-sans font-semibold text-[15px] text-ink-0 border border-[var(--line-2)] bg-bg-3 transition-all active:scale-[0.97] hover:bg-bg-4"
+        <Reveal>
+          <div
+            className="relative overflow-hidden"
+            style={{
+              borderRadius: 32,
+              background: 'linear-gradient(135deg, #141417 0%, #0A0A0B 100%)',
+              border: '1px solid var(--line)',
+            }}
           >
-            {t('explore')}
-          </Link>
-        </div>
+            {/* Glow décoratif */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(245,158,11,0.07), transparent 60%)' }}
+            />
+
+            {/* Motif triangles en filigrane */}
+            <svg aria-hidden className="absolute right-0 top-0 h-full" style={{ opacity: 0.06, width: 'auto' }} viewBox="0 0 300 300">
+              <defs>
+                <pattern id="port-banner-tri" width="28" height="32" patternUnits="userSpaceOnUse">
+                  <path d="M14 3 L26 29 L2 29 Z" fill="none" stroke="white" strokeWidth="0.6" />
+                </pattern>
+              </defs>
+              <rect width="300" height="300" fill="url(#port-banner-tri)" />
+            </svg>
+
+            <div className="relative flex flex-col items-start gap-6 p-8 sm:p-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:p-14">
+              {/* Left */}
+              <div className="max-w-lg">
+                <div className="mb-5 flex items-center gap-3">
+                  <Eyebrow>Portfolio</Eyebrow>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-amber-soft"
+                    style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}
+                  >
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-60" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber" />
+                    </span>
+                    Bientôt disponible
+                  </span>
+                </div>
+
+                <h3
+                  className="font-sans font-bold text-ink-0"
+                  style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}
+                >
+                  Nos créations,<br />
+                  <span className="honey-text">bientôt en ligne.</span>
+                </h3>
+
+                <p className="mt-4 text-ink-2" style={{ fontSize: 15, lineHeight: 1.6, maxWidth: 440 }}>
+                  Projets custom, séries limitées et collaborations — notre portfolio arrive prochainement.
+                  En attendant, lancez votre propre projet sur-mesure.
+                </p>
+
+                <Link
+                  href="/custom"
+                  className="mt-6 inline-flex h-[46px] items-center gap-2 rounded-pill px-7 font-semibold text-[14px] cursor-pointer transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5"
+                  style={{ background: 'var(--btn-primary-bg)', color: '#fff', boxShadow: 'var(--shadow-amber)' }}
+                >
+                  Demander un devis
+                </Link>
+              </div>
+
+              {/* Right: placeholder tiles */}
+              <div className="flex shrink-0 gap-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex flex-col items-center justify-center gap-2" style={{ opacity: 1 - i * 0.22 }}>
+                    <div
+                      style={{
+                        width: 80, height: 110,
+                        borderRadius: 18,
+                        background: 'linear-gradient(160deg, #1E1E24, #0E0E12)',
+                        border: '1px solid var(--line)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style={{ opacity: 0.2 }}>
+                        <path d="M10 2 L18 17 L2 17 Z" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <div className="rounded-full" style={{ width: 40, height: 6, background: 'var(--line-2)' }} />
+                    <div className="rounded-full" style={{ width: 28, height: 5, background: 'var(--line)' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   )
