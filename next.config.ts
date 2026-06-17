@@ -17,6 +17,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.tiktokcdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.tiktokcdn-us.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.tiktokcdn-eu.com',
+      },
     ],
   },
   // typedRoutes désactivé le temps de migrer tous les Link vers @/i18n/navigation

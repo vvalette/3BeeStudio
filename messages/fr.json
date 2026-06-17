@@ -125,10 +125,9 @@
     }
   },
   "videoStrip": {
-    "eyebrow": "Studio · TikTok",
-    "heading": "Voir naître les pièces.",
-    "viewAll": "VOIR TOUT →",
-    "cardAria": "Voir « {title} » sur TikTok"
+    "eyebrow": "Nos réseaux",
+    "heading": "Suivez l'atelier en direct.",
+    "viewAll": "VOIR TOUT →"
   },
   "portfolioSection": {
     "eyebrow": "Portfolio",
