@@ -65,7 +65,7 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
     setCropQueue((q) => q.slice(1))
   }
 
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/jpeg': [], 'image/png': [], 'image/webp': [], 'image/avif': [], 'image/heic': [], 'image/heif': [] },
     maxFiles: 6 - images.length,
@@ -128,13 +128,20 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
             <p className="text-[11px]">JPG, PNG, WebP · max 5 Mo · {6 - images.length} image{6 - images.length > 1 ? 's' : ''} restante{6 - images.length > 1 ? 's' : ''}</p>
           </div>
           {!uploading && (
-            <button
-              type="button"
-              onClick={open}
-              className="rounded-lg border border-[var(--line-amber)] bg-amber/10 px-3 py-1.5 text-xs font-medium text-amber hover:bg-amber/20 transition-colors cursor-pointer"
-            >
+            <label className="rounded-lg border border-[var(--line-amber)] bg-amber/10 px-3 py-1.5 text-xs font-medium text-amber hover:bg-amber/20 transition-colors cursor-pointer">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif"
+                multiple={images.length < 5}
+                className="sr-only"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? [])
+                  if (files.length) onDrop(files)
+                  e.target.value = ''
+                }}
+              />
               Choisir depuis l'appareil
-            </button>
+            </label>
           )}
         </div>
       )}
