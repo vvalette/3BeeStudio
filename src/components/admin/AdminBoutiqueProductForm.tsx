@@ -20,9 +20,10 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
   const [cropQueue, setCropQueue] = useState<{ src: string; file: File }[]>([])
 
   async function uploadBlob(blob: Blob, originalFile: File): Promise<string | null> {
+    const mime = blob.type || 'image/jpeg'
+    const ext  = mime.includes('webp') ? 'webp' : mime.includes('png') ? 'png' : 'jpg'
     const form = new FormData()
-    const ext  = 'webp'
-    form.append('file', new File([blob], `${originalFile.name.replace(/\.[^.]+$/, '')}.${ext}`, { type: 'image/webp' }))
+    form.append('file', new File([blob], `${originalFile.name.replace(/\.[^.]+$/, '')}.${ext}`, { type: mime }))
     const res  = await fetch('/api/admin/upload/product-image', { method: 'POST', body: form })
     const data = await res.json()
     if (!res.ok) { setError(data.error ?? 'Erreur upload'); return null }

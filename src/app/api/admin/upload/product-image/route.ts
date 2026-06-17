@@ -8,6 +8,8 @@ const ALLOWED: Record<string, string> = {
   'image/png':   'png',
   'image/webp':  'webp',
   'image/avif':  'avif',
+  'image/heic':  'jpg',
+  'image/heif':  'jpg',
 }
 
 const MAX_SIZE = 5 * 1024 * 1024 // 5 Mo
