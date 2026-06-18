@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import type { CartItem } from '@/types/cart'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
@@ -13,9 +14,11 @@ interface Props {
 }
 
 export default function CheckoutClient({ forcedItems }: Props) {
+  const t = useTranslations('boutique.checkoutForm')
   const cart = useCart()
   const isBuyNow = !!forcedItems
   const items = forcedItems ?? cart.items
+  const { freeShippingEnabled } = cart
 
   const [name, setName]                 = useState('')
   const [email, setEmail]               = useState('')
@@ -31,9 +34,9 @@ export default function CheckoutClient({ forcedItems }: Props) {
 
   const { subtotal, shipping, total } = useMemo(() => {
     const subtotal = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
-    const shipping = items.length > 0 ? calcShopShipping(subtotal) : 0
+    const shipping = items.length > 0 ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
     return { subtotal, shipping, total: subtotal + shipping }
-  }, [items])
+  }, [items, freeShippingEnabled])
 
   // Garde-fou : si le panier se vide (hors buy-now), on n'affiche plus le form
   const empty = items.length === 0
@@ -65,7 +68,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
 
     const data = await res.json()
     if (!res.ok) {
-      setError(data.error ?? 'Une erreur est survenue. Réessayez.')
+      setError(data.error ?? t('errorFallback'))
       setLoading(false)
       return
     }
@@ -79,9 +82,9 @@ export default function CheckoutClient({ forcedItems }: Props) {
   if (empty) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-dashed border-[var(--line)] py-16 text-center">
-        <p className="text-ink-2">Votre panier est vide.</p>
+        <p className="text-ink-2">{t('emptyCart')}</p>
         <Link href="/boutique" className="mt-3 inline-block text-[13px] font-medium text-amber hover:text-amber-soft transition-colors">
-          Retour à la boutique →
+          {t('backToShop')}
         </Link>
       </div>
     )
@@ -95,46 +98,46 @@ export default function CheckoutClient({ forcedItems }: Props) {
 
         {/* Contact */}
         <fieldset className="space-y-4">
-          <legend className="mb-2 font-semibold text-ink-0">Vos coordonnées</legend>
+          <legend className="mb-2 font-semibold text-ink-0">{t('contactTitle')}</legend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>Prénom / Nom *</label>
-              <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Marie Dupont" required minLength={2} />
+              <label className={labelClass}>{t('nameLabel')}</label>
+              <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('namePlaceholder')} required minLength={2} autoComplete="off" />
             </div>
             <div>
-              <label className={labelClass}>Email *</label>
-              <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="marie@exemple.fr" required />
+              <label className={labelClass}>{t('emailLabel')}</label>
+              <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('emailPlaceholder')} required autoComplete="off" />
             </div>
           </div>
           <div>
-            <label className={labelClass}>Téléphone (optionnel)</label>
-            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+33 6 00 00 00 00" />
+            <label className={labelClass}>{t('phoneLabel')}</label>
+            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phonePlaceholder')} autoComplete="off" />
           </div>
         </fieldset>
 
         {/* Adresse */}
         <fieldset className="space-y-4">
-          <legend className="mb-2 font-semibold text-ink-0">Adresse de livraison</legend>
+          <legend className="mb-2 font-semibold text-ink-0">{t('addressTitle')}</legend>
           <div>
-            <label className={labelClass}>Nom destinataire *</label>
-            <input className={inputClass} value={shippingName} onChange={(e) => setShippingName(e.target.value)} placeholder={name || 'Marie Dupont'} required />
+            <label className={labelClass}>{t('recipientLabel')}</label>
+            <input className={inputClass} value={shippingName} onChange={(e) => setShippingName(e.target.value)} placeholder={name || t('namePlaceholder')} required autoComplete="off" />
           </div>
           <div>
-            <label className={labelClass}>Adresse *</label>
-            <input className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 rue de la Paix" required minLength={5} />
+            <label className={labelClass}>{t('addressLabel')}</label>
+            <input className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('addressPlaceholder')} required minLength={5} autoComplete="off" />
           </div>
           <div>
-            <label className={labelClass}>Complément (optionnel)</label>
-            <input className={inputClass} value={address2} onChange={(e) => setAddress2(e.target.value)} placeholder="Bâtiment B, Apt 4" />
+            <label className={labelClass}>{t('address2Label')}</label>
+            <input className={inputClass} value={address2} onChange={(e) => setAddress2(e.target.value)} placeholder={t('address2Placeholder')} autoComplete="off" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Code postal *</label>
-              <input className={inputClass} value={postal} onChange={(e) => setPostal(e.target.value)} placeholder="75001" required minLength={4} maxLength={6} />
+              <label className={labelClass}>{t('postalLabel')}</label>
+              <input className={inputClass} value={postal} onChange={(e) => setPostal(e.target.value)} placeholder={t('postalPlaceholder')} required minLength={4} maxLength={6} autoComplete="off" />
             </div>
             <div>
-              <label className={labelClass}>Ville *</label>
-              <input className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Paris" required minLength={2} />
+              <label className={labelClass}>{t('cityLabel')}</label>
+              <input className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('cityPlaceholder')} required minLength={2} autoComplete="off" />
             </div>
           </div>
         </fieldset>
@@ -151,22 +154,22 @@ export default function CheckoutClient({ forcedItems }: Props) {
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round" /></svg>
-              Redirection vers Stripe…
+              {t('loading')}
             </span>
           ) : (
-            <>Payer {formatPrice(total)} →</>
+            <>{t('pay', { price: formatPrice(total) })}</>
           )}
         </button>
 
         <p className="text-center text-[11px] text-ink-3">
-          Paiement sécurisé par Stripe · SSL · Données chiffrées
+          {t('securePayment')}
         </p>
       </form>
 
       {/* Récap commande */}
       <aside className="order-1 lg:order-2 lg:sticky lg:top-[88px] rounded-2xl border border-[var(--line)] bg-bg-1 p-5">
         <h2 className="mb-4 font-semibold text-ink-0">
-          {isBuyNow ? 'Votre commande' : 'Votre panier'}
+          {isBuyNow ? t('orderSummary') : t('cartSummary')}
         </h2>
         <ul className="space-y-3">
           {items.map((item) => (
@@ -186,7 +189,12 @@ export default function CheckoutClient({ forcedItems }: Props) {
               </div>
               <div className="flex flex-1 items-center justify-between gap-2">
                 <span className="text-[13px] text-ink-1 leading-tight">{item.name}</span>
-                <span className="font-mono text-[13px] text-ink-0">{formatPrice(item.price * item.quantity)}</span>
+                <div className="flex flex-col items-end">
+                  <span className="font-mono text-[13px] text-ink-0">{formatPrice(item.price * item.quantity)}</span>
+                  {item.original_price !== null && (
+                    <span className="font-mono text-[11px] text-ink-3 line-through">{formatPrice(item.original_price * item.quantity)}</span>
+                  )}
+                </div>
               </div>
             </li>
           ))}
@@ -194,16 +202,16 @@ export default function CheckoutClient({ forcedItems }: Props) {
 
         <div className="mt-4 space-y-1.5 border-t border-[var(--line)] pt-4 text-[13px]">
           <div className="flex justify-between text-ink-2">
-            <span>Sous-total</span><span>{formatPrice(subtotal)}</span>
+            <span>{t('subtotal')}</span><span>{formatPrice(subtotal)}</span>
           </div>
           <div className="flex justify-between text-ink-2">
-            <span>Livraison</span><span>{shipping === 0 ? 'Offerte' : formatPrice(shipping)}</span>
+            <span>{t('shipping')}</span><span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
           </div>
           {shipping > 0 && (
-            <p className="text-[11px] text-ink-3">Offerte dès {formatPrice(SHOP_FREE_SHIPPING_THRESHOLD)} d&apos;achat</p>
+            <p className="text-[11px] text-ink-3">{t('freeShippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
           )}
           <div className="flex justify-between border-t border-[var(--line)] pt-1.5 font-bold text-ink-0">
-            <span>Total</span><span className="text-amber">{formatPrice(total)}</span>
+            <span>{t('total')}</span><span className="text-amber">{formatPrice(total)}</span>
           </div>
         </div>
       </aside>

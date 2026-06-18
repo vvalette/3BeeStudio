@@ -15,6 +15,7 @@ const patchSchema = z.object({
   subtitle_en:     z.string().max(80).nullable().optional(),
   description_en:  z.string().max(2000).nullable().optional(),
   price:           z.number().int().positive().optional(),
+  sale_price:      z.number().int().positive().nullable().optional(),
   images:          z.array(z.string().url()).max(6).optional(),
   stock:           z.number().int().min(0).nullable().optional(),
   active:          z.boolean().optional(),
@@ -72,6 +73,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.stl_url !== undefined)        updates.stl_url        = d.stl_url
   if (d.slug !== undefined)           updates.slug           = d.slug
   else if (d.name && d.name !== product.name) updates.slug   = generateSlug(d.name)
+  if (d.sale_price !== undefined)     updates.sale_price     = d.sale_price
 
   // Sync Stripe — produit
   if (product.stripe_product_id) {

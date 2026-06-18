@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import ReactMarkdown from 'react-markdown'
 
 const COLLAPSED_HEIGHT = 130
 
 export default function DescriptionExpand({ text }: { text: string }) {
+  const t = useTranslations('boutique.descriptionExpand')
   const [expanded, setExpanded] = useState(false)
   const [overflows, setOverflows] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -46,7 +48,7 @@ export default function DescriptionExpand({ text }: { text: string }) {
           onClick={() => setExpanded(!expanded)}
           className="mt-2 font-mono text-[12px] tracking-[0.05em] text-amber hover:text-amber-soft transition-colors cursor-pointer"
         >
-          {expanded ? 'Voir moins ↑' : 'Voir plus ↓'}
+          {expanded ? t('showLess') : t('showMore')}
         </button>
       )}
     </div>

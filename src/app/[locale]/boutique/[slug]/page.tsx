@@ -1,11 +1,12 @@
 import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import type { ShopProduct } from '@/types/shop-product'
-import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
+import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD, effectivePrice, discountPercent } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import { buildAlternates } from '@/lib/seo'
 import type { Locale } from '@/i18n/routing'
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 import AddToCartForm from '@/components/boutique/AddToCartForm'
 import BoutiqueProductMedia from '@/components/boutique/BoutiqueProductMedia'
 import DescriptionExpand from '@/components/boutique/DescriptionExpand'
@@ -39,9 +40,10 @@ export async function generateMetadata({
 export default async function ProductPage({
   params,
 }: {
-  params: Promise<{ slug: string; locale: string }>
+  params: Promise<{ slug: string; locale: Locale }>
 }) {
   const { slug, locale } = await params
+  const t = await getTranslations({ locale, namespace: 'boutique.product' })
 
   const { data, error } = await supabaseAdmin
     .from('shop_products')
@@ -59,8 +61,9 @@ export default async function ProductPage({
   const displayDescription = (isEn && product.description_en) ? product.description_en : product.description
   const outOfStock = product.stock !== null && product.stock === 0
 
-  const exampleSubtotal = product.price
+  const exampleSubtotal = effectivePrice(product)
   const shipping        = calcShopShipping(exampleSubtotal)
+  const discount        = discountPercent(product)
 
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-6 pb-16">
@@ -68,9 +71,9 @@ export default async function ProductPage({
 
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-[12px] text-ink-3">
-          <a href="/boutique" className="hover:text-ink-1 transition-colors">Boutique</a>
+          <a href="/boutique" className="hover:text-ink-1 transition-colors">{t('breadcrumb')}</a>
           <span>/</span>
-          <span className="text-ink-2">{product.name}</span>
+          <span className="text-ink-2">{displayName}</span>
         </nav>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 lg:items-start">
@@ -85,21 +88,29 @@ export default async function ProductPage({
 
             {/* En-tête : titre, sous-titre, prix */}
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">Impression 3D · Fait main</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">{t('eyebrow')}</p>
               <h1 className="mt-2 font-extrabold text-ink-0" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.25rem)', letterSpacing: '-0.025em', lineHeight: 1.1 }}>
                 {displayName}
               </h1>
               {displaySubtitle && (
                 <p className="mt-2 font-mono text-[14px] tracking-[0.04em] text-ink-1">{displaySubtitle}</p>
               )}
-              <div className="mt-4 flex items-center gap-3 border-t border-[var(--line)] pt-4">
-                <span className="font-mono text-3xl font-bold text-amber">{formatPrice(product.price)}</span>
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--line)] pt-4">
+                <span className="font-mono text-3xl font-bold text-amber">{formatPrice(effectivePrice(product))}</span>
+                {product.sale_price !== null && (
+                  <span className="font-mono text-xl text-ink-3 line-through">{formatPrice(product.price)}</span>
+                )}
+                {discount !== null && (
+                  <span className="rounded-pill border border-red-500/30 bg-red-500/15 px-2.5 py-1 font-mono text-[12px] font-bold text-red-400">
+                    -{discount}%
+                  </span>
+                )}
                 {outOfStock ? (
-                  <span className="rounded-pill bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-xs text-red-400">Rupture de stock</span>
+                  <span className="rounded-pill bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-xs text-red-400">{t('outOfStockBadge')}</span>
                 ) : product.stock !== null ? (
-                  <span className="rounded-pill border border-[var(--line)] bg-bg-1 px-2.5 py-1 text-[11px] text-ink-3">{product.stock} en stock</span>
+                  <span className="rounded-pill border border-[var(--line)] bg-bg-1 px-2.5 py-1 text-[11px] text-ink-3">{t('inStockCount', { count: product.stock })}</span>
                 ) : (
-                  <span className="rounded-pill border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-[11px] text-green-400">En stock</span>
+                  <span className="rounded-pill border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-[11px] text-green-400">{t('inStock')}</span>
                 )}
               </div>
             </div>
@@ -114,7 +125,7 @@ export default async function ProductPage({
               <AddToCartForm product={product} />
             ) : (
               <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center">
-                Ce produit est temporairement en rupture de stock.
+                {t('outOfStockMsg')}
               </div>
             )}
 
@@ -134,11 +145,11 @@ export default async function ProductPage({
                   </div>
                   <div className="min-w-0">
                     <p className="text-[13px] font-semibold text-ink-0 leading-tight">
-                      Livraison{' '}
-                      <span className="text-amber">{shipping === 0 ? 'offerte' : formatPrice(shipping)}</span>
+                      {t('shipping')}{' '}
+                      <span className="text-amber">{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
                     </p>
                     {shipping > 0 && (
-                      <p className="mt-0.5 text-[11px] text-ink-3">dès {formatPrice(SHOP_FREE_SHIPPING_THRESHOLD)} d&apos;achat</p>
+                      <p className="mt-0.5 text-[11px] text-ink-3">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
                     )}
                   </div>
                 </div>
@@ -152,8 +163,8 @@ export default async function ProductPage({
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold text-ink-0 leading-tight">3 à 7 jours</p>
-                    <p className="mt-0.5 text-[11px] text-ink-3">délai indicatif</p>
+                    <p className="text-[13px] font-semibold text-ink-0 leading-tight">{t('leadTime')}</p>
+                    <p className="mt-0.5 text-[11px] text-ink-3">{t('leadTimeLabel')}</p>
                   </div>
                 </div>
 
@@ -166,8 +177,8 @@ export default async function ProductPage({
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold text-ink-0 leading-tight">Fait main</p>
-                    <p className="mt-0.5 text-[11px] text-ink-3">imprimé en France</p>
+                    <p className="text-[13px] font-semibold text-ink-0 leading-tight">{t('handmade')}</p>
+                    <p className="mt-0.5 text-[11px] text-ink-3">{t('madeInFrance')}</p>
                   </div>
                 </div>
 

@@ -738,5 +738,160 @@
       "title": "Porte-clé NFC personnalisé & impression 3D sur-mesure",
       "description": "Studio d'impression 3D français. Porte-clés NFC personnalisés à votre logo (B2B), objets de série et créations sur-mesure. Fabriqué en France, devis sous 48h."
     }
+  },
+  "boutique": {
+    "page": {
+      "eyebrow": "3BeeStudio · Boutique",
+      "title": "Impressions 3D",
+      "description": "Chaque pièce est imprimée à la main dans nos studios français. Livraison sous 3 à 7 jours ouvrés.",
+      "cancelBanner": "Paiement annulé — votre panier a été conservé.",
+      "empty": "Les produits arrivent bientôt…",
+      "metaTitle": "Boutique — 3BeeStudio",
+      "metaDescription": "Objets imprimés en 3D à la main dans nos studios français. Décoration, accessoires, pièces uniques."
+    },
+    "product": {
+      "breadcrumb": "Boutique",
+      "eyebrow": "Impression 3D · Fait main",
+      "outOfStockBadge": "Rupture de stock",
+      "inStockCount": "{count} en stock",
+      "inStock": "En stock",
+      "outOfStockMsg": "Ce produit est temporairement en rupture de stock.",
+      "shipping": "Livraison",
+      "shippingFree": "offerte",
+      "shippingThreshold": "dès {price} d'achat",
+      "leadTime": "3 à 7 jours",
+      "leadTimeLabel": "délai indicatif",
+      "handmade": "Fait main",
+      "madeInFrance": "imprimé en France"
+    },
+    "checkout": {
+      "breadcrumb": "Boutique",
+      "breadcrumbCurrent": "Commande",
+      "title": "Finaliser ma commande"
+    },
+    "card": {
+      "view3D": "Voir le modèle 3D",
+      "photoAlt": "Photo {n}",
+      "outOfStock": "Rupture de stock",
+      "available": "{count} dispo",
+      "inStock": "En stock",
+      "order": "Commander"
+    },
+    "addToCart": {
+      "quantity": "Quantité",
+      "lowStock": "Plus que {count} en stock",
+      "addToCartBtn": "Ajouter au panier",
+      "buyNow": "Acheter maintenant · {price} →"
+    },
+    "cart": {
+      "title": "Votre panier",
+      "itemCount": "{count, plural, =1 {# article} other {# articles}}",
+      "closeLabel": "Fermer",
+      "removeLabel": "Retirer",
+      "empty": "Votre panier est vide.",
+      "continueShopping": "Continuer mes achats →",
+      "freeShipping": "🎉 Livraison offerte sur toute la boutique",
+      "progressMsg": "Plus que <b>{amount}</b> pour la livraison offerte 🎉",
+      "subtotal": "Sous-total",
+      "shipping": "Livraison",
+      "shippingFree": "Offerte",
+      "total": "Total",
+      "checkoutBtn": "Commander →"
+    },
+    "checkoutForm": {
+      "emptyCart": "Votre panier est vide.",
+      "backToShop": "Retour à la boutique →",
+      "contactTitle": "Vos coordonnées",
+      "nameLabel": "Prénom / Nom *",
+      "namePlaceholder": "Marie Dupont",
+      "emailLabel": "Email *",
+      "emailPlaceholder": "marie@exemple.fr",
+      "phoneLabel": "Téléphone (optionnel)",
+      "phonePlaceholder": "+33 6 00 00 00 00",
+      "addressTitle": "Adresse de livraison",
+      "recipientLabel": "Nom destinataire *",
+      "addressLabel": "Adresse *",
+      "addressPlaceholder": "12 rue de la Paix",
+      "address2Label": "Complément (optionnel)",
+      "address2Placeholder": "Bâtiment B, Apt 4",
+      "postalLabel": "Code postal *",
+      "postalPlaceholder": "75001",
+      "cityLabel": "Ville *",
+      "cityPlaceholder": "Paris",
+      "errorFallback": "Une erreur est survenue. Réessayez.",
+      "loading": "Redirection vers Stripe…",
+      "pay": "Payer {price} →",
+      "securePayment": "Paiement sécurisé par Stripe · SSL · Données chiffrées",
+      "orderSummary": "Votre commande",
+      "cartSummary": "Votre panier",
+      "subtotal": "Sous-total",
+      "shipping": "Livraison",
+      "shippingFree": "Offerte",
+      "freeShippingThreshold": "Offerte dès {price} d'achat",
+      "total": "Total"
+    },
+    "descriptionExpand": {
+      "showMore": "Voir plus ↓",
+      "showLess": "Voir moins ↑"
+    },
+    "cartButtonAria": "{count, plural, =1 {Panier (# article)} other {Panier (# articles)}}",
+    "suivi": {
+      "metaTitle": "Suivi commande — Boutique 3BeeStudio",
+      "paymentConfirmed": "Paiement confirmé",
+      "orderReceived": "Commande reçue !",
+      "confirmationEmail": "Un email de confirmation a été envoyé à",
+      "eyebrow": "Boutique · Suivi commande",
+      "orderTitle": "Commande #{ref}",
+      "now": "← maintenant",
+      "trackingLabel": "Numéro de suivi",
+      "summary": "Récapitulatif",
+      "subtotal": "Sous-total",
+      "shipping": "Livraison",
+      "shippingFree": "Offerte",
+      "total": "Total",
+      "shippingAddress": "Adresse de livraison",
+      "nextSteps": "Prochaines étapes",
+      "stepConfirmed1": "Votre commande est en attente de préparation dans nos studios",
+      "stepConfirmed2": "Vous recevrez un email dès que votre commande est expédiée",
+      "stepProcessing": "Votre commande est en cours de préparation — expédition prévue sous 2 à 3 jours",
+      "stepShipped": "Votre colis est en route ! Délai estimé : 2 à 3 jours ouvrés",
+      "contactMsg": "Une question ? Écrivez-nous à <email/> en mentionnant votre référence #{ref}",
+      "backToShop": "← Retour à la boutique",
+      "statusLabels": {
+        "pending_payment": "En attente de paiement",
+        "confirmed": "Commande reçue",
+        "processing": "En préparation",
+        "shipped": "Expédiée",
+        "delivered": "Livrée",
+        "cancelled": "Annulée"
+      }
+    }
+  },
+  "portfolio": {
+    "metaTitle": "Portfolio — 3BeeStudio",
+    "metaDescription": "Découvrez bientôt nos projets d'impression 3D — créations custom, séries limitées et collaborations.",
+    "badge": "Bientôt disponible",
+    "heading": "Les projets arrivent.",
+    "description": "Nos créations custom, séries limitées et collaborations seront bientôt visibles ici. En attendant, découvrez la boutique ou lancez un projet sur-mesure.",
+    "ctaShop": "Voir la boutique",
+    "ctaCustom": "Demander un devis",
+    "hint": "3BeeStudio · Studio d'impression 3D français"
+  },
+  "howItWorks": {
+    "eyebrow": "Sur-mesure",
+    "heading": "Du croquis à votre étagère.",
+    "subheading": "Trois étapes, zéro friction. On parle avec vous, on prototype, on livre.",
+    "step1Title": "Le studio vous écoute",
+    "step1Desc": "Pas de formulaire à rallonge — une conversation directe avec l'artisan. Premier rendu 3D en main sous 48h.",
+    "step2Title": "Prototype & itération",
+    "step2Desc": "Impression test, photos détaillées, retours. On affine jusqu'à la pièce parfaite.",
+    "step3Title": "Production & livraison",
+    "step3Desc": "Production en série courte ou pièce unique. Expédié sous 5–7 jours en France."
+  },
+  "boutiqueTeaser": {
+    "badge": "Bientôt disponible",
+    "headingLine1": "Des pièces à commander",
+    "headingLine2": "directement en ligne.",
+    "description": "Vases, luminaires, accessoires imprimés en 3D — notre catalogue arrive prochainement. En attendant, contactez-nous pour toute commande."
   }
 }

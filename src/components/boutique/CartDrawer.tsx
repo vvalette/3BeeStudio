@@ -2,13 +2,15 @@
 
 import { useEffect } from 'react'
 import { useRouter } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import { useCart } from './CartProvider'
 import { formatPrice } from '@/lib/utils'
 import { SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 
 export default function CartDrawer() {
   const router = useRouter()
-  const { items, isOpen, close, subtotal, shipping, total, setQuantity, removeItem } = useCart()
+  const t = useTranslations('boutique.cart')
+  const { items, isOpen, close, subtotal, shipping, total, setQuantity, removeItem, freeShippingEnabled } = useCart()
 
   // Bloque le scroll du body quand ouvert
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function CartDrawer() {
       {/* Panneau */}
       <aside
         role="dialog"
-        aria-label="Panier"
+        aria-label={t('title')}
         className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-md flex-col border-l border-[var(--line)] bg-bg-0 shadow-pop transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
@@ -53,14 +55,14 @@ export default function CartDrawer() {
         {/* En-tête */}
         <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
           <h2 className="flex items-center gap-2 font-semibold text-ink-0">
-            Votre panier
+            {t('title')}
             <span className="font-mono text-[12px] text-ink-3">
-              {items.reduce((a, i) => a + i.quantity, 0)} article{items.reduce((a, i) => a + i.quantity, 0) > 1 ? 's' : ''}
+              {t('itemCount', { count: items.reduce((a, i) => a + i.quantity, 0) })}
             </span>
           </h2>
           <button
             onClick={close}
-            aria-label="Fermer"
+            aria-label={t('closeLabel')}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-bg-2 hover:text-ink-0"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -74,18 +76,22 @@ export default function CartDrawer() {
               <circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" />
               <path d="M2 2h2.5l2.2 12.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 6H5.2" />
             </svg>
-            <p className="text-sm text-ink-2">Votre panier est vide.</p>
+            <p className="text-sm text-ink-2">{t('empty')}</p>
             <button onClick={close} className="cursor-pointer text-[13px] font-medium text-amber hover:text-amber-soft transition-colors">
-              Continuer mes achats →
+              {t('continueShopping')}
             </button>
           </div>
         ) : (
           <>
-            {/* Jauge livraison offerte */}
-            {shipping > 0 && remaining > 0 && (
+            {/* Livraison offerte globale ou jauge seuil */}
+            {freeShippingEnabled ? (
+              <div className="border-b border-[var(--line)] bg-amber/5 px-5 py-2.5">
+                <p className="text-[12px] font-medium text-amber">{t('freeShipping')}</p>
+              </div>
+            ) : shipping > 0 && remaining > 0 ? (
               <div className="border-b border-[var(--line)] bg-bg-1 px-5 py-3">
                 <p className="text-[12px] text-ink-2">
-                  Plus que <strong className="text-amber">{formatPrice(remaining)}</strong> pour la livraison offerte 🎉
+                  {t.rich('progressMsg', { amount: formatPrice(remaining), b: (c) => <strong className="text-amber">{c}</strong> })}
                 </p>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-bg-3">
                   <div
@@ -94,7 +100,7 @@ export default function CartDrawer() {
                   />
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Liste articles */}
             <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -117,7 +123,7 @@ export default function CartDrawer() {
                         <p className="text-[14px] font-medium leading-tight text-ink-0">{item.name}</p>
                         <button
                           onClick={() => removeItem(item.product_id)}
-                          aria-label="Retirer"
+                          aria-label={t('removeLabel')}
                           className="shrink-0 cursor-pointer text-ink-3 transition-colors hover:text-red-400"
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -142,7 +148,12 @@ export default function CartDrawer() {
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 3v10M3 8h10" /></svg>
                           </button>
                         </div>
-                        <span className="font-mono text-[14px] font-semibold text-ink-0">{formatPrice(item.price * item.quantity)}</span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-mono text-[14px] font-semibold text-ink-0">{formatPrice(item.price * item.quantity)}</span>
+                          {item.original_price !== null && (
+                            <span className="font-mono text-[11px] text-ink-3 line-through">{formatPrice(item.original_price * item.quantity)}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </li>
@@ -154,20 +165,20 @@ export default function CartDrawer() {
             <div className="border-t border-[var(--line)] px-5 py-4 space-y-3">
               <div className="space-y-1.5 text-[13px]">
                 <div className="flex justify-between text-ink-2">
-                  <span>Sous-total</span><span>{formatPrice(subtotal)}</span>
+                  <span>{t('subtotal')}</span><span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-ink-2">
-                  <span>Livraison</span><span>{shipping === 0 ? 'Offerte' : formatPrice(shipping)}</span>
+                  <span>{t('shipping')}</span><span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
                 </div>
                 <div className="flex justify-between border-t border-[var(--line)] pt-1.5 font-bold text-ink-0">
-                  <span>Total</span><span className="text-amber">{formatPrice(total)}</span>
+                  <span>{t('total')}</span><span className="text-amber">{formatPrice(total)}</span>
                 </div>
               </div>
               <button
                 onClick={goToCheckout}
                 className="w-full cursor-pointer rounded-pill bg-amber py-3 font-bold text-bg-0 transition-opacity hover:opacity-90"
               >
-                Commander →
+                {t('checkoutBtn')}
               </button>
             </div>
           </>

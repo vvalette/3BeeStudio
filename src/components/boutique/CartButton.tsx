@@ -1,14 +1,16 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useCart } from './CartProvider'
 
 export default function CartButton() {
+  const t = useTranslations('boutique')
   const { count, open } = useCart()
 
   return (
     <button
       onClick={open}
-      aria-label={`Panier (${count} article${count > 1 ? 's' : ''})`}
+      aria-label={t('cartButtonAria', { count })}
       className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border border-[var(--line)] bg-bg-2 text-ink-1 transition-colors hover:bg-bg-3 hover:text-ink-0"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

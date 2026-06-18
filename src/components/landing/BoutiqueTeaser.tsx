@@ -1,7 +1,9 @@
+import { useTranslations } from 'next-intl'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
 
 export default function BoutiqueTeaser() {
+  const t = useTranslations('boutiqueTeaser')
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -56,7 +58,7 @@ export default function BoutiqueTeaser() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-60" />
                       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber" />
                     </span>
-                    Bientôt disponible
+                    {t('badge')}
                   </span>
                 </div>
 
@@ -68,13 +70,12 @@ export default function BoutiqueTeaser() {
                     letterSpacing: '-0.025em',
                   }}
                 >
-                  Des pièces à commander<br />
-                  <span className="honey-text">directement en ligne.</span>
+                  {t('headingLine1')}<br />
+                  <span className="honey-text">{t('headingLine2')}</span>
                 </h2>
 
                 <p className="mt-4 text-ink-2" style={{ fontSize: 15, lineHeight: 1.6, maxWidth: 440 }}>
-                  Vases, luminaires, accessoires imprimés en 3D — notre catalogue arrive prochainement.
-                  En attendant, contactez-nous pour toute commande.
+                  {t('description')}
                 </p>
               </div>
 
