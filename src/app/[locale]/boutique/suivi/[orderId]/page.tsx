@@ -222,6 +222,11 @@ export default async function SuiviBoutiquePage({
             <div className="flex justify-between text-ink-3">
               <span>{t('subtotal')}</span><span>{formatPrice(order.subtotal)}</span>
             </div>
+            {(order.discount_amount ?? 0) > 0 && (
+              <div className="flex justify-between text-emerald-400">
+                <span>{t('newsletterDiscount')}</span><span>−{formatPrice(order.discount_amount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-ink-3">
               <span>{t('shipping')}</span><span>{order.shipping === 0 ? t('shippingFree') : formatPrice(order.shipping)}</span>
             </div>

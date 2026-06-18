@@ -834,6 +834,8 @@
       "shipping": "Shipping",
       "shippingFree": "Free",
       "freeShippingThreshold": "Free from {price} purchase",
+      "newsletterDiscount": "Newsletter discount (−10%)",
+      "newsletterDiscountBadge": "🎉 Newsletter discount −10% applied",
       "total": "Total"
     },
     "descriptionExpand": {
@@ -854,6 +856,7 @@
       "subtotal": "Subtotal",
       "shipping": "Shipping",
       "shippingFree": "Free",
+      "newsletterDiscount": "Newsletter discount (−10%)",
       "total": "Total",
       "shippingAddress": "Delivery address",
       "nextSteps": "Next steps",

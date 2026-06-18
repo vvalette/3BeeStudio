@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Link } from '@/i18n/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import type { CartItem } from '@/types/cart'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
@@ -14,8 +14,9 @@ interface Props {
 }
 
 export default function CheckoutClient({ forcedItems }: Props) {
-  const t = useTranslations('boutique.checkoutForm')
-  const cart = useCart()
+  const t      = useTranslations('boutique.checkoutForm')
+  const locale = useLocale()
+  const cart   = useCart()
   const isBuyNow = !!forcedItems
   const items = forcedItems ?? cart.items
   const { freeShippingEnabled } = cart
@@ -29,17 +30,31 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const [city, setCity]                 = useState('')
   const [postal, setPostal]             = useState('')
   const [country]                       = useState('FR')
-  const [deliveryMode, setDeliveryMode] = useState<'delivery' | 'pickup'>('delivery')
-  const [loading, setLoading]           = useState(false)
-  const [error, setError]               = useState<string | null>(null)
+  const [deliveryMode, setDeliveryMode]           = useState<'delivery' | 'pickup'>('delivery')
+  const [hasNewsletterDiscount, setHasDiscount]   = useState(false)
+  const [loading, setLoading]                     = useState(false)
+  const [error, setError]                         = useState<string | null>(null)
 
   const isPickup = deliveryMode === 'pickup'
 
-  const { subtotal, shipping, total } = useMemo(() => {
-    const subtotal = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
-    const shipping = items.length > 0 && !isPickup ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
-    return { subtotal, shipping, total: subtotal + shipping }
-  }, [items, freeShippingEnabled, isPickup])
+  const { subtotal, discountAmount, shipping, total } = useMemo(() => {
+    const subtotal      = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
+    const discountAmount = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
+    const shipping      = items.length > 0 && !isPickup ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
+    return { subtotal, discountAmount, shipping, total: subtotal - discountAmount + shipping }
+  }, [items, freeShippingEnabled, isPickup, hasNewsletterDiscount])
+
+  // Vérifie la promo newsletter dès que l'email est valide
+  useEffect(() => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setHasDiscount(false); return }
+    const timer = setTimeout(() => {
+      fetch(`/api/newsletter/check?email=${encodeURIComponent(email)}`)
+        .then((r) => r.json())
+        .then((d) => setHasDiscount(d.hasDiscount === true))
+        .catch(() => setHasDiscount(false))
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [email])
 
   // Garde-fou : si le panier se vide (hors buy-now), on n'affiche plus le form
   const empty = items.length === 0
@@ -60,6 +75,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
         email,
         name,
         phone: phone || undefined,
+        locale,
         delivery_mode: deliveryMode,
         ...(isPickup ? {} : {
           shipping_name:        shippingName || name,
@@ -265,10 +281,20 @@ export default function CheckoutClient({ forcedItems }: Props) {
           ))}
         </ul>
 
+        {hasNewsletterDiscount && (
+          <p className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-[12px] text-emerald-400">
+            {t('newsletterDiscountBadge')}
+          </p>
+        )}
         <div className="mt-4 space-y-1.5 border-t border-[var(--line)] pt-4 text-[13px]">
           <div className="flex justify-between text-ink-2">
             <span>{t('subtotal')}</span><span>{formatPrice(subtotal)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-emerald-400">
+              <span>{t('newsletterDiscount')}</span><span>−{formatPrice(discountAmount)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-ink-2">
             <span>{t('shipping')}</span><span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
           </div>

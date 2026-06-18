@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   Html,
   Head,
@@ -12,65 +13,81 @@ import {
 
 interface Props {
   appUrl: string
+  locale?: string
 }
 
-export default function NewsletterWelcome({ appUrl }: Props) {
+export default function NewsletterWelcome({ appUrl, locale = 'fr' }: Props) {
+  const isEn = locale === 'en'
+
+  const copy = {
+    preview:     isEn ? 'Welcome to 3BeeStudio — and a gift for you 🐝' : 'Bienvenue chez 3BeeStudio — un cadeau vous attend 🐝',
+    headerSub:   isEn ? '3D Printing · NFC Keychains' : 'Impression 3D · Porte-clés NFC',
+    h1:          isEn ? 'Your subscription is confirmed.' : 'Votre inscription est confirmée.',
+    intro:       isEn
+      ? 'You\'ll now receive our monthly drops directly in your inbox: new releases, limited series, exclusive deals — always before anyone else.'
+      : 'Vous recevrez désormais nos drops mensuels directement dans votre boîte mail : nouveautés, séries limitées, offres exclusives — toujours en avant-première.',
+    promoLabel:  isEn ? 'YOUR WELCOME GIFT' : 'VOTRE CADEAU DE BIENVENUE',
+    promoSub:    isEn ? 'off your first NFC keychain, custom or shop order' : 'sur votre première commande NFC, sur-mesure ou boutique',
+    promoHow:    isEn ? 'How to use it:' : 'Comment en profiter :',
+    promoHint:   isEn
+      ? 'When placing your NFC or custom order, mention the email address you used to subscribe to this newsletter. The discount will be applied automatically.'
+      : "Lors de votre commande NFC ou sur-mesure, mentionnez bien l'email utilisé lors de votre inscription à cette newsletter. La réduction sera appliquée automatiquement.",
+    ctaIntro:    isEn ? 'Discover our creations:' : 'Découvrez nos créations :',
+    ctaBtn:      isEn ? 'Explore 3BeeStudio →' : 'Explorer 3BeeStudio →',
+    footerUnsub: isEn
+      ? 'You received this email because you subscribed to 3BeeStudio Honey Drops.'
+      : 'Vous recevez cet email car vous vous êtes inscrit aux Honey Drops de 3BeeStudio.',
+    footerStudio: isEn
+      ? '3BeeStudio · French 3D printing studio · Belleville-en-Beaujolais'
+      : "3BeeStudio · Studio d'impression 3D français · Belleville-en-Beaujolais",
+  }
+
   return (
-    <Html lang="fr">
+    <Html lang={isEn ? 'en' : 'fr'}>
       <Head />
-      <Preview>Bienvenue dans la ruche — votre avant-première vous attend 🐝</Preview>
+      <Preview>{copy.preview}</Preview>
       <Body style={body}>
         <Container style={container}>
 
           <Section style={header}>
             <Text style={logo}>🐝 3BeeStudio</Text>
-            <Text style={headerSub}>Impression 3D · Porte-clés NFC</Text>
+            <Text style={headerSub}>{copy.headerSub}</Text>
           </Section>
 
           <Section style={section}>
-            <Text style={badge}>🎉 Bienvenue dans la ruche</Text>
-            <Text style={h1}>Vous êtes en avant-première.</Text>
-            <Text style={intro}>
-              À chaque drop mensuel, vous recevez les nouveautés avant tout le monde :
-              séries limitées, pièces exclusives, collections en édition restreinte.
-            </Text>
+            <Text style={h1}>{copy.h1}</Text>
+            <Text style={intro}>{copy.intro}</Text>
           </Section>
 
           <Hr style={divider} />
 
           {/* Promo block */}
           <Section style={{ ...section, textAlign: 'center' as const }}>
-            <Text style={promoLabel}>VOTRE CADEAU DE BIENVENUE</Text>
+            <Text style={promoLabel}>{copy.promoLabel}</Text>
             <Text style={promoCode}>-10%</Text>
-            <Text style={promoSub}>
-              sur votre première commande NFC ou sur-mesure
-            </Text>
-            <Text style={promoHint}>
-              La réduction est appliquée automatiquement à votre prochaine commande,
-              sans code à saisir.
-            </Text>
+            <Text style={promoSub}>{copy.promoSub}</Text>
+            <div style={promoBox}>
+              <Text style={promoHowLabel}>{copy.promoHow}</Text>
+              <Text style={promoHint}>{copy.promoHint}</Text>
+            </div>
           </Section>
 
           <Hr style={divider} />
 
           <Section style={{ ...section, textAlign: 'center' as const }}>
             <Text style={{ ...intro, textAlign: 'center' as const, marginBottom: 20 }}>
-              Découvrez nos créations en attendant votre premier drop :
+              {copy.ctaIntro}
             </Text>
             <Link href={appUrl} style={ctaButton}>
-              Explorer 3BeeStudio →
+              {copy.ctaBtn}
             </Link>
           </Section>
 
           <Hr style={divider} />
 
           <Section style={footer}>
-            <Text style={footerText}>
-              Vous recevez cet email car vous vous êtes inscrit aux Honey Drops de 3BeeStudio.
-            </Text>
-            <Text style={{ ...footerText, marginTop: 8 }}>
-              3BeeStudio · Studio d'impression 3D français · Belleville-en-Beaujolais
-            </Text>
+            <Text style={footerText}>{copy.footerUnsub}</Text>
+            <Text style={{ ...footerText, marginTop: 8 }}>{copy.footerStudio}</Text>
           </Section>
 
         </Container>
@@ -121,17 +138,6 @@ const section: React.CSSProperties = {
   padding: '24px 32px',
 }
 
-const badge: React.CSSProperties = {
-  display: 'inline-block',
-  backgroundColor: 'rgba(245,158,11,0.12)',
-  color: '#F59E0B',
-  borderRadius: 99,
-  fontSize: 12,
-  fontWeight: 600,
-  padding: '4px 12px',
-  margin: '0 0 12px',
-}
-
 const h1: React.CSSProperties = {
   fontSize: 22,
   fontWeight: 700,
@@ -169,15 +175,33 @@ const promoSub: React.CSSProperties = {
   fontSize: 15,
   color: '#FAFAFA',
   fontWeight: 600,
-  margin: '0 0 12px',
+  margin: '0 0 16px',
+}
+
+const promoBox: React.CSSProperties = {
+  backgroundColor: 'rgba(245,158,11,0.07)',
+  border: '1px solid rgba(245,158,11,0.2)',
+  borderRadius: 10,
+  padding: '12px 16px',
+  textAlign: 'left',
+  maxWidth: 360,
+  margin: '0 auto',
+}
+
+const promoHowLabel: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#F59E0B',
+  margin: '0 0 4px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.8px',
 }
 
 const promoHint: React.CSSProperties = {
-  fontSize: 12,
-  color: '#54545A',
-  lineHeight: 1.5,
+  fontSize: 13,
+  color: '#C9C9CE',
+  lineHeight: 1.55,
   margin: 0,
-  fontStyle: 'italic',
 }
 
 const ctaButton: React.CSSProperties = {

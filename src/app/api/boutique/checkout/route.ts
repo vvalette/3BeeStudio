@@ -15,6 +15,7 @@ const schema = z.object({
   name:          z.string().min(2),
   phone:         z.string().optional(),
   delivery_mode: z.enum(['delivery', 'pickup']).default('delivery'),
+  locale:        z.enum(['fr', 'en']).default('fr'),
   // Adresse — requise uniquement pour la livraison à domicile
   shipping_name:        z.string().min(2).optional(),
   shipping_address:     z.string().min(5).optional(),
@@ -124,7 +125,18 @@ export async function POST(req: Request) {
 
   const isPickup = d.delivery_mode === 'pickup'
   const shipping = isPickup ? 0 : (globalFreeShipping ? 0 : calcShopShipping(subtotal))
-  const total    = subtotal + shipping
+
+  // Vérifie la promo newsletter (-10% sur le sous-total, frais de port inchangés)
+  const { data: newsletterSub } = await supabaseAdmin
+    .from('newsletter_subscriptions')
+    .select('id')
+    .eq('email', d.email)
+    .eq('promo_used', false)
+    .maybeSingle()
+
+  const hasNewsletterDiscount = newsletterSub !== null
+  const discountAmount        = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
+  const total                 = subtotal - discountAmount + shipping
 
   // Crée la commande en base
   const { data: order, error: dbError } = await supabaseAdmin
@@ -135,10 +147,12 @@ export async function POST(req: Request) {
       phone:                d.phone ?? null,
       items:                orderItems,
       subtotal,
+      discount_amount:      discountAmount,
       shipping,
       total_amount:         total,
       status:               'pending_payment',
       delivery_mode:        d.delivery_mode,
+      locale:               d.locale,
       shipping_name:        isPickup ? null : (d.shipping_name ?? null),
       shipping_address:     isPickup ? null : (d.shipping_address ?? null),
       shipping_address2:    isPickup ? null : (d.shipping_address2 ?? null),
@@ -152,14 +166,35 @@ export async function POST(req: Request) {
   if (dbError || !order)
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
 
+  // Consomme la promo dès la création de la session (engagement de paiement)
+  if (hasNewsletterDiscount && newsletterSub) {
+    await supabaseAdmin
+      .from('newsletter_subscriptions')
+      .update({ promo_used: true })
+      .eq('id', newsletterSub.id)
+  }
+
+  // Coupon Stripe one-shot si réduction newsletter applicable
+  let stripeDiscounts: { coupon: string }[] = []
+  if (hasNewsletterDiscount) {
+    const coupon = await stripe.coupons.create({
+      percent_off: 10,
+      duration: 'once',
+      name: 'Newsletter −10%',
+      metadata: { source: 'newsletter', email: d.email, shop_order_id: order.id },
+    })
+    stripeDiscounts = [{ coupon: coupon.id }]
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
 
   const session = await stripe.checkout.sessions.create({
     mode:           'payment',
-    locale:         'fr',
+    locale:         d.locale === 'en' ? 'en' : 'fr',
     submit_type:    'pay',
     customer_email: d.email,
     line_items:     lineItems,
+    ...(stripeDiscounts.length > 0 ? { discounts: stripeDiscounts } : {}),
     ...(isPickup ? {} : {
       payment_intent_data: {
         shipping: {

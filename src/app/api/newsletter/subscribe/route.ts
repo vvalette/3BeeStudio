@@ -4,7 +4,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { addToNewsletterAudience, sendNewsletterWelcome } from '@/lib/resend'
 
 const schema = z.object({
-  email: z.string().email(),
+  email:  z.string().email(),
+  locale: z.enum(['fr', 'en']).optional().default('fr'),
 })
 
 export async function POST(req: Request) {
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email invalide' }, { status: 400 })
   }
 
-  const { email } = parsed.data
+  const { email, locale } = parsed.data
 
   // Upsert : si l'email existe déjà, on ne renvoie pas d'erreur (double inscription silencieuse)
   const { error: dbError, data: rows } = await supabaseAdmin
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
   // Pour un nouvel abonné uniquement : email de bienvenue + ajout audience Resend
   if (isNew) {
     await Promise.allSettled([
-      sendNewsletterWelcome(email),
+      sendNewsletterWelcome(email, locale),
       addToNewsletterAudience(email),
     ])
   }
