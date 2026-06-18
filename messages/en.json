@@ -854,7 +854,11 @@
       "confirmationEmail": "A confirmation email has been sent to",
       "eyebrow": "Shop · Order tracking",
       "orderTitle": "Order #{ref}",
-      "now": "← now",
+      "timelineHeading": "Progress",
+      "inProgress": "in progress",
+      "pendingPaymentMsg": "Awaiting payment confirmation…",
+      "trackParcel": "Track my parcel",
+      "trackingShort": "Tracking: {number}",
       "trackingLabel": "Tracking number",
       "summary": "Summary",
       "subtotal": "Subtotal",
@@ -863,11 +867,6 @@
       "newsletterDiscount": "Newsletter discount (−10%)",
       "total": "Total",
       "shippingAddress": "Delivery address",
-      "nextSteps": "Next steps",
-      "stepConfirmed1": "Your order is awaiting preparation in our studios",
-      "stepConfirmed2": "You will receive an email as soon as your order ships",
-      "stepProcessing": "Your order is being prepared — expected to ship within 2 to 3 days",
-      "stepShipped": "Your parcel is on its way! Estimated delivery: 2 to 3 business days",
       "contactMsg": "Any questions? Write to us at <email/> mentioning your reference #{ref}",
       "backToShop": "← Back to shop",
       "pickupMode": "Studio pickup",
@@ -880,6 +879,12 @@
         "shipped": "Shipped",
         "delivered": "Delivered",
         "cancelled": "Cancelled"
+      },
+      "hints": {
+        "confirmed": "Payment confirmed — your order is going into preparation.",
+        "processing": "Your items are handmade in our studios.",
+        "shipped": "Your parcel is on its way.",
+        "delivered": "Your order has arrived. Thank you for your trust!"
       }
     }
   },
