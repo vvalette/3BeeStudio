@@ -8,6 +8,7 @@ import CartProvider from '@/components/boutique/CartProvider'
 import CartDrawer from '@/components/boutique/CartDrawer'
 import { routing } from '@/i18n/routing'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import '@/styles/globals.css'
 
 const manrope = Manrope({
@@ -92,6 +93,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           </CartProvider>
         </NextIntlClientProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

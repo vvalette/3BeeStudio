@@ -34,6 +34,9 @@ export interface ShopOrder {
   // Statut
   status: ShopOrderStatus
 
+  // Mode de livraison
+  delivery_mode: 'delivery' | 'pickup'
+
   // Adresse
   shipping_name: string | null
   shipping_address: string | null

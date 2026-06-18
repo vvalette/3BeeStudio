@@ -29,14 +29,17 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const [city, setCity]                 = useState('')
   const [postal, setPostal]             = useState('')
   const [country]                       = useState('FR')
+  const [deliveryMode, setDeliveryMode] = useState<'delivery' | 'pickup'>('delivery')
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState<string | null>(null)
 
+  const isPickup = deliveryMode === 'pickup'
+
   const { subtotal, shipping, total } = useMemo(() => {
     const subtotal = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
-    const shipping = items.length > 0 ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
+    const shipping = items.length > 0 && !isPickup ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
     return { subtotal, shipping, total: subtotal + shipping }
-  }, [items, freeShippingEnabled])
+  }, [items, freeShippingEnabled, isPickup])
 
   // Garde-fou : si le panier se vide (hors buy-now), on n'affiche plus le form
   const empty = items.length === 0
@@ -57,12 +60,15 @@ export default function CheckoutClient({ forcedItems }: Props) {
         email,
         name,
         phone: phone || undefined,
-        shipping_name:        shippingName || name,
-        shipping_address:     address,
-        shipping_address2:    address2 || undefined,
-        shipping_city:        city,
-        shipping_postal_code: postal,
-        shipping_country:     country,
+        delivery_mode: deliveryMode,
+        ...(isPickup ? {} : {
+          shipping_name:        shippingName || name,
+          shipping_address:     address,
+          shipping_address2:    address2 || undefined,
+          shipping_city:        city,
+          shipping_postal_code: postal,
+          shipping_country:     country,
+        }),
       }),
     })
 
@@ -96,6 +102,63 @@ export default function CheckoutClient({ forcedItems }: Props) {
       {/* Formulaire */}
       <form onSubmit={handleSubmit} autoComplete="off" className="space-y-6 order-2 lg:order-1">
 
+        {/* Sélecteur mode de livraison */}
+        <fieldset className="space-y-2">
+          <legend className="mb-3 font-semibold text-ink-0">{t('deliveryTitle')}</legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(['delivery', 'pickup'] as const).map((mode) => {
+              const isSelected = deliveryMode === mode
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setDeliveryMode(mode)}
+                  className={[
+                    'cursor-pointer flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left transition-all',
+                    isSelected
+                      ? 'border-amber bg-amber/8 text-ink-0'
+                      : 'border-[var(--line)] bg-bg-1 text-ink-2 hover:border-[var(--line-2)]',
+                  ].join(' ')}
+                >
+                  {/* Icône */}
+                  <div className={['mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors', isSelected ? 'bg-amber/15 text-amber' : 'bg-bg-2 text-ink-3'].join(' ')}>
+                    {mode === 'delivery' ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="7" width="13" height="11" rx="2"/>
+                        <path d="M14 10h4l3 4.5V18h-7V10z"/>
+                        <circle cx="5.5" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={['text-[13px] font-semibold leading-tight', isSelected ? 'text-ink-0' : 'text-ink-1'].join(' ')}>
+                      {t(mode === 'delivery' ? 'deliveryOption' : 'pickupOption')}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[11px] text-ink-3">
+                      {t(mode === 'delivery' ? 'deliveryOptionDesc' : 'pickupOptionDesc')}
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <svg className="mt-0.5 shrink-0 text-amber" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M3 8l3.5 3.5L13 5" />
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          {isPickup && (
+            <p className="rounded-lg border border-amber/20 bg-amber/5 px-3.5 py-3 text-[13px] text-ink-2 leading-relaxed">
+              {t('pickupInfo')}
+            </p>
+          )}
+        </fieldset>
+
         {/* Contact */}
         <fieldset className="space-y-4">
           <legend className="mb-2 font-semibold text-ink-0">{t('contactTitle')}</legend>
@@ -115,32 +178,34 @@ export default function CheckoutClient({ forcedItems }: Props) {
           </div>
         </fieldset>
 
-        {/* Adresse */}
-        <fieldset className="space-y-4">
-          <legend className="mb-2 font-semibold text-ink-0">{t('addressTitle')}</legend>
-          <div>
-            <label className={labelClass}>{t('recipientLabel')}</label>
-            <input className={inputClass} value={shippingName} onChange={(e) => setShippingName(e.target.value)} placeholder={name || t('namePlaceholder')} required autoComplete="off" />
-          </div>
-          <div>
-            <label className={labelClass}>{t('addressLabel')}</label>
-            <input className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('addressPlaceholder')} required minLength={5} autoComplete="off" />
-          </div>
-          <div>
-            <label className={labelClass}>{t('address2Label')}</label>
-            <input className={inputClass} value={address2} onChange={(e) => setAddress2(e.target.value)} placeholder={t('address2Placeholder')} autoComplete="off" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        {/* Adresse — masquée en mode retrait */}
+        {!isPickup && (
+          <fieldset className="space-y-4">
+            <legend className="mb-2 font-semibold text-ink-0">{t('addressTitle')}</legend>
             <div>
-              <label className={labelClass}>{t('postalLabel')}</label>
-              <input className={inputClass} value={postal} onChange={(e) => setPostal(e.target.value)} placeholder={t('postalPlaceholder')} required minLength={4} maxLength={6} autoComplete="off" />
+              <label className={labelClass}>{t('recipientLabel')}</label>
+              <input className={inputClass} value={shippingName} onChange={(e) => setShippingName(e.target.value)} placeholder={name || t('namePlaceholder')} required autoComplete="off" />
             </div>
             <div>
-              <label className={labelClass}>{t('cityLabel')}</label>
-              <input className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('cityPlaceholder')} required minLength={2} autoComplete="off" />
+              <label className={labelClass}>{t('addressLabel')}</label>
+              <input className={inputClass} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('addressPlaceholder')} required minLength={5} autoComplete="off" />
             </div>
-          </div>
-        </fieldset>
+            <div>
+              <label className={labelClass}>{t('address2Label')}</label>
+              <input className={inputClass} value={address2} onChange={(e) => setAddress2(e.target.value)} placeholder={t('address2Placeholder')} autoComplete="off" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>{t('postalLabel')}</label>
+                <input className={inputClass} value={postal} onChange={(e) => setPostal(e.target.value)} placeholder={t('postalPlaceholder')} required minLength={4} maxLength={6} autoComplete="off" />
+              </div>
+              <div>
+                <label className={labelClass}>{t('cityLabel')}</label>
+                <input className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('cityPlaceholder')} required minLength={2} autoComplete="off" />
+              </div>
+            </div>
+          </fieldset>
+        )}
 
         {error && (
           <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>

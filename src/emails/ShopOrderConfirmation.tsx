@@ -67,12 +67,27 @@ export default function ShopOrderConfirmation({ order, appUrl }: Props) {
           </Section>
 
           <Section style={section}>
-            <Text style={sectionTitle}>Livraison</Text>
-            <Text style={address}>
-              {order.shipping_name}<br />
-              {order.shipping_address}{order.shipping_address2 ? `, ${order.shipping_address2}` : ''}<br />
-              {order.shipping_postal_code} {order.shipping_city}
-            </Text>
+            {order.delivery_mode === 'pickup' ? (
+              <>
+                <Text style={sectionTitle}>Retrait en studio</Text>
+                <Text style={address}>
+                  144 rue de la République<br />
+                  69220 Belleville-en-Beaujolais
+                </Text>
+                <Text style={{ ...address, marginTop: 8, fontSize: 13, fontStyle: 'italic' }}>
+                  Nous vous contacterons pour convenir d&apos;un créneau de retrait.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={sectionTitle}>Livraison</Text>
+                <Text style={address}>
+                  {order.shipping_name}<br />
+                  {order.shipping_address}{order.shipping_address2 ? `, ${order.shipping_address2}` : ''}<br />
+                  {order.shipping_postal_code} {order.shipping_city}
+                </Text>
+              </>
+            )}
           </Section>
 
           <Section style={{ ...section, textAlign: 'center' as const }}>
