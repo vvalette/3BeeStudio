@@ -36,9 +36,13 @@ Trois flux de commande **complets et fonctionnels** :
 **Boutique (objets de série)**
 - Catalogue `/boutique` + fiche produit `/boutique/[slug]` (markdown, viewer 3D STL/3MF, contenu FR/EN)
 - Panier + checkout Stripe `/boutique/commande`, paiement intégral + frais de port calculés
+- **Mode de livraison** : livraison à domicile OU **retrait studio** (0 € de port, sans adresse) — sélecteur dans le checkout
+- **Réduction newsletter −10%** : appliquée auto au checkout boutique si l'email est abonné et `promo_used = false` (coupon Stripe one-shot, colonne `discount_amount`) — partagée avec le flux NFC
 - Webhook Stripe → statut `confirmed` + décrément de stock atomique + email de confirmation
+- **Email de confirmation localisé** (FR/EN selon `shop_orders.locale`, capturé au checkout)
+- **Expédition Boxtal** : depuis `/admin/boutique/commande/[id]` → génération étiquette + suivi auto via webhook Boxtal (table `shop_orders.boxtal_order_id`). Retrait studio = pas d'expédition
 - Page suivi `/boutique/suivi/[orderId]`
-- Admin produits : `/admin/boutique` (CRUD, upload images + STL, gestion stock, EN)
+- Admin produits : `/admin/boutique` (CRUD, upload images + STL, gestion stock, EN) · Admin commandes : `/admin/boutique/commande/[id]` (`AdminShopOrderDetail`)
 
 **Admin** : nav dédiée — `/admin/commandes` (dashboard global NFC + sur-mesure + boutique, CA global, stats, tabs, filtres, tri, bulk delete), pages dédiées `/admin/nfc`, `/admin/sur-mesure`, `/admin/boutique`, `/admin/testimonials`
 

@@ -8,6 +8,7 @@ Formulaire multi-step : upload logo → sélecteur lien NFC → infos contact �
 - Webhook `/api/stripe/webhook` : `checkout.session.completed` + `payment_intent.succeeded` (fallback)
 - Sync Stripe direct dans `/suivi/[orderId]` si webhook lent (fallback race condition)
 - Email confirmation automatique : Resend + template React Email, domaine `3beestudio.fr` vérifié
+- **Statuts NFC harmonisés avec la boutique** (depuis juin 2026) : `pending_payment → confirmed → processing → shipped → delivered` (+ `cancelled`). Les anciens `printing`/`printed` ont été fusionnés dans `processing`. `shipped`/`delivered` pilotés auto par le webhook Boxtal. Le déclencheur "étiquette à générer" se base sur `processing` sans `boxtal_order_id`
   - From : `commandes@3beestudio.fr` / Reply-to : `contact@3beestudio.fr`
   - Header texte `🐝 3BeeStudio` (pas d'image logo — meilleure compatibilité email)
 
@@ -50,21 +51,26 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `POST /api/nfc/order` | Crée commande NFC Supabase + session Stripe (paiement intégral) |
 | `POST /api/stripe/webhook` | Confirme paiement NFC ou acompte custom + envoie email |
 | `POST /api/nfc/verify-link` | Vérifie URL/profil NFC (best-effort) |
-| `POST /api/upload/logo` | Upload logo vers Vercel Blob |
+| `POST /api/upload/logo` | Upload logo vers Supabase Storage (bucket `logos`) |
 | `POST /api/custom/order` | Crée demande sur-mesure Supabase + emails confirmation/admin |
 | `POST /api/custom/[orderId]/quote` | Admin : crée session Stripe acompte + email client (auth header `x-admin-password`) |
 | `GET /api/admin/orders` | Liste commandes NFC (auth cookie) |
 | `PATCH /api/admin/orders/[id]` | Met à jour statut/notes NFC (auth cookie) |
 | `DELETE /api/admin/orders/[id]` | Supprime commande NFC (auth cookie) |
-| `POST /api/admin/orders/[id]/ship` | Génère étiquette Boxtal |
+| `POST /api/admin/orders/[id]/ship` | Génère étiquette Boxtal (NFC) |
 | `PATCH /api/admin/custom/[orderId]` | Met à jour statut/notes/suivi sur-mesure (auth cookie) |
 | `DELETE /api/admin/custom/[orderId]` | Supprime demande sur-mesure (auth cookie) |
+| `POST /api/boutique/checkout` | Crée commande boutique + session Stripe (livraison/retrait, locale, réduction newsletter) |
+| `PATCH /api/admin/boutique/orders/[id]` | Met à jour statut/suivi/notes boutique (auth cookie) |
+| `POST /api/admin/boutique/orders/[id]/ship` | Génère étiquette Boxtal (boutique) |
+| `POST /api/boxtal/webhook` | Suivi auto Boxtal → met à jour `orders` ET `shop_orders` |
 | `GET /api/test-email` | ⚠️ Diagnostic — supprimer avant prod |
 
 ## Infrastructure
 
-- **Supabase** : tables `orders` (NFC) + `custom_orders` (sur-mesure), RLS activé sur `custom_orders`
-  - Migration `006_create_custom_orders.sql` à appliquer manuellement dans le SQL editor Supabase
+- **Supabase** : tables `orders` (NFC) + `custom_orders` (sur-mesure) + `shop_orders` (boutique) + `newsletter_subscriptions`, RLS activé sur `custom_orders`
+  - Migrations appliquées manuellement dans le SQL editor Supabase (connexion directe IPv6 KO depuis WSL → `npm run migrate` inutilisable)
+  - **Migrations boutique en attente** (à coller dans SQL editor) : `016` delivery_mode, `017` locale, `018` discount_amount, `019` boxtal_order_id, `020` harmonisation statuts NFC (`update orders set status='processing' where status in ('printing','printed')`)
 - **Resend** : domaine `3beestudio.fr` vérifié, `RESEND_FROM_EMAIL=commandes@3beestudio.fr`
 - **Stripe** : mode test actif, webhook gère NFC (paiement intégral) et custom (acompte 50%)
 - **Dev** : port `3001` (`npm run dev`)

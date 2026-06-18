@@ -805,6 +805,7 @@
       "emailLabel": "Email *",
       "emailPlaceholder": "marie@exemple.fr",
       "phoneLabel": "Téléphone (optionnel)",
+      "phoneLabelRequired": "Téléphone *",
       "phonePlaceholder": "+33 6 00 00 00 00",
       "addressTitle": "Adresse de livraison",
       "recipientLabel": "Nom destinataire *",
@@ -839,6 +840,11 @@
     "descriptionExpand": {
       "showMore": "Voir plus ↓",
       "showLess": "Voir moins ↑"
+    },
+    "viewer": {
+      "loading": "Chargement du modèle 3D…",
+      "badge": "Modèle 3D interactif",
+      "hint": "🖱 Faire glisser pour tourner · Molette pour zoomer"
     },
     "cartButtonAria": "{count, plural, =1 {Panier (# article)} other {Panier (# articles)}}",
     "suivi": {
