@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   Html, Head, Preview, Body, Container, Section, Text, Link, Hr, Row, Column,
 } from 'react-email'
@@ -6,43 +7,75 @@ import type { ShopOrder } from '@/types/shop-order'
 interface Props {
   order: ShopOrder
   appUrl: string
+  locale?: string
 }
 
-export default function ShopOrderConfirmation({ order, appUrl }: Props) {
-  const orderRef    = order.id.slice(0, 8).toUpperCase()
-  const trackingUrl = `${appUrl}/boutique/suivi/${order.id}`
-  const fmt         = (cents: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(cents / 100)
+export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: Props) {
+  const isEn      = locale === 'en'
+  const orderRef  = order.id.slice(0, 8).toUpperCase()
+  const trackingUrl = isEn
+    ? `${appUrl}/en/boutique/suivi/${order.id}`
+    : `${appUrl}/boutique/suivi/${order.id}`
+
+  const fmt = (cents: number) =>
+    new Intl.NumberFormat(isEn ? 'en-GB' : 'fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(cents / 100)
+
+  const copy = {
+    preview:      isEn ? `Order #${orderRef} confirmed — 3BeeStudio` : `Commande #${orderRef} confirmée — 3BeeStudio`,
+    headerSub:    isEn ? '3D Printing · Shop' : 'Impression 3D · Boutique',
+    badge:        isEn ? '✅ Payment received' : '✅ Paiement reçu',
+    h1:           isEn ? 'Your order is confirmed!' : 'Votre commande est confirmée !',
+    intro:        isEn
+      ? `Thank you ${order.name} — we've received your payment. Your order is being prepared in our studio.`
+      : `Merci ${order.name} — nous avons bien reçu votre paiement. Votre commande est en cours de préparation dans nos studios.`,
+    summaryTitle: isEn ? 'ORDER SUMMARY' : 'RÉCAPITULATIF DE COMMANDE',
+    qty:          isEn ? 'Qty' : 'Qté',
+    subtotal:          isEn ? 'Subtotal' : 'Sous-total',
+    newsletterDiscount: isEn ? 'Newsletter discount (−10%)' : 'Réduction newsletter (−10%)',
+    shipping:          isEn ? 'Shipping' : 'Livraison',
+    shippingFree:      isEn ? 'Free' : 'Offerte',
+    total:             isEn ? 'Total paid' : 'Total payé',
+    pickupTitle:  isEn ? 'STUDIO PICKUP' : 'RETRAIT EN STUDIO',
+    pickupAddress: '144 rue de la République\n69220 Belleville-en-Beaujolais',
+    pickupHint:   isEn
+      ? "We'll contact you to arrange a pickup time."
+      : "Nous vous contacterons pour convenir d'un créneau de retrait.",
+    deliveryTitle: isEn ? 'DELIVERY' : 'LIVRAISON',
+    ctaText:      isEn ? 'Track your order in real time:' : "Suivez l'avancement de votre commande en temps réel :",
+    ctaBtn:       isEn ? 'Track my order →' : 'Suivre ma commande →',
+    refLabel:     isEn ? 'Order reference:' : 'Référence commande :',
+    question:     isEn
+      ? 'Any questions? Reply to this email or write to'
+      : 'Une question ? Répondez directement à cet email ou écrivez à',
+    footerStudio: isEn ? '3D Printing · Made in France' : 'Impression 3D française',
+  }
 
   return (
-    <Html lang="fr">
+    <Html lang={isEn ? 'en' : 'fr'}>
       <Head />
-      <Preview>Commande #{orderRef} confirmée — 3BeeStudio</Preview>
+      <Preview>{copy.preview}</Preview>
       <Body style={body}>
         <Container style={container}>
 
           <Section style={header}>
             <Text style={logo}>🐝 3BeeStudio</Text>
-            <Text style={headerSub}>Impression 3D · Boutique</Text>
+            <Text style={headerSub}>{copy.headerSub}</Text>
           </Section>
 
           <Section style={section}>
-            <Text style={badge}>✅ Paiement reçu</Text>
-            <Text style={h1}>Votre commande est confirmée !</Text>
-            <Text style={intro}>
-              Merci <strong>{order.name}</strong> — nous avons bien reçu votre paiement.
-              Votre commande est en cours de préparation dans nos studios.
-            </Text>
+            <Text style={badge}>{copy.badge}</Text>
+            <Text style={h1}>{copy.h1}</Text>
+            <Text style={intro}>{copy.intro}</Text>
           </Section>
 
           <Section style={section}>
-            <Text style={sectionTitle}>Récapitulatif de commande</Text>
+            <Text style={sectionTitle}>{copy.summaryTitle}</Text>
             <div style={card}>
               {order.items.map((item, i) => (
                 <Row key={i} style={i > 0 ? { ...itemRow, borderTop: '1px solid #1f1f25' } : itemRow}>
                   <Column>
                     <Text style={itemName}>{item.product_name}</Text>
-                    <Text style={itemMeta}>Qté : {item.quantity} × {fmt(item.unit_price)}</Text>
+                    <Text style={itemMeta}>{copy.qty} : {item.quantity} × {fmt(item.unit_price)}</Text>
                   </Column>
                   <Column align="right">
                     <Text style={itemTotal}>{fmt(item.unit_price * item.quantity)}</Text>
@@ -51,45 +84,66 @@ export default function ShopOrderConfirmation({ order, appUrl }: Props) {
               ))}
               <Hr style={divider} />
               <Row style={itemRow}>
-                <Column><Text style={itemMeta}>Sous-total</Text></Column>
+                <Column><Text style={itemMeta}>{copy.subtotal}</Text></Column>
                 <Column align="right"><Text style={itemMeta}>{fmt(order.subtotal)}</Text></Column>
               </Row>
+              {(order.discount_amount ?? 0) > 0 && (
+                <Row style={itemRow}>
+                  <Column><Text style={{ ...itemMeta, color: '#34d399' }}>{copy.newsletterDiscount}</Text></Column>
+                  <Column align="right"><Text style={{ ...itemMeta, color: '#34d399' }}>−{fmt(order.discount_amount)}</Text></Column>
+                </Row>
+              )}
               <Row style={itemRow}>
-                <Column><Text style={itemMeta}>Livraison</Text></Column>
-                <Column align="right"><Text style={itemMeta}>{order.shipping === 0 ? 'Offerte' : fmt(order.shipping)}</Text></Column>
+                <Column><Text style={itemMeta}>{copy.shipping}</Text></Column>
+                <Column align="right"><Text style={itemMeta}>{order.shipping === 0 ? copy.shippingFree : fmt(order.shipping)}</Text></Column>
               </Row>
               <Hr style={divider} />
               <Row style={itemRow}>
-                <Column><Text style={{ ...itemName, color: '#F59E0B' }}>Total payé</Text></Column>
+                <Column><Text style={{ ...itemName, color: '#F59E0B' }}>{copy.total}</Text></Column>
                 <Column align="right"><Text style={{ ...itemName, color: '#F59E0B' }}>{fmt(order.total_amount)}</Text></Column>
               </Row>
             </div>
           </Section>
 
           <Section style={section}>
-            <Text style={sectionTitle}>Livraison</Text>
-            <Text style={address}>
-              {order.shipping_name}<br />
-              {order.shipping_address}{order.shipping_address2 ? `, ${order.shipping_address2}` : ''}<br />
-              {order.shipping_postal_code} {order.shipping_city}
-            </Text>
+            {order.delivery_mode === 'pickup' ? (
+              <>
+                <Text style={sectionTitle}>{copy.pickupTitle}</Text>
+                <Text style={address}>
+                  144 rue de la République<br />
+                  69220 Belleville-en-Beaujolais
+                </Text>
+                <Text style={{ ...address, marginTop: 8, fontSize: 13, fontStyle: 'italic' }}>
+                  {copy.pickupHint}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={sectionTitle}>{copy.deliveryTitle}</Text>
+                <Text style={address}>
+                  {order.shipping_name}<br />
+                  {order.shipping_address}{order.shipping_address2 ? `, ${order.shipping_address2}` : ''}<br />
+                  {order.shipping_postal_code} {order.shipping_city}
+                </Text>
+              </>
+            )}
           </Section>
 
           <Section style={{ ...section, textAlign: 'center' as const }}>
-            <Text style={ctaText}>Suivez l&apos;avancement de votre commande en temps réel :</Text>
-            <Link href={trackingUrl} style={ctaBtn}>Suivre ma commande →</Link>
+            <Text style={ctaText}>{copy.ctaText}</Text>
+            <Link href={trackingUrl} style={ctaBtn}>{copy.ctaBtn}</Link>
           </Section>
 
           <Hr style={divider} />
           <Section style={footer}>
             <Text style={footerText}>
-              Référence commande : <strong style={{ color: '#C9C9CE' }}>#{orderRef}</strong>
+              {copy.refLabel} <strong style={{ color: '#C9C9CE' }}>#{orderRef}</strong>
             </Text>
             <Text style={footerText}>
-              Une question ? Répondez directement à cet email ou écrivez à{' '}
+              {copy.question}{' '}
               <Link href="mailto:contact@3beestudio.fr" style={{ color: '#F59E0B' }}>contact@3beestudio.fr</Link>
             </Text>
-            <Text style={footerText}>© {new Date().getFullYear()} 3BeeStudio · Impression 3D française</Text>
+            <Text style={footerText}>© {new Date().getFullYear()} 3BeeStudio · {copy.footerStudio}</Text>
           </Section>
 
         </Container>

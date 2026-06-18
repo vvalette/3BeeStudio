@@ -184,7 +184,6 @@ export default async function SuiviBoutiquePage({
                     </div>
                     <span className={['text-[13px]', done ? 'text-ink-0 font-medium' : 'text-ink-3'].join(' ')}>
                       {stepLabel[s]}
-                      {current && <span className="ml-2 font-mono text-[10px] text-amber">{t('now')}</span>}
                     </span>
                   </div>
                 )
@@ -222,6 +221,11 @@ export default async function SuiviBoutiquePage({
             <div className="flex justify-between text-ink-3">
               <span>{t('subtotal')}</span><span>{formatPrice(order.subtotal)}</span>
             </div>
+            {(order.discount_amount ?? 0) > 0 && (
+              <div className="flex justify-between text-emerald-400">
+                <span>{t('newsletterDiscount')}</span><span>−{formatPrice(order.discount_amount)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-ink-3">
               <span>{t('shipping')}</span><span>{order.shipping === 0 ? t('shippingFree') : formatPrice(order.shipping)}</span>
             </div>
@@ -231,8 +235,14 @@ export default async function SuiviBoutiquePage({
           </div>
         </div>
 
-        {/* Adresse */}
-        {order.shipping_name && (
+        {/* Adresse / Mode retrait */}
+        {order.delivery_mode === 'pickup' ? (
+          <div className="rounded-2xl border border-amber/20 bg-amber/5 p-5">
+            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-amber">{t('pickupMode')}</h2>
+            <p className="text-sm text-ink-2 leading-relaxed">{t('pickupAddress')}</p>
+            <p className="mt-2 text-[12px] text-ink-3">{t('pickupContact')}</p>
+          </div>
+        ) : order.shipping_name ? (
           <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-5">
             <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-ink-3">{t('shippingAddress')}</h2>
             <p className="text-sm text-ink-2 leading-relaxed">
@@ -242,7 +252,7 @@ export default async function SuiviBoutiquePage({
               {order.shipping_postal_code} {order.shipping_city}
             </p>
           </div>
-        )}
+        ) : null}
 
         {/* Prochaines étapes */}
         {isPaid && !isCancelled && order.status !== 'delivered' && (

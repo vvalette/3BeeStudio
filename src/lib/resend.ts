@@ -125,15 +125,22 @@ export async function addToNewsletterAudience(email: string): Promise<void> {
 
 export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
-  const from = getFrom()
+  const from   = getFrom()
+  const locale = order.locale ?? 'fr'
+  const isEn   = locale === 'en'
+  const ref    = order.id.slice(0, 8).toUpperCase()
 
-  const html = await render(ShopOrderConfirmation({ order, appUrl }))
+  const html = await render(ShopOrderConfirmation({ order, appUrl, locale }))
+
+  const subject = isEn
+    ? `✅ Shop order #${ref} confirmed — 3BeeStudio`
+    : `✅ Commande boutique #${ref} confirmée — 3BeeStudio`
 
   const { data, error } = await resend.emails.send({
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `✅ Commande boutique #${order.id.slice(0, 8).toUpperCase()} confirmée — 3BeeStudio`,
+    subject,
     html,
   })
 
@@ -141,17 +148,22 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
   console.log('[resend] Confirmation boutique — id:', data?.id, '→', order.email)
 }
 
-export async function sendNewsletterWelcome(email: string): Promise<void> {
+export async function sendNewsletterWelcome(email: string, locale = 'fr'): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
-  const from = getFrom()
+  const from   = getFrom()
+  const isEn   = locale === 'en'
 
-  const html = await render(NewsletterWelcome({ appUrl }))
+  const html = await render(NewsletterWelcome({ appUrl, locale }))
+
+  const subject = isEn
+    ? '🐝 Welcome to the hive — your first look awaits'
+    : '🐝 Bienvenue dans la ruche — votre avant-première vous attend'
 
   const { data, error } = await resend.emails.send({
     from,
     replyTo: 'contact@3beestudio.fr',
     to: email,
-    subject: '🐝 Bienvenue dans la ruche — votre avant-première vous attend',
+    subject,
     html,
   })
 

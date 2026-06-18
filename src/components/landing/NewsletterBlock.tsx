@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import Eyebrow from '@/components/ui/Eyebrow'
 
 export default function NewsletterBlock() {
-  const t = useTranslations('newsletter')
+  const t      = useTranslations('newsletter')
+  const locale = useLocale()
   const [email, setEmail]   = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
@@ -17,7 +18,7 @@ export default function NewsletterBlock() {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, locale }),
       })
       setStatus(res.ok ? 'success' : 'error')
     } catch {

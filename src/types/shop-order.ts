@@ -28,11 +28,15 @@ export interface ShopOrder {
 
   // Montants (centimes)
   subtotal: number
+  discount_amount: number
   shipping: number
   total_amount: number
 
   // Statut
   status: ShopOrderStatus
+
+  // Mode de livraison
+  delivery_mode: 'delivery' | 'pickup'
 
   // Adresse
   shipping_name: string | null
@@ -51,6 +55,9 @@ export interface ShopOrder {
 
   // Stripe
   stripe_checkout_session_id: string | null
+
+  // Locale utilisé lors de la commande
+  locale?: string
 }
 
 export const SHOP_STATUS_LABELS: Record<ShopOrderStatus, string> = {

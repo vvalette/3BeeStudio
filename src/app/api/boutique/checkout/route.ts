@@ -11,16 +11,24 @@ const schema = z.object({
     product_id: z.string().uuid(),
     quantity:   z.number().int().min(1).max(100),
   })).min(1).max(20),
-  email:                z.string().email(),
-  name:                 z.string().min(2),
-  phone:                z.string().optional(),
-  shipping_name:        z.string().min(2),
-  shipping_address:     z.string().min(5),
+  email:         z.string().email(),
+  name:          z.string().min(2),
+  phone:         z.string().optional(),
+  delivery_mode: z.enum(['delivery', 'pickup']).default('delivery'),
+  locale:        z.enum(['fr', 'en']).default('fr'),
+  // Adresse — requise uniquement pour la livraison à domicile
+  shipping_name:        z.string().min(2).optional(),
+  shipping_address:     z.string().min(5).optional(),
   shipping_address2:    z.string().optional(),
-  shipping_city:        z.string().min(2),
-  shipping_postal_code: z.string().min(4).max(6),
+  shipping_city:        z.string().min(2).optional(),
+  shipping_postal_code: z.string().min(4).max(6).optional(),
   shipping_country:     z.string().length(2).default('FR'),
-})
+}).refine(
+  (d) => d.delivery_mode === 'pickup' || (
+    d.shipping_name && d.shipping_address && d.shipping_city && d.shipping_postal_code
+  ),
+  { message: 'Adresse de livraison requise pour la livraison à domicile' },
+)
 
 export async function POST(req: Request) {
   const ip = getClientIp(req)
@@ -32,6 +40,7 @@ export async function POST(req: Request) {
     )
   }
 
+  try {
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success)
@@ -115,8 +124,20 @@ export async function POST(req: Request) {
     })
   }
 
-  const shipping = globalFreeShipping ? 0 : calcShopShipping(subtotal)
-  const total    = subtotal + shipping
+  const isPickup = d.delivery_mode === 'pickup'
+  const shipping = isPickup ? 0 : (globalFreeShipping ? 0 : calcShopShipping(subtotal))
+
+  // Vérifie la promo newsletter (-10% sur le sous-total, frais de port inchangés)
+  const { data: newsletterSub } = await supabaseAdmin
+    .from('newsletter_subscriptions')
+    .select('id')
+    .eq('email', d.email)
+    .eq('promo_used', false)
+    .maybeSingle()
+
+  const hasNewsletterDiscount = newsletterSub !== null
+  const discountAmount        = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
+  const total                 = subtotal - discountAmount + shipping
 
   // Crée la commande en base
   const { data: order, error: dbError } = await supabaseAdmin
@@ -127,58 +148,98 @@ export async function POST(req: Request) {
       phone:                d.phone ?? null,
       items:                orderItems,
       subtotal,
+      discount_amount:      discountAmount,
       shipping,
       total_amount:         total,
       status:               'pending_payment',
-      shipping_name:        d.shipping_name,
-      shipping_address:     d.shipping_address,
-      shipping_address2:    d.shipping_address2 ?? null,
-      shipping_city:        d.shipping_city,
-      shipping_postal_code: d.shipping_postal_code,
+      delivery_mode:        d.delivery_mode,
+      locale:               d.locale,
+      shipping_name:        isPickup ? null : (d.shipping_name ?? null),
+      shipping_address:     isPickup ? null : (d.shipping_address ?? null),
+      shipping_address2:    isPickup ? null : (d.shipping_address2 ?? null),
+      shipping_city:        isPickup ? null : (d.shipping_city ?? null),
+      shipping_postal_code: isPickup ? null : (d.shipping_postal_code ?? null),
       shipping_country:     d.shipping_country,
     })
     .select()
     .single()
 
-  if (dbError || !order)
+  if (dbError || !order) {
+    console.error('[checkout] DB insert error:', JSON.stringify(dbError))
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
+  }
+
+  // Consomme la promo dès la création de la session (engagement de paiement)
+  if (hasNewsletterDiscount && newsletterSub) {
+    await supabaseAdmin
+      .from('newsletter_subscriptions')
+      .update({ promo_used: true })
+      .eq('id', newsletterSub.id)
+  }
+
+  // Coupon Stripe one-shot si réduction newsletter applicable
+  let stripeDiscounts: { coupon: string }[] = []
+  if (hasNewsletterDiscount) {
+    const coupon = await stripe.coupons.create({
+      percent_off: 10,
+      duration: 'once',
+      name: 'Newsletter −10%',
+      metadata: { source: 'newsletter', email: d.email, shop_order_id: order.id },
+    })
+    stripeDiscounts = [{ coupon: coupon.id }]
+  }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
 
   const session = await stripe.checkout.sessions.create({
     mode:           'payment',
-    locale:         'fr',
+    locale:         d.locale === 'en' ? 'en' : 'fr',
     submit_type:    'pay',
     customer_email: d.email,
     line_items:     lineItems,
-    payment_intent_data: {
-      shipping: {
-        name: d.shipping_name,
-        address: {
-          line1:       d.shipping_address,
-          line2:       d.shipping_address2 || '',
-          city:        d.shipping_city,
-          postal_code: d.shipping_postal_code,
-          country:     d.shipping_country,
-        },
-      },
-    },
-    shipping_options: [
-      {
-        shipping_rate_data: {
-          type:           'fixed_amount',
-          fixed_amount:   { amount: shipping, currency: 'eur' },
-          display_name:   shipping === 0 ? 'Livraison offerte' : 'Livraison suivie',
-          delivery_estimate: {
-            minimum: { unit: 'business_day', value: 3 },
-            maximum: { unit: 'business_day', value: 7 },
+    ...(stripeDiscounts.length > 0 ? { discounts: stripeDiscounts } : {}),
+    ...(isPickup ? {} : {
+      payment_intent_data: {
+        shipping: {
+          name: d.shipping_name!,
+          address: {
+            line1:       d.shipping_address!,
+            line2:       d.shipping_address2 || '',
+            city:        d.shipping_city!,
+            postal_code: d.shipping_postal_code!,
+            country:     d.shipping_country,
           },
         },
       },
-    ],
+    }),
+    shipping_options: isPickup
+      ? [
+          {
+            shipping_rate_data: {
+              type:         'fixed_amount',
+              fixed_amount: { amount: 0, currency: 'eur' },
+              display_name: 'Retrait en studio (gratuit)',
+            },
+          },
+        ]
+      : [
+          {
+            shipping_rate_data: {
+              type:           'fixed_amount',
+              fixed_amount:   { amount: shipping, currency: 'eur' },
+              display_name:   shipping === 0 ? 'Livraison offerte' : 'Livraison suivie',
+              delivery_estimate: {
+                minimum: { unit: 'business_day', value: 3 },
+                maximum: { unit: 'business_day', value: 7 },
+              },
+            },
+          },
+        ],
     custom_text: {
       submit: {
-        message: 'Votre commande est préparée à la main dans nos studios. Délai indicatif : 3 à 7 jours ouvrés.',
+        message: isPickup
+          ? 'Retrait en studio à Belleville-en-Beaujolais. Nous vous contacterons pour convenir d\'un créneau.'
+          : 'Votre commande est préparée à la main dans nos studios. Délai indicatif : 3 à 7 jours ouvrés.',
       },
     },
     success_url: `${appUrl}/boutique/suivi/${order.id}?payment=success`,
@@ -195,4 +256,10 @@ export async function POST(req: Request) {
     .eq('id', order.id)
 
   return NextResponse.json({ checkout_url: session.url, order_id: order.id })
+
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error('[checkout] Erreur non gérée:', detail)
+    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 })
+  }
 }
