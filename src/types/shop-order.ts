@@ -49,6 +49,7 @@ export interface ShopOrder {
   // Expédition
   tracking_number: string | null
   tracking_url: string | null
+  boxtal_order_id: string | null
 
   // Admin
   admin_notes: string | null

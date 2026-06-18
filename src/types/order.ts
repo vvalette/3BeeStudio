@@ -2,10 +2,9 @@ export type OrderStatus =
   | 'pending_payment'
   | 'confirmed'
   | 'processing'
-  | 'printing'
-  | 'printed'
   | 'shipped'
   | 'delivered'
+  | 'cancelled'
 
 export interface Order {
   id: string
@@ -52,18 +51,15 @@ export interface Order {
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending_payment: 'En attente de paiement',
   confirmed: 'Commande confirmée',
-  processing: 'En traitement',
-  printing: 'Impression en cours',
-  printed: 'Imprimé',
+  processing: 'En préparation',
   shipped: 'Expédié',
   delivered: 'Livré',
+  cancelled: 'Annulée',
 }
 
 export const ORDER_STATUS_STEPS: OrderStatus[] = [
   'confirmed',
   'processing',
-  'printing',
-  'printed',
   'shipped',
   'delivered',
 ]
