@@ -790,8 +790,8 @@
       "removeLabel": "Remove",
       "empty": "Your cart is empty.",
       "continueShopping": "Continue shopping →",
-      "freeShipping": "🎉 Free shipping on the entire shop",
-      "progressMsg": "Only <b>{amount}</b> away from free shipping 🎉",
+      "freeShipping": "Free shipping on the entire shop",
+      "progressMsg": "Only <b>{amount}</b> away from free shipping",
       "subtotal": "Subtotal",
       "shipping": "Shipping",
       "shippingFree": "Free",
@@ -835,7 +835,7 @@
       "shippingFree": "Free",
       "freeShippingThreshold": "Free from {price} purchase",
       "newsletterDiscount": "Newsletter discount (−10%)",
-      "newsletterDiscountBadge": "🎉 Newsletter discount −10% applied",
+      "newsletterDiscountBadge": "Newsletter discount −10% applied",
       "total": "Total"
     },
     "descriptionExpand": {

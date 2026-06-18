@@ -790,8 +790,8 @@
       "removeLabel": "Retirer",
       "empty": "Votre panier est vide.",
       "continueShopping": "Continuer mes achats →",
-      "freeShipping": "🎉 Livraison offerte sur toute la boutique",
-      "progressMsg": "Plus que <b>{amount}</b> pour la livraison offerte 🎉",
+      "freeShipping": "Livraison offerte sur toute la boutique",
+      "progressMsg": "Plus que <b>{amount}</b> pour la livraison offerte ",
       "subtotal": "Sous-total",
       "shipping": "Livraison",
       "shippingFree": "Offerte",
@@ -835,7 +835,7 @@
       "shippingFree": "Offerte",
       "freeShippingThreshold": "Offerte dès {price} d'achat",
       "newsletterDiscount": "Réduction newsletter (−10%)",
-      "newsletterDiscountBadge": "🎉 Réduction newsletter −10% appliquée",
+      "newsletterDiscountBadge": "Réduction newsletter −10% appliquée",
       "total": "Total"
     },
     "descriptionExpand": {

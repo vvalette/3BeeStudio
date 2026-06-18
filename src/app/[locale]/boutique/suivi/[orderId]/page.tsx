@@ -184,7 +184,6 @@ export default async function SuiviBoutiquePage({
                     </div>
                     <span className={['text-[13px]', done ? 'text-ink-0 font-medium' : 'text-ink-3'].join(' ')}>
                       {stepLabel[s]}
-                      {current && <span className="ml-2 font-mono text-[10px] text-amber">{t('now')}</span>}
                     </span>
                   </div>
                 )

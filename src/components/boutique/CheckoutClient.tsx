@@ -88,7 +88,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
       }),
     })
 
-    const data = await res.json()
+    const data = await res.json().catch(() => ({ error: t('errorFallback') }))
     if (!res.ok) {
       setError(data.error ?? t('errorFallback'))
       setLoading(false)

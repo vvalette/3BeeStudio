@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     )
   }
 
+  try {
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success)
@@ -163,8 +164,10 @@ export async function POST(req: Request) {
     .select()
     .single()
 
-  if (dbError || !order)
+  if (dbError || !order) {
+    console.error('[checkout] DB insert error:', JSON.stringify(dbError))
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
+  }
 
   // Consomme la promo dès la création de la session (engagement de paiement)
   if (hasNewsletterDiscount && newsletterSub) {
@@ -253,4 +256,10 @@ export async function POST(req: Request) {
     .eq('id', order.id)
 
   return NextResponse.json({ checkout_url: session.url, order_id: order.id })
+
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
+    console.error('[checkout] Erreur non gérée:', detail)
+    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 })
+  }
 }
