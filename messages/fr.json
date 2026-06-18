@@ -685,19 +685,17 @@
     "statuses": {
       "pending_payment": "En attente de paiement",
       "confirmed": "Commande confirmée",
-      "processing": "En traitement",
-      "printing": "Impression en cours",
-      "printed": "Imprimé",
+      "processing": "En préparation",
       "shipped": "Expédié",
-      "delivered": "Livré"
+      "delivered": "Livré",
+      "cancelled": "Annulée"
     },
     "hints": {
       "confirmed": "Paiement validé — votre commande entre en production.",
-      "processing": "Nous vérifions votre logo et préparons vos puces NFC.",
-      "printing": "Vos porte-clés sont en cours d'impression 3D dans nos studios.",
-      "printed": "Production terminée — votre colis est en préparation.",
+      "processing": "Nous vérifions votre logo, imprimons vos porte-clés et préparons vos puces NFC.",
       "shipped": "Votre colis est en route.",
-      "delivered": "Votre commande est arrivée. Merci pour votre confiance !"
+      "delivered": "Votre commande est arrivée. Merci pour votre confiance !",
+      "cancelled": "Cette commande a été annulée. Contactez-nous pour toute question."
     },
     "order": {
       "heading": "Votre commande",

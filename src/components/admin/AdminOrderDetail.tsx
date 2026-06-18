@@ -13,8 +13,7 @@ const MANUAL_STATUSES: OrderStatus[] = [
   'pending_payment',
   'confirmed',
   'processing',
-  'printing',
-  'printed',
+  'cancelled',
 ]
 
 // Statuts pilotés automatiquement par le suivi Boxtal (non modifiables à la main).

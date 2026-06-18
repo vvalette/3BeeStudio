@@ -67,38 +67,52 @@ export async function POST(req: Request) {
 
   // 1. Infos de suivi = métadonnées → toujours rafraîchies (sans garde de statut),
   //    pour backfill l'URL même sur une commande déjà passée en "shipped".
+  // On applique sur les deux tables (orders + shop_orders) : un boxtal_order_id
+  // n'existe que dans l'une, la mise à jour de l'autre touche simplement 0 ligne.
   const trackingUpdates: Record<string, unknown> = {}
   if (trackingNumber) trackingUpdates.tracking_number = trackingNumber
   if (packageTrackingUrl) trackingUpdates.tracking_url = packageTrackingUrl
   if (Object.keys(trackingUpdates).length > 0) {
-    const { error } = await supabaseAdmin
-      .from('orders')
-      .update(trackingUpdates)
-      .eq('boxtal_order_id', boxtalOrderId)
-    if (error) console.error('[boxtal-webhook] erreur maj suivi:', error)
+    for (const table of ['orders', 'shop_orders'] as const) {
+      const { error } = await supabaseAdmin
+        .from(table)
+        .update(trackingUpdates)
+        .eq('boxtal_order_id', boxtalOrderId)
+      if (error) console.error(`[boxtal-webhook] erreur maj suivi (${table}):`, error)
+    }
   }
 
   // 2. Transitions de statut avec gardes (évite tout retour en arrière).
   // SHIPPED = colis pris en charge / déposé ; DELIVERED = livré.
   if (status === 'SHIPPED' || status === 'IN_TRANSIT') {
-    const { error } = await supabaseAdmin
+    const { error: nfcErr } = await supabaseAdmin
       .from('orders')
       .update({ status: 'shipped' })
       .eq('boxtal_order_id', boxtalOrderId)
-      .in('status', ['confirmed', 'processing', 'printing', 'printed'])
-    if (error) {
-      console.error('[boxtal-webhook] erreur mise à jour shipped:', error)
+      .in('status', ['confirmed', 'processing'])
+    const { error: shopErr } = await supabaseAdmin
+      .from('shop_orders')
+      .update({ status: 'shipped' })
+      .eq('boxtal_order_id', boxtalOrderId)
+      .in('status', ['confirmed', 'processing'])
+    if (nfcErr || shopErr) {
+      console.error('[boxtal-webhook] erreur mise à jour shipped:', nfcErr ?? shopErr)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
     console.log(`[boxtal-webhook] ${boxtalOrderId} → shipped (${status}, tracking: ${trackingNumber ?? 'N/A'})`)
   } else if (status === 'DELIVERED') {
-    const { error } = await supabaseAdmin
+    const { error: nfcErr } = await supabaseAdmin
       .from('orders')
       .update({ status: 'delivered' })
       .eq('boxtal_order_id', boxtalOrderId)
       .in('status', ['shipped'])
-    if (error) {
-      console.error('[boxtal-webhook] erreur mise à jour delivered:', error)
+    const { error: shopErr } = await supabaseAdmin
+      .from('shop_orders')
+      .update({ status: 'delivered' })
+      .eq('boxtal_order_id', boxtalOrderId)
+      .in('status', ['shipped'])
+    if (nfcErr || shopErr) {
+      console.error('[boxtal-webhook] erreur mise à jour delivered:', nfcErr ?? shopErr)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
     console.log(`[boxtal-webhook] ${boxtalOrderId} → delivered`)

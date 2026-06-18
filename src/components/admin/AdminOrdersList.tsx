@@ -35,7 +35,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 // ── Filtres NFC ───────────────────────────────────────────────────────────────
 
 const NFC_FILTERS: { key: NfcFilterKey; label: string; dot?: string; match: (o: Order) => boolean }[] = [
-  { key: 'active',   label: 'À traiter',      match: (o) => o.status !== 'delivered' },
+  { key: 'active',   label: 'À traiter',      match: (o) => o.status !== 'delivered' && o.status !== 'cancelled' },
   { key: 'all',      label: 'Toutes',         match: () => true },
   ...ALL_STATUSES.map((s) => ({
     key: s as NfcFilterKey,
@@ -43,7 +43,7 @@ const NFC_FILTERS: { key: NfcFilterKey; label: string; dot?: string; match: (o: 
     dot: STATUS_ACCENT[s],
     match: (o: Order) => o.status === s,
   })),
-  { key: 'no_label', label: 'Sans étiquette', dot: '#F59E0B', match: (o: Order) => o.status === 'printed' && !o.boxtal_order_id },
+  { key: 'no_label', label: 'Sans étiquette', dot: '#F59E0B', match: (o: Order) => o.status === 'processing' && !o.boxtal_order_id },
 ]
 
 // ── Filtres Custom ────────────────────────────────────────────────────────────
@@ -172,8 +172,8 @@ export default function AdminOrdersList({
       // NFC
       nfcRevenue:    nfcPaid.reduce((s, o) => s + o.total_amount, 0),
       nfcTotal:      periodNfc.length,
-      nfcProduction: periodNfc.filter((o) => ['confirmed', 'processing', 'printing'].includes(o.status)).length,
-      nfcNoLabel:    periodNfc.filter((o) => o.status === 'printed' && !o.boxtal_order_id).length,
+      nfcProduction: periodNfc.filter((o) => ['confirmed', 'processing'].includes(o.status)).length,
+      nfcNoLabel:    periodNfc.filter((o) => o.status === 'processing' && !o.boxtal_order_id).length,
       // Custom
       customRevenue:    customPaid.reduce((s, o) => s + (o.deposit_amount ?? 0), 0),
       customTotal:      periodCustom.length,
@@ -642,7 +642,7 @@ function NfcList({
     <div className="space-y-2">
       {orders.map((order) => {
         const status = order.status as OrderStatus
-        const needsLabel = order.status === 'printed' && !order.boxtal_order_id
+        const needsLabel = order.status === 'processing' && !order.boxtal_order_id
         const created = new Date(order.created_at)
         const isSelected = selected.has(order.id)
         return (
@@ -808,6 +808,9 @@ function ShopList({
         const status = order.status as ShopOrderStatus
         const created = new Date(order.created_at)
         const isSelected = selected.has(order.id)
+        const needsLabel = order.delivery_mode !== 'pickup'
+          && (status === 'confirmed' || status === 'processing')
+          && !order.boxtal_order_id
         return (
           <div key={order.id} className={['group flex items-stretch overflow-hidden rounded-xl border bg-bg-1 transition-all', isSelected ? 'border-amber/40 bg-bg-2' : 'border-[var(--line)] hover:border-amber/30 hover:bg-bg-2'].join(' ')}>
             <span className="w-[3px] shrink-0" style={{ background: SHOP_STATUS_ACCENT[status] }} />
@@ -819,7 +822,7 @@ function ShopList({
               </span>
             </label>
 
-            <Link href={`/boutique/suivi/${order.id}`} target="_blank" className="flex flex-1 items-center gap-4 py-3.5 pr-3">
+            <Link href={`/admin/boutique/commande/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
               <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}>
                 <span className="font-mono text-sm font-bold text-ink-2">{order.name.slice(0, 2).toUpperCase()}</span>
               </div>
@@ -828,6 +831,8 @@ function ShopList({
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-semibold text-ink-0 group-hover:text-amber">{order.name}</p>
                   <span className="shrink-0 font-mono text-[10px] text-ink-3">#{order.id.slice(0, 8).toUpperCase()}</span>
+                  {needsLabel && <span className="shrink-0 rounded-pill border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber">Étiquette à générer</span>}
+                  {order.delivery_mode === 'pickup' && <span className="shrink-0 rounded-pill border border-sky-400/30 bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-400">Retrait studio</span>}
                 </div>
                 <p className="mt-0.5 truncate text-xs text-ink-3">{order.email}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">

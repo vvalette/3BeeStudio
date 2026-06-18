@@ -1,4 +1,5 @@
 import type { Order } from '@/types/order'
+import type { ShopOrder } from '@/types/shop-order'
 
 const CONTENT_ID = 'content:v1:50180' // Cadeaux, cadeaux entreprise
 
@@ -34,6 +35,30 @@ function estimatePackage(qty: number) {
   return { weight, length: 40, width: 30, height: 15 }
 }
 
+// Estimation du colis boutique : objets imprimés en 3D, ~250 g/pièce par défaut.
+function estimateShopPackage(itemCount: number) {
+  const weight = Math.max(0.2, Math.round(itemCount * 0.25 * 1000) / 1000)
+  if (itemCount <= 2) return { weight, length: 25, width: 20, height: 12 }
+  if (itemCount <= 5) return { weight, length: 35, width: 25, height: 20 }
+  return { weight, length: 45, width: 35, height: 30 }
+}
+
+// Forme normalisée d'une expédition, indépendante du type de commande.
+interface ShipmentInput {
+  externalId: string
+  recipientName: string
+  email: string
+  phone: string | null
+  shipping_address: string | null
+  shipping_address2: string | null
+  shipping_city: string | null
+  shipping_postal_code: string | null
+  shipping_country: string | null
+  totalAmount: number // centimes
+  pkg: { weight: number; length: number; width: number; height: number }
+  description: string
+}
+
 async function boxtalFetch(path: string, options: RequestInit = {}) {
   const res = await fetch(`${getApiUrl()}${path}`, {
     ...options,
@@ -56,7 +81,8 @@ export interface BoxtalResult {
   labelUrl: string
 }
 
-export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> {
+// Crée une expédition Boxtal à partir d'une entrée normalisée, puis récupère l'étiquette.
+async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
   const senderFirstName = process.env.BOXTAL_SENDER_FIRSTNAME
   const senderLastName = process.env.BOXTAL_SENDER_LASTNAME
   const senderEmail = process.env.BOXTAL_SENDER_EMAIL
@@ -71,13 +97,14 @@ export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> 
     throw new Error('Variables BOXTAL_SENDER_* non configurées dans .env.local')
   }
 
-  const { firstName, lastName } = splitName(order.shipping_name ?? order.company)
-  const pkg = estimatePackage(order.quantity)
+  if (!input.phone) throw new Error('Numéro de téléphone destinataire manquant')
+
+  const { firstName, lastName } = splitName(input.recipientName)
 
   const body = {
     shipment: {
-      content: { id: CONTENT_ID, description: 'Porte-clés NFC personnalisés' },
-      externalId: order.id.slice(0, 20),
+      content: { id: CONTENT_ID, description: input.description },
+      externalId: input.externalId.slice(0, 20),
       fromAddress: {
         type: 'BUSINESS',
         contact: {
@@ -99,21 +126,21 @@ export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> 
         contact: {
           firstName,
           lastName,
-          email: order.email,
-          phone: normalizePhone(order.phone),
+          email: input.email,
+          phone: normalizePhone(input.phone),
         },
-        ...(order.shipping_address2 ? { additionalInformation: order.shipping_address2 } : {}),
+        ...(input.shipping_address2 ? { additionalInformation: input.shipping_address2 } : {}),
         location: {
-          street: order.shipping_address ?? '',
-          city: order.shipping_city ?? '',
-          postalCode: order.shipping_postal_code ?? '',
-          countryIsoCode: order.shipping_country ?? 'FR',
+          street: input.shipping_address ?? '',
+          city: input.shipping_city ?? '',
+          postalCode: input.shipping_postal_code ?? '',
+          countryIsoCode: input.shipping_country ?? 'FR',
         },
       },
       packages: [{
-        ...pkg,
-        value: { value: Math.round(order.total_amount / 100), currency: 'EUR' },
-        content: { id: CONTENT_ID, description: 'Porte-clés NFC' },
+        ...input.pkg,
+        value: { value: Math.round(input.totalAmount / 100), currency: 'EUR' },
+        content: { id: CONTENT_ID, description: input.description },
       }],
     },
     shippingOfferCode: process.env.BOXTAL_SHIPPING_OFFER_CODE ?? 'POFR-ColissimoExpert',
@@ -142,6 +169,41 @@ export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> 
   if (!labelUrl) throw new Error("Étiquette non disponible après plusieurs tentatives")
 
   return { boxtalOrderId, labelUrl }
+}
+
+export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> {
+  return createShipment({
+    externalId: order.id,
+    recipientName: order.shipping_name ?? order.company,
+    email: order.email,
+    phone: order.phone,
+    shipping_address: order.shipping_address,
+    shipping_address2: order.shipping_address2,
+    shipping_city: order.shipping_city,
+    shipping_postal_code: order.shipping_postal_code,
+    shipping_country: order.shipping_country,
+    totalAmount: order.total_amount,
+    pkg: estimatePackage(order.quantity),
+    description: 'Porte-clés NFC personnalisés',
+  })
+}
+
+export async function createShopBoxtalShipment(order: ShopOrder): Promise<BoxtalResult> {
+  const itemCount = order.items.reduce((s, i) => s + i.quantity, 0)
+  return createShipment({
+    externalId: order.id,
+    recipientName: order.shipping_name ?? order.name,
+    email: order.email,
+    phone: order.phone,
+    shipping_address: order.shipping_address,
+    shipping_address2: order.shipping_address2,
+    shipping_city: order.shipping_city,
+    shipping_postal_code: order.shipping_postal_code,
+    shipping_country: order.shipping_country,
+    totalAmount: order.total_amount,
+    pkg: estimateShopPackage(itemCount),
+    description: 'Objets imprimés en 3D — 3BeeStudio',
+  })
 }
 
 export async function getBoxtalLabel(boxtalOrderId: string): Promise<string> {

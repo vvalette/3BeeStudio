@@ -685,19 +685,17 @@
     "statuses": {
       "pending_payment": "Awaiting payment",
       "confirmed": "Order confirmed",
-      "processing": "Processing",
-      "printing": "Printing in progress",
-      "printed": "Printed",
+      "processing": "In preparation",
       "shipped": "Shipped",
-      "delivered": "Delivered"
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
     },
     "hints": {
       "confirmed": "Payment confirmed — your order is going into production.",
-      "processing": "We're checking your logo and preparing your NFC chips.",
-      "printing": "Your keychains are being 3D printed in our studios.",
-      "printed": "Production complete — your parcel is being prepared.",
+      "processing": "We're checking your logo, 3D printing your keychains and preparing your NFC chips.",
       "shipped": "Your parcel is on its way.",
-      "delivered": "Your order has arrived. Thank you for your trust!"
+      "delivered": "Your order has arrived. Thank you for your trust!",
+      "cancelled": "This order has been cancelled. Contact us with any questions."
     },
     "order": {
       "heading": "Your order",
