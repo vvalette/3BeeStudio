@@ -28,6 +28,9 @@ const schema = z.object({
     d.shipping_name && d.shipping_address && d.shipping_city && d.shipping_postal_code
   ),
   { message: 'Adresse de livraison requise pour la livraison à domicile' },
+).refine(
+  (d) => d.delivery_mode === 'pickup' || (!!d.phone && d.phone.replace(/[\s.\-()]/g, '').length >= 8),
+  { message: 'Téléphone requis pour la livraison (nécessaire au transporteur)', path: ['phone'] },
 )
 
 export async function POST(req: Request) {
@@ -190,10 +193,25 @@ export async function POST(req: Request) {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const isEn   = d.locale === 'en'
+  const prefix = isEn ? '/en' : ''
+
+  // Textes affichés sur la page de paiement Stripe — localisés selon la langue du client.
+  const tx = {
+    pickupRate:   isEn ? 'Studio pickup (free)' : 'Retrait en studio (gratuit)',
+    freeShipping: isEn ? 'Free delivery' : 'Livraison offerte',
+    trackedShip:  isEn ? 'Tracked delivery' : 'Livraison suivie',
+    pickupMsg:    isEn
+      ? 'Studio pickup in Belleville-en-Beaujolais. We will contact you to arrange a time.'
+      : 'Retrait en studio à Belleville-en-Beaujolais. Nous vous contacterons pour convenir d\'un créneau.',
+    deliveryMsg:  isEn
+      ? 'Your order is handmade in our studio. Estimated time: 3 to 7 business days.'
+      : 'Votre commande est préparée à la main dans nos studios. Délai indicatif : 3 à 7 jours ouvrés.',
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode:           'payment',
-    locale:         d.locale === 'en' ? 'en' : 'fr',
+    locale:         isEn ? 'en' : 'fr',
     submit_type:    'pay',
     customer_email: d.email,
     line_items:     lineItems,
@@ -218,7 +236,7 @@ export async function POST(req: Request) {
             shipping_rate_data: {
               type:         'fixed_amount',
               fixed_amount: { amount: 0, currency: 'eur' },
-              display_name: 'Retrait en studio (gratuit)',
+              display_name: tx.pickupRate,
             },
           },
         ]
@@ -227,7 +245,7 @@ export async function POST(req: Request) {
             shipping_rate_data: {
               type:           'fixed_amount',
               fixed_amount:   { amount: shipping, currency: 'eur' },
-              display_name:   shipping === 0 ? 'Livraison offerte' : 'Livraison suivie',
+              display_name:   shipping === 0 ? tx.freeShipping : tx.trackedShip,
               delivery_estimate: {
                 minimum: { unit: 'business_day', value: 3 },
                 maximum: { unit: 'business_day', value: 7 },
@@ -237,13 +255,11 @@ export async function POST(req: Request) {
         ],
     custom_text: {
       submit: {
-        message: isPickup
-          ? 'Retrait en studio à Belleville-en-Beaujolais. Nous vous contacterons pour convenir d\'un créneau.'
-          : 'Votre commande est préparée à la main dans nos studios. Délai indicatif : 3 à 7 jours ouvrés.',
+        message: isPickup ? tx.pickupMsg : tx.deliveryMsg,
       },
     },
-    success_url: `${appUrl}/boutique/suivi/${order.id}?payment=success`,
-    cancel_url:  `${appUrl}/boutique?cancelled=true`,
+    success_url: `${appUrl}${prefix}/boutique/suivi/${order.id}?payment=success`,
+    cancel_url:  `${appUrl}${prefix}/boutique?cancelled=true`,
     metadata: {
       shop_order_id: order.id,
       type:          'shop_order',

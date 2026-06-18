@@ -805,6 +805,7 @@
       "emailLabel": "Email *",
       "emailPlaceholder": "marie@exemple.fr",
       "phoneLabel": "Téléphone (optionnel)",
+      "phoneLabelRequired": "Téléphone *",
       "phonePlaceholder": "+33 6 00 00 00 00",
       "addressTitle": "Adresse de livraison",
       "recipientLabel": "Nom destinataire *",
@@ -840,6 +841,11 @@
       "showMore": "Voir plus ↓",
       "showLess": "Voir moins ↑"
     },
+    "viewer": {
+      "loading": "Chargement du modèle 3D…",
+      "badge": "Modèle 3D interactif",
+      "hint": "🖱 Faire glisser pour tourner · Molette pour zoomer"
+    },
     "cartButtonAria": "{count, plural, =1 {Panier (# article)} other {Panier (# articles)}}",
     "suivi": {
       "metaTitle": "Suivi commande — Boutique 3BeeStudio",
@@ -848,7 +854,11 @@
       "confirmationEmail": "Un email de confirmation a été envoyé à",
       "eyebrow": "Boutique · Suivi commande",
       "orderTitle": "Commande #{ref}",
-      "now": "← maintenant",
+      "timelineHeading": "Avancement",
+      "inProgress": "en cours",
+      "pendingPaymentMsg": "En attente de confirmation du paiement…",
+      "trackParcel": "Suivre mon colis",
+      "trackingShort": "Suivi : {number}",
       "trackingLabel": "Numéro de suivi",
       "summary": "Récapitulatif",
       "subtotal": "Sous-total",
@@ -857,11 +867,6 @@
       "newsletterDiscount": "Réduction newsletter (−10%)",
       "total": "Total",
       "shippingAddress": "Adresse de livraison",
-      "nextSteps": "Prochaines étapes",
-      "stepConfirmed1": "Votre commande est en attente de préparation dans nos studios",
-      "stepConfirmed2": "Vous recevrez un email dès que votre commande est expédiée",
-      "stepProcessing": "Votre commande est en cours de préparation — expédition prévue sous 2 à 3 jours",
-      "stepShipped": "Votre colis est en route ! Délai estimé : 2 à 3 jours ouvrés",
       "contactMsg": "Une question ? Écrivez-nous à <email/> en mentionnant votre référence #{ref}",
       "backToShop": "← Retour à la boutique",
       "pickupMode": "Retrait en studio",
@@ -874,6 +879,12 @@
         "shipped": "Expédiée",
         "delivered": "Livrée",
         "cancelled": "Annulée"
+      },
+      "hints": {
+        "confirmed": "Paiement validé — votre commande entre en préparation.",
+        "processing": "Vos objets sont préparés à la main dans nos studios.",
+        "shipped": "Votre colis est en route.",
+        "delivered": "Votre commande est arrivée. Merci pour votre confiance !"
       }
     }
   },

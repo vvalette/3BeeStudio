@@ -189,8 +189,8 @@ export default function CheckoutClient({ forcedItems }: Props) {
             </div>
           </div>
           <div>
-            <label className={labelClass}>{t('phoneLabel')}</label>
-            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phonePlaceholder')} autoComplete="off" />
+            <label className={labelClass}>{t(isPickup ? 'phoneLabel' : 'phoneLabelRequired')}</label>
+            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phonePlaceholder')} required={!isPickup} minLength={!isPickup ? 8 : undefined} autoComplete="off" />
           </div>
         </fieldset>
 
