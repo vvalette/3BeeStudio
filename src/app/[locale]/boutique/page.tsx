@@ -1,21 +1,30 @@
 import { supabase } from '@/lib/supabase'
 import type { ShopProduct } from '@/types/shop-product'
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import type { Locale } from '@/i18n/routing'
 import BoutiqueProductCard from '@/components/boutique/BoutiqueProductCard'
-
-export const metadata: Metadata = {
-  title: 'Boutique — 3BeeStudio',
-  description: 'Objets imprimés en 3D à la main dans nos studios français. Décoration, accessoires, pièces uniques.',
-}
 
 export const revalidate = 60
 
-export default async function BoutiquePage({
-  searchParams,
-}: {
+type Props = {
+  params: Promise<{ locale: Locale }>
   searchParams: Promise<{ cancelled?: string }>
-}) {
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'boutique.page' })
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+  }
+}
+
+export default async function BoutiquePage({ params, searchParams }: Props) {
+  const { locale } = await params
   const { cancelled } = await searchParams
+  const t = await getTranslations({ locale, namespace: 'boutique.page' })
 
   const { data } = await supabase
     .from('shop_products')
@@ -31,31 +40,31 @@ export default async function BoutiquePage({
 
         {/* En-tête */}
         <header className="mb-10 text-center">
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-amber">3BeeStudio · Boutique</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-amber">{t('eyebrow')}</p>
           <h1 className="mt-3 font-extrabold text-ink-0" style={{ fontSize: 'clamp(2rem, 6vw, 3rem)', letterSpacing: '-0.03em', lineHeight: 1.05 }}>
-            Impressions 3D
+            {t('title')}
           </h1>
           <p className="mt-3 text-base text-ink-2 max-w-md mx-auto">
-            Chaque pièce est imprimée à la main dans nos studios français. Livraison sous 3 à 7 jours ouvrés.
+            {t('description')}
           </p>
         </header>
 
         {/* Bannière annulation */}
         {cancelled === 'true' && (
           <div className="mb-6 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-amber text-center">
-            Paiement annulé — votre panier a été conservé.
+            {t('cancelBanner')}
           </div>
         )}
 
         {/* Grille produits */}
         {products.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--line)] py-24 text-center">
-            <p className="text-ink-3">Les produits arrivent bientôt…</p>
+            <p className="text-ink-3">{t('empty')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
-              <BoutiqueProductCard key={product.id} product={product} />
+              <BoutiqueProductCard key={product.id} product={product} locale={locale} />
             ))}
           </div>
         )}

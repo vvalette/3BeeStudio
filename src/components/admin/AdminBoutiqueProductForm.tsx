@@ -256,7 +256,10 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
   const [nameEn, setNameEn]           = useState(product?.name_en ?? '')
   const [subtitleEn, setSubtitleEn]   = useState(product?.subtitle_en ?? '')
   const [descriptionEn, setDescriptionEn] = useState(product?.description_en ?? '')
-  const [priceEuros, setPriceEuros]   = useState(product ? String(product.price / 100) : '')
+  const [priceEuros, setPriceEuros]         = useState(product ? String(product.price / 100) : '')
+  const [salePriceEuros, setSalePriceEuros] = useState(
+    product?.sale_price !== null && product?.sale_price !== undefined ? String(product.sale_price / 100) : ''
+  )
   const [images, setImages]           = useState<string[]>(product?.images ?? [])
   const [stlUrl, setStlUrl]           = useState<string | null>(product?.stl_url ?? null)
   const [stock, setStock]             = useState(product?.stock !== null && product?.stock !== undefined ? String(product.stock) : '')
@@ -280,10 +283,25 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
       return
     }
 
+    let salePrice: number | null = null
+    if (salePriceEuros !== '') {
+      salePrice = Math.round(parseFloat(salePriceEuros.replace(',', '.')) * 100)
+      if (isNaN(salePrice) || salePrice <= 0) {
+        setError('Prix promotionnel invalide')
+        setSaving(false)
+        return
+      }
+      if (salePrice >= price) {
+        setError('Le prix promotionnel doit être inférieur au prix de base')
+        setSaving(false)
+        return
+      }
+    }
+
     const payload = {
       name, slug: slugValue, subtitle: subtitle || null, description,
       name_en: nameEn || null, subtitle_en: subtitleEn || null, description_en: descriptionEn || null,
-      price, images,
+      price, sale_price: salePrice, images,
       stl_url: stlUrl,
       stock: stock !== '' ? parseInt(stock, 10) : null,
       weight_grams: parseInt(weightGrams, 10) || 100,
@@ -450,6 +468,38 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
               <label className={labelClass}>Stock (vide = illimité)</label>
               <input className={inputClass} value={stock} onChange={(e) => setStock(e.target.value)} placeholder="∞" type="number" min="0" />
             </div>
+          </div>
+
+          {/* Prix promotionnel */}
+          <div>
+            <label className={labelClass}>
+              Prix promotionnel (€)
+              <span className="ml-1.5 normal-case font-normal text-ink-3">— laisser vide pour désactiver la promo</span>
+            </label>
+            <div className="relative">
+              <input
+                className={inputClass + ' pr-8'}
+                value={salePriceEuros}
+                onChange={(e) => setSalePriceEuros(e.target.value)}
+                placeholder="Vide = pas de promo"
+                type="number"
+                min="0"
+                step="0.01"
+              />
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-ink-3">€</span>
+            </div>
+            {salePriceEuros && !isNaN(parseFloat(salePriceEuros.replace(',', '.'))) && (() => {
+              const sp = Math.round(parseFloat(salePriceEuros.replace(',', '.')) * 100)
+              const bp = Math.round(parseFloat(priceEuros.replace(',', '.')) * 100)
+              const pct = bp > 0 ? Math.round((1 - sp / bp) * 100) : 0
+              return (
+                <p className="mt-1 text-[11px]">
+                  <span className="text-amber">{formatPrice(sp)}</span>
+                  {bp > 0 && sp < bp && <span className="ml-1.5 text-red-400 font-semibold">(-{pct}%)</span>}
+                  {bp > 0 && sp >= bp && <span className="ml-1.5 text-red-400">⚠ doit être inférieur au prix de base</span>}
+                </p>
+              )
+            })()}
           </div>
 
           {/* Images — dropzone */}

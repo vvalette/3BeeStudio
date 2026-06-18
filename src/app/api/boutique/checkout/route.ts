@@ -61,30 +61,61 @@ export async function POST(req: Request) {
   if (products.length !== qtyByProduct.size)
     return NextResponse.json({ error: 'Un ou plusieurs produits sont introuvables ou indisponibles' }, { status: 404 })
 
-  const lineItems: { price: string; quantity: number }[] = []
+  // Récupère le paramètre livraison offerte globale
+  const { data: settingsData } = await supabaseAdmin.from('shop_settings').select('key, value')
+  const settingsMap = Object.fromEntries(
+    (settingsData ?? []).map((s: { key: string; value: string }) => [s.key, s.value])
+  )
+  const globalFreeShipping = settingsMap.free_shipping === 'true'
+
+  const lineItems: (
+    | { price: string; quantity: number }
+    | { price_data: { currency: string; product: string; unit_amount: number }; quantity: number }
+    | { price_data: { currency: string; product_data: { name: string; images?: string[] }; unit_amount: number }; quantity: number }
+  )[] = []
   const orderItems: { product_id: string; product_name: string; quantity: number; unit_price: number }[] = []
   let subtotal = 0
 
   for (const product of products) {
-    const quantity = qtyByProduct.get(product.id)!
+    const quantity  = qtyByProduct.get(product.id)!
+    const unitPrice = product.sale_price ?? product.price
 
     if (product.stock !== null && product.stock < quantity)
       return NextResponse.json({ error: `Stock insuffisant pour « ${product.name} » (${product.stock} disponible${product.stock > 1 ? 's' : ''})` }, { status: 409 })
 
-    if (!product.stripe_price_id)
-      return NextResponse.json({ error: `« ${product.name} » n'est pas encore disponible à la vente` }, { status: 400 })
+    if (product.sale_price !== null) {
+      // Prix promotionnel → price_data inline (pas besoin du stripe_price_id)
+      if (product.stripe_product_id) {
+        lineItems.push({
+          price_data: { currency: 'eur', product: product.stripe_product_id, unit_amount: product.sale_price },
+          quantity,
+        })
+      } else {
+        lineItems.push({
+          price_data: {
+            currency: 'eur',
+            product_data: { name: product.name, images: product.images.slice(0, 8) },
+            unit_amount: product.sale_price,
+          },
+          quantity,
+        })
+      }
+    } else {
+      if (!product.stripe_price_id)
+        return NextResponse.json({ error: `« ${product.name} » n'est pas encore disponible à la vente` }, { status: 400 })
+      lineItems.push({ price: product.stripe_price_id, quantity })
+    }
 
-    subtotal += product.price * quantity
-    lineItems.push({ price: product.stripe_price_id, quantity })
+    subtotal += unitPrice * quantity
     orderItems.push({
       product_id:   product.id,
       product_name: product.name,
       quantity,
-      unit_price:   product.price,
+      unit_price:   unitPrice,
     })
   }
 
-  const shipping = calcShopShipping(subtotal)
+  const shipping = globalFreeShipping ? 0 : calcShopShipping(subtotal)
   const total    = subtotal + shipping
 
   // Crée la commande en base

@@ -26,17 +26,33 @@ const ORDER_FILTERS: { key: 'all' | 'active' | ShopOrderStatus; label: string; m
 export default function AdminBoutiqueProducts({
   products: initialProducts,
   orders,
+  freeShipping: initialFreeShipping,
 }: {
   products: ShopProduct[]
   orders: ShopOrder[]
+  freeShipping: boolean
 }) {
   const router = useRouter()
-  const [tab, setTab]                 = useState<Tab>('products')
-  const [products, setProducts]       = useState(initialProducts)
-  const [orderFilter, setOrderFilter] = useState<'all' | 'active' | ShopOrderStatus>('active')
-  const [orderQuery, setOrderQuery]   = useState('')
-  const [togglingId, setTogglingId]   = useState<string | null>(null)
-  const [deletingId, setDeletingId]   = useState<string | null>(null)
+  const [tab, setTab]                       = useState<Tab>('products')
+  const [products, setProducts]             = useState(initialProducts)
+  const [orderFilter, setOrderFilter]       = useState<'all' | 'active' | ShopOrderStatus>('active')
+  const [orderQuery, setOrderQuery]         = useState('')
+  const [togglingId, setTogglingId]         = useState<string | null>(null)
+  const [deletingId, setDeletingId]         = useState<string | null>(null)
+  const [freeShipping, setFreeShipping]     = useState(initialFreeShipping)
+  const [savingShipping, setSavingShipping] = useState(false)
+
+  async function toggleFreeShipping() {
+    setSavingShipping(true)
+    const next = !freeShipping
+    const res = await fetch('/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ free_shipping: next }),
+    })
+    if (res.ok) setFreeShipping(next)
+    setSavingShipping(false)
+  }
 
   async function toggleActive(product: ShopProduct) {
     setTogglingId(product.id)
@@ -140,6 +156,33 @@ export default function AdminBoutiqueProducts({
 
         {/* ── Onglet Produits ── */}
         {tab === 'products' && (
+          <div className="space-y-4">
+
+          {/* Livraison offerte globale */}
+          <div className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-ink-0">Livraison offerte</p>
+              <p className="text-[11px] text-ink-3 mt-0.5">
+                {freeShipping ? 'Active — livraison gratuite sur toutes les commandes' : 'Inactive — livraison payante selon le seuil habituel'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleFreeShipping}
+              disabled={savingShipping}
+              className={[
+                'relative flex h-6 w-11 cursor-pointer items-center rounded-full border transition-all duration-200 disabled:opacity-50',
+                freeShipping ? 'border-amber bg-amber' : 'border-[var(--line)] bg-bg-3',
+              ].join(' ')}
+              aria-label={freeShipping ? 'Désactiver la livraison offerte' : 'Activer la livraison offerte'}
+            >
+              <span className={[
+                'absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                freeShipping ? 'translate-x-5' : 'translate-x-1',
+              ].join(' ')} />
+            </button>
+          </div>
+
           <div className="space-y-2">
             {products.length === 0 && (
               <div className="rounded-xl border border-dashed border-[var(--line)] py-12 text-center text-ink-3">
@@ -170,7 +213,14 @@ export default function AdminBoutiqueProducts({
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-ink-0 truncate">{product.name}</p>
                   <p className="text-[12px] text-ink-3 truncate">
-                    /boutique/{product.slug} · {formatPrice(product.price)} · {product.stock !== null ? `${product.stock} en stock` : 'stock illimité'}
+                    /boutique/{product.slug} ·{' '}
+                    {product.sale_price !== null ? (
+                      <>
+                        <span className="text-amber">{formatPrice(product.sale_price)}</span>
+                        <span className="line-through ml-1">{formatPrice(product.price)}</span>
+                      </>
+                    ) : formatPrice(product.price)}
+                    {' '}· {product.stock !== null ? `${product.stock} en stock` : 'stock illimité'}
                   </p>
                 </div>
 
@@ -218,6 +268,7 @@ export default function AdminBoutiqueProducts({
                 </div>
               </div>
             ))}
+          </div>
           </div>
         )}
 

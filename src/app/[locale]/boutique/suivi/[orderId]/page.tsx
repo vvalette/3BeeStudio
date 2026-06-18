@@ -3,15 +3,23 @@ import { stripe } from '@/lib/stripe'
 import { sendShopOrderConfirmation } from '@/lib/resend'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import type { Locale } from '@/i18n/routing'
 import type { ShopOrder, ShopOrderStatus } from '@/types/shop-order'
-import { SHOP_STATUS_LABELS, SHOP_STATUS_STEPS } from '@/types/shop-order'
+import { SHOP_STATUS_STEPS } from '@/types/shop-order'
 import { SHOP_STATUS_PILL } from '@/lib/status-ui'
 import { formatPrice } from '@/lib/utils'
 import CartClearer from '@/components/boutique/CartClearer'
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale; orderId: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'boutique.suivi' })
   return {
-    title: 'Suivi commande — Boutique 3BeeStudio',
+    title: t('metaTitle'),
     robots: { index: false, follow: false },
   }
 }
@@ -48,11 +56,12 @@ export default async function SuiviBoutiquePage({
   params,
   searchParams,
 }: {
-  params: Promise<{ orderId: string }>
+  params: Promise<{ orderId: string; locale: Locale }>
   searchParams: Promise<{ payment?: string }>
 }) {
-  const { orderId }  = await params
+  const { orderId, locale } = await params
   const { payment }  = await searchParams
+  const t = await getTranslations({ locale, namespace: 'boutique.suivi' })
 
   const { data: raw, error } = await supabaseAdmin
     .from('shop_orders')
@@ -75,13 +84,15 @@ export default async function SuiviBoutiquePage({
   const orderRef      = order.id.slice(0, 8).toUpperCase()
 
   const stepLabel: Record<ShopOrderStatus, string> = {
-    pending_payment: 'En attente de paiement',
-    confirmed:       'Commande reçue',
-    processing:      'En préparation',
-    shipped:         'Expédiée',
-    delivered:       'Livrée',
-    cancelled:       'Annulée',
+    pending_payment: t('statusLabels.pending_payment'),
+    confirmed:       t('statusLabels.confirmed'),
+    processing:      t('statusLabels.processing'),
+    shipped:         t('statusLabels.shipped'),
+    delivered:       t('statusLabels.delivered'),
+    cancelled:       t('statusLabels.cancelled'),
   }
+
+  const dateLocale = locale === 'en' ? 'en-GB' : 'fr-FR'
 
   const stepIcon: Record<ShopOrderStatus, React.ReactNode> = {
     pending_payment: <path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7L8 1z" />,
@@ -116,18 +127,18 @@ export default async function SuiviBoutiquePage({
                 />
               </svg>
             </div>
-            <p className="relative mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-amber">Paiement confirmé</p>
+            <p className="relative mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-amber">{t('paymentConfirmed')}</p>
             <h1 className="relative mt-2 font-extrabold text-ink-0"
               style={{ fontSize: 'clamp(1.6rem, 5vw, 2.2rem)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              Commande reçue !
+              {t('orderReceived')}
             </h1>
-            <p className="relative mt-2 text-sm text-ink-2">Un email de confirmation a été envoyé à <strong>{order.email}</strong></p>
+            <p className="relative mt-2 text-sm text-ink-2">{t('confirmationEmail')} <strong>{order.email}</strong></p>
           </header>
         ) : (
           <header className="pt-2">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">Boutique · Suivi commande</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">{t('eyebrow')}</p>
             <h1 className="mt-1.5 font-extrabold text-ink-0" style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', letterSpacing: '-0.025em' }}>
-              Commande #{orderRef}
+              {t('orderTitle', { ref: orderRef })}
             </h1>
           </header>
         )}
@@ -144,12 +155,12 @@ export default async function SuiviBoutiquePage({
               <div>
                 <p className="font-semibold text-ink-0">{stepLabel[order.status]}</p>
                 <p className="text-[12px] text-ink-3">
-                  {new Date(order.updated_at ?? order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(order.updated_at ?? order.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
             </div>
             <span className={['rounded-pill px-2.5 py-1 text-[11px] font-medium', SHOP_STATUS_PILL[order.status]].join(' ')}>
-              {SHOP_STATUS_LABELS[order.status]}
+              {stepLabel[order.status]}
             </span>
           </div>
 
@@ -173,7 +184,7 @@ export default async function SuiviBoutiquePage({
                     </div>
                     <span className={['text-[13px]', done ? 'text-ink-0 font-medium' : 'text-ink-3'].join(' ')}>
                       {stepLabel[s]}
-                      {current && <span className="ml-2 font-mono text-[10px] text-amber">← maintenant</span>}
+                      {current && <span className="ml-2 font-mono text-[10px] text-amber">{t('now')}</span>}
                     </span>
                   </div>
                 )
@@ -184,7 +195,7 @@ export default async function SuiviBoutiquePage({
           {/* Tracking */}
           {order.tracking_number && (
             <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3">
-              <p className="text-[12px] font-medium text-cyan-400">Numéro de suivi</p>
+              <p className="text-[12px] font-medium text-cyan-400">{t('trackingLabel')}</p>
               {order.tracking_url ? (
                 <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" className="mt-0.5 font-mono text-sm text-ink-0 hover:text-amber transition-colors">
                   {order.tracking_number} →
@@ -198,7 +209,7 @@ export default async function SuiviBoutiquePage({
 
         {/* Récapitulatif commande */}
         <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-5 space-y-4">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Récapitulatif</h2>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{t('summary')}</h2>
           <div className="space-y-2">
             {order.items.map((item, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
@@ -209,13 +220,13 @@ export default async function SuiviBoutiquePage({
           </div>
           <div className="space-y-1 border-t border-[var(--line)] pt-3 text-[13px]">
             <div className="flex justify-between text-ink-3">
-              <span>Sous-total</span><span>{formatPrice(order.subtotal)}</span>
+              <span>{t('subtotal')}</span><span>{formatPrice(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-ink-3">
-              <span>Livraison</span><span>{order.shipping === 0 ? 'Offerte' : formatPrice(order.shipping)}</span>
+              <span>{t('shipping')}</span><span>{order.shipping === 0 ? t('shippingFree') : formatPrice(order.shipping)}</span>
             </div>
             <div className="flex justify-between font-bold text-ink-0 pt-1">
-              <span>Total</span><span className="text-amber">{formatPrice(order.total_amount)}</span>
+              <span>{t('total')}</span><span className="text-amber">{formatPrice(order.total_amount)}</span>
             </div>
           </div>
         </div>
@@ -223,7 +234,7 @@ export default async function SuiviBoutiquePage({
         {/* Adresse */}
         {order.shipping_name && (
           <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-5">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-ink-3">Adresse de livraison</h2>
+            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-ink-3">{t('shippingAddress')}</h2>
             <p className="text-sm text-ink-2 leading-relaxed">
               {order.shipping_name}<br />
               {order.shipping_address}
@@ -236,19 +247,19 @@ export default async function SuiviBoutiquePage({
         {/* Prochaines étapes */}
         {isPaid && !isCancelled && order.status !== 'delivered' && (
           <div className="rounded-2xl border border-amber/20 bg-amber/5 p-5 space-y-3">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-amber">Prochaines étapes</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-amber">{t('nextSteps')}</h2>
             <ul className="space-y-2 text-sm text-ink-2">
               {order.status === 'confirmed' && (
                 <>
-                  <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>Votre commande est en attente de préparation dans nos studios</li>
-                  <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>Vous recevrez un email dès que votre commande est expédiée</li>
+                  <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>{t('stepConfirmed1')}</li>
+                  <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>{t('stepConfirmed2')}</li>
                 </>
               )}
               {order.status === 'processing' && (
-                <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>Votre commande est en cours de préparation — expédition prévue sous 2 à 3 jours</li>
+                <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>{t('stepProcessing')}</li>
               )}
               {order.status === 'shipped' && (
-                <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>Votre colis est en route ! Délai estimé : 2 à 3 jours ouvrés</li>
+                <li className="flex items-start gap-2"><span className="text-amber mt-0.5">→</span>{t('stepShipped')}</li>
               )}
             </ul>
           </div>
@@ -256,13 +267,14 @@ export default async function SuiviBoutiquePage({
 
         {/* Contact */}
         <p className="text-center text-[12px] text-ink-3">
-          Une question ? Écrivez-nous à{' '}
-          <a href="mailto:contact@3beestudio.fr" className="text-amber hover:underline">contact@3beestudio.fr</a>
-          {' '}en mentionnant votre référence <strong className="text-ink-2">#{orderRef}</strong>
+          {t.rich('contactMsg', {
+            email: () => <a href="mailto:contact@3beestudio.fr" className="text-amber hover:underline">contact@3beestudio.fr</a>,
+            ref: orderRef,
+          })}
         </p>
 
         <a href="/boutique" className="flex cursor-pointer items-center justify-center gap-2 rounded-pill border border-[var(--line)] py-3 text-sm font-medium text-ink-2 hover:text-ink-0 transition-colors">
-          ← Retour à la boutique
+          {t('backToShop')}
         </a>
       </div>
     </main>

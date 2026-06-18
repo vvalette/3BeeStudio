@@ -12,6 +12,7 @@ interface CartContextValue {
   subtotal: number
   shipping: number
   total: number
+  freeShippingEnabled: boolean
   isOpen: boolean
   open: () => void
   close: () => void
@@ -33,6 +34,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
   const [items, setItems]   = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  const [freeShippingEnabled, setFreeShippingEnabled] = useState(false)
 
   // Chargement initial depuis localStorage
   useEffect(() => {
@@ -43,6 +45,14 @@ export default function CartProvider({ children }: { children: React.ReactNode }
       /* ignore */
     }
     setHydrated(true)
+  }, [])
+
+  // Fetch setting livraison offerte globale
+  useEffect(() => {
+    fetch('/api/boutique/settings')
+      .then((r) => r.json())
+      .then((d) => { if (d.free_shipping) setFreeShippingEnabled(true) })
+      .catch(() => null)
   }, [])
 
   // Persistance
@@ -92,12 +102,12 @@ export default function CartProvider({ children }: { children: React.ReactNode }
   const { count, subtotal, shipping, total } = useMemo(() => {
     const count    = items.reduce((acc, i) => acc + i.quantity, 0)
     const subtotal = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
-    const shipping = items.length > 0 ? calcShopShipping(subtotal) : 0
+    const shipping = items.length > 0 ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
     return { count, subtotal, shipping, total: subtotal + shipping }
-  }, [items])
+  }, [items, freeShippingEnabled])
 
   const value: CartContextValue = {
-    items, count, subtotal, shipping, total,
+    items, count, subtotal, shipping, total, freeShippingEnabled,
     isOpen, open, close,
     addItem, setQuantity, removeItem, clear,
   }

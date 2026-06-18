@@ -1,16 +1,5 @@
+import { useTranslations } from 'next-intl'
 import Eyebrow from '@/components/ui/Eyebrow'
-
-interface StepData {
-  n: string
-  title: string
-  desc: string
-}
-
-const STEPS: StepData[] = [
-  { n: '01', title: "Le studio vous écoute",    desc: "Pas de formulaire à rallonge — une conversation directe avec l'artisan. Premier rendu 3D en main sous 48h." },
-  { n: '02', title: 'Prototype & itération',   desc: 'Impression test, photos détaillées, retours. On affine jusqu\'à la pièce parfaite.' },
-  { n: '03', title: 'Production & livraison',  desc: 'Production en série courte ou pièce unique. Expédié sous 5–7 jours en France.' },
-]
 
 function Badge({ n }: { n: string }) {
   return (
@@ -24,16 +13,24 @@ function Badge({ n }: { n: string }) {
 }
 
 export default function HowItWorks() {
+  const t = useTranslations('howItWorks')
+
+  const steps = [
+    { n: '01', title: t('step1Title'), desc: t('step1Desc') },
+    { n: '02', title: t('step2Title'), desc: t('step2Desc') },
+    { n: '03', title: t('step3Title'), desc: t('step3Desc') },
+  ]
+
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mb-12 max-w-2xl">
-          <div className="mb-3"><Eyebrow>Sur-mesure</Eyebrow></div>
+          <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
           <h2 className="font-sans font-bold text-ink-0" style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
-            Du croquis à votre étagère.
+            {t('heading')}
           </h2>
           <p className="mt-4 text-ink-1" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.15rem)', lineHeight: 1.55 }}>
-            Trois étapes, zéro friction. On parle avec vous, on prototype, on livre.
+            {t('subheading')}
           </p>
         </div>
 
@@ -46,12 +43,12 @@ export default function HowItWorks() {
             style={{ background: 'linear-gradient(90deg, var(--line-amber), var(--line-amber) 66%, transparent)' }}
           />
 
-          {STEPS.map((step, i) => (
+          {steps.map((step, i) => (
             <div key={step.n} className="relative flex gap-5 lg:flex-col lg:gap-0">
               {/* Badge + mobile vertical connector */}
               <div className="relative flex flex-col items-center lg:items-start lg:mb-6">
                 <Badge n={step.n} />
-                {i < STEPS.length - 1 && (
+                {i < steps.length - 1 && (
                   <div
                     className="lg:hidden flex-1 mt-2 w-px"
                     style={{ background: 'linear-gradient(180deg, var(--line-amber), transparent)' }}

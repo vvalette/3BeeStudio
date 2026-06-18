@@ -1,20 +1,25 @@
 import { getTranslations } from 'next-intl/server'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
-import TikTokFeaturedCard from '@/components/landing/TikTokFeaturedCard'
+import SocialVideoCard from './SocialVideoCard'
 
-const TIKTOK_PROFILE_URL = 'https://www.tiktok.com/@3bee.studio'
-const FEATURED_VIDEO_ID = '7652267891596791062'
-const FEATURED_VIDEO_URL = `https://www.tiktok.com/@3bee.studio/video/${FEATURED_VIDEO_ID}`
+const TIKTOK_VIDEOS = [
+  { id: '7652319556232285473', label: 'BeeLid — Ikea Hack',           views: '9K' },
+  { id: '7652624940654431510', label: '3BeeStudio — Impression 3D',   views: undefined },
+]
 
-async function fetchTikTokOembed(videoUrl: string) {
+const INSTAGRAM_URL = 'https://www.instagram.com/3bee_studio_/'
+
+async function fetchThumbnail(videoId: string): Promise<string | null> {
   try {
+    const videoUrl = `https://www.tiktok.com/@3bee.studio/video/${videoId}`
     const res = await fetch(
       `https://www.tiktok.com/oembed?url=${encodeURIComponent(videoUrl)}`,
-      { next: { revalidate: 43200 } }
+      { next: { revalidate: 43200 } },
     )
     if (!res.ok) return null
-    return await res.json() as { thumbnail_url: string; title: string }
+    const data = await res.json() as { thumbnail_url?: string }
+    return data.thumbnail_url ?? null
   } catch {
     return null
   }
@@ -22,43 +27,68 @@ async function fetchTikTokOembed(videoUrl: string) {
 
 export default async function VideoStrip() {
   const t = await getTranslations('videoStrip')
-  const oembed = await fetchTikTokOembed(FEATURED_VIDEO_URL)
-
-  if (!oembed?.thumbnail_url) return null
+  const thumbnails = await Promise.all(TIKTOK_VIDEOS.map((v) => fetchThumbnail(v.id)))
 
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <Reveal className="flex items-end justify-between mb-10">
-          <div>
-            <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
-            <h2
-              className="font-sans font-bold text-ink-0"
-              style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}
-            >
-              {t('heading')}
-            </h2>
+
+        <Reveal className="mb-12">
+          <div className="mb-3">
+            <Eyebrow>{t('eyebrow')}</Eyebrow>
           </div>
+          <h2
+            className="font-sans font-bold text-ink-0"
+            style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}
+          >
+            {t('heading')}
+          </h2>
+          <p className="mt-4 text-ink-2 text-sm sm:text-base max-w-md leading-relaxed">
+            Regardez les pièces se fabriquer en direct, de l&apos;impression 3D à la finition, suivez chaque étape de la création.
+          </p>
+        </Reveal>
+
+        {/* Deux vidéos TikTok */}
+        <Reveal>
+          <div className="flex flex-col sm:flex-row items-start justify-start gap-8">
+            {TIKTOK_VIDEOS.map((v, i) => (
+              <SocialVideoCard
+                key={v.id}
+                embedUrl={`https://www.tiktok.com/embed/v2/${v.id}`}
+                externalUrl={`https://www.tiktok.com/@3bee.studio/video/${v.id}`}
+                handle="@3bee.studio"
+                label={v.label}
+                thumbnailUrl={thumbnails[i] ?? null}
+                views={v.views}
+              />
+            ))}
+          </div>
+        </Reveal>
+
+        {/* Lien Instagram */}
+        <Reveal className="mt-8 flex justify-start">
           <a
-            href={TIKTOK_PROFILE_URL}
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-amber whitespace-nowrap hover:text-amber-soft transition-colors cursor-pointer"
-            style={{ fontSize: 11, letterSpacing: '0.06em' }}
+            className="inline-flex items-center gap-2.5 rounded-pill border border-[var(--line)] bg-bg-1 px-5 py-2.5 text-sm font-medium text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-amber cursor-pointer"
           >
-            {t('viewAll')}
+            <InstagramIcon />
+            Retrouvez-nous aussi sur Instagram
           </a>
         </Reveal>
 
-        <Reveal>
-          <TikTokFeaturedCard
-            thumbnailUrl={oembed.thumbnail_url}
-            title="BeeLid - Ikea Hack"
-            videoId={FEATURED_VIDEO_ID}
-            views="9K"
-          />
-        </Reveal>
       </div>
     </section>
+  )
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
   )
 }

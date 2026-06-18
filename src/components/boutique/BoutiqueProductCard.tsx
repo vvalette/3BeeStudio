@@ -1,8 +1,10 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import type { ShopProduct } from '@/types/shop-product'
+import { discountPercent } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import STLViewerWrapper from './STLViewerWrapper'
 
@@ -10,9 +12,13 @@ const SLIDE_DURATION = 5000
 
 type Slide = { type: '3d' } | { type: 'photo'; index: number }
 
-export default function BoutiqueProductCard({ product }: { product: ShopProduct }) {
+export default function BoutiqueProductCard({ product, locale }: { product: ShopProduct; locale?: string }) {
   const router  = useRouter()
+  const t = useTranslations('boutique.card')
   const wasDrag = useRef(false)
+  const isEn = locale === 'en'
+  const displayName    = (isEn && product.name_en)    ? product.name_en    : product.name
+  const displaySubtitle = (isEn && product.subtitle_en) ? product.subtitle_en : product.subtitle
 
   const has3D     = !!product.stl_url
   const hasImages = product.images.length > 0
@@ -56,6 +62,7 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
 
   const active = slides[activeIdx]
   const outOfStock = product.stock !== null && product.stock === 0
+  const discount = discountPercent(product)
 
   function handlePointerDown(e: React.PointerEvent) {
     const id = e.pointerId
@@ -142,7 +149,7 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
                 <button
                   key={i}
                   type="button"
-                  aria-label={slide.type === '3d' ? 'Voir le modèle 3D' : `Photo ${i}`}
+                  aria-label={slide.type === '3d' ? t('view3D') : t('photoAlt', { n: i })}
                   onClick={(e) => { e.stopPropagation(); goTo(i) }}
                   className="cursor-pointer flex items-center justify-center transition-all duration-200"
                 >
@@ -171,10 +178,19 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
           </div>
         )}
 
+        {/* Badge promo */}
+        {discount !== null && !outOfStock && (
+          <div className="absolute left-2.5 top-2.5 z-10">
+            <span className="rounded-pill border border-red-500/30 bg-red-500/80 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
+              -{discount}%
+            </span>
+          </div>
+        )}
+
         {outOfStock && (
           <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(10,10,11,0.6)' }}>
             <span className="rounded-pill border border-red-500/30 bg-bg-0/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-red-400">
-              Rupture de stock
+              {t('outOfStock')}
             </span>
           </div>
         )}
@@ -182,14 +198,21 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
 
       {/* Infos */}
       <div className="p-4">
-        <h2 className="font-semibold text-ink-0 leading-tight">{product.name}</h2>
-        {product.subtitle && (
-          <p className="mt-0.5 font-mono text-[12px] tracking-[0.05em] text-ink-1 leading-snug">{product.subtitle}</p>
+        <h2 className="font-semibold text-ink-0 leading-tight">{displayName}</h2>
+        {displaySubtitle && (
+          <p className="mt-0.5 font-mono text-[12px] tracking-[0.05em] text-ink-1 leading-snug">{displaySubtitle}</p>
         )}
         <div className="mt-3 flex items-center justify-between">
-          <span className="font-mono font-bold text-amber">{formatPrice(product.price)}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono font-bold text-amber">
+              {formatPrice(product.sale_price ?? product.price)}
+            </span>
+            {product.sale_price !== null && (
+              <span className="font-mono text-[12px] text-ink-3 line-through">{formatPrice(product.price)}</span>
+            )}
+          </div>
           <span className="text-[11px] text-ink-3">
-            {product.stock !== null ? (product.stock > 0 ? `${product.stock} dispo` : 'Rupture') : 'En stock'}
+            {product.stock !== null ? (product.stock > 0 ? t('available', { count: product.stock }) : t('outOfStock')) : t('inStock')}
           </span>
         </div>
 
@@ -198,11 +221,11 @@ export default function BoutiqueProductCard({ product }: { product: ShopProduct 
             <div className="pt-3 flex justify-center">
               {outOfStock ? (
                 <span className="inline-flex items-center gap-1.5 rounded-pill border border-red-500/20 bg-red-500/10 px-3 py-1 font-mono text-[11px] tracking-[0.06em] text-red-400">
-                  Rupture de stock
+                  {t('outOfStock')}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3 py-1 font-mono text-[11px] tracking-[0.06em] text-amber">
-                  Commander
+                  {t('order')}
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>

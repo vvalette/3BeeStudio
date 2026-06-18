@@ -1,13 +1,23 @@
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import { useTranslations } from 'next-intl'
+import type { Locale } from '@/i18n/routing'
 import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 
-export const metadata: Metadata = {
-  title: 'Portfolio — 3BeeStudio',
-  description: 'Découvrez bientôt nos projets d\'impression 3D — créations custom, séries limitées et collaborations.',
+type Props = { params: Promise<{ locale: Locale }> }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'portfolio' })
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+  }
 }
 
 export default function PortfolioPage() {
+  const t = useTranslations('portfolio')
   return (
     <main className="relative min-h-[calc(100dvh-72px)] bg-bg-0 flex items-center justify-center overflow-hidden">
 
@@ -45,7 +55,7 @@ export default function PortfolioPage() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber" />
           </span>
-          <span className="font-mono text-amber text-[11px] tracking-[0.12em] uppercase">Bientôt disponible</span>
+          <span className="font-mono text-amber text-[11px] tracking-[0.12em] uppercase">{t('badge')}</span>
         </div>
 
         {/* Heading */}
@@ -53,11 +63,11 @@ export default function PortfolioPage() {
           className="font-sans font-extrabold text-ink-0 mb-5"
           style={{ fontSize: 'clamp(2.5rem, 7vw, 4.5rem)', lineHeight: 1.0, letterSpacing: '-0.035em' }}
         >
-          Les projets arrivent.
+          {t('heading')}
         </h1>
 
         <p className="text-ink-2 text-base sm:text-lg mb-10 max-w-md mx-auto leading-relaxed">
-          Nos créations custom, séries limitées et collaborations seront bientôt visibles ici. En attendant, découvrez la boutique ou lancez un projet sur-mesure.
+          {t('description')}
         </p>
 
         {/* CTAs */}
@@ -67,19 +77,19 @@ export default function PortfolioPage() {
             className="inline-flex h-[50px] items-center justify-center rounded-pill px-8 font-semibold text-[15px] cursor-pointer transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5"
             style={{ background: 'var(--btn-primary-bg)', color: '#fff', boxShadow: 'var(--shadow-amber)' }}
           >
-            Voir la boutique
+            {t('ctaShop')}
           </Link>
           <Link
             href="/custom"
             className="inline-flex h-[50px] items-center justify-center rounded-pill px-8 font-semibold text-[15px] text-ink-1 border border-[var(--line-2)] bg-bg-3 cursor-pointer transition-all duration-300 hover:bg-bg-4"
           >
-            Demander un devis
+            {t('ctaCustom')}
           </Link>
         </div>
 
         {/* Bottom hint */}
         <p className="mt-12 font-mono text-ink-3 text-[11px] tracking-widest uppercase">
-          3BeeStudio · Studio d'impression 3D français
+          {t('hint')}
         </p>
       </div>
     </main>

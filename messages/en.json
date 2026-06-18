@@ -738,5 +738,160 @@
       "title": "Custom NFC keychains & bespoke 3D printing",
       "description": "French 3D printing studio. Custom NFC keychains with your logo (B2B), series objects and bespoke creations. Made in France, quote within 48h."
     }
+  },
+  "boutique": {
+    "page": {
+      "eyebrow": "3BeeStudio · Shop",
+      "title": "3D Prints",
+      "description": "Each piece is hand-printed in our French studios. Delivered within 3 to 7 business days.",
+      "cancelBanner": "Payment cancelled — your cart has been saved.",
+      "empty": "Products coming soon…",
+      "metaTitle": "Shop — 3BeeStudio",
+      "metaDescription": "Hand-printed 3D objects from our French studios. Decor, accessories, unique pieces."
+    },
+    "product": {
+      "breadcrumb": "Shop",
+      "eyebrow": "3D Print · Handmade",
+      "outOfStockBadge": "Out of stock",
+      "inStockCount": "{count} in stock",
+      "inStock": "In stock",
+      "outOfStockMsg": "This product is temporarily out of stock.",
+      "shipping": "Shipping",
+      "shippingFree": "free",
+      "shippingThreshold": "from {price} purchase",
+      "leadTime": "3 to 7 days",
+      "leadTimeLabel": "estimated",
+      "handmade": "Handmade",
+      "madeInFrance": "printed in France"
+    },
+    "checkout": {
+      "breadcrumb": "Shop",
+      "breadcrumbCurrent": "Order",
+      "title": "Complete my order"
+    },
+    "card": {
+      "view3D": "View 3D model",
+      "photoAlt": "Photo {n}",
+      "outOfStock": "Out of stock",
+      "available": "{count} left",
+      "inStock": "In stock",
+      "order": "Order"
+    },
+    "addToCart": {
+      "quantity": "Quantity",
+      "lowStock": "Only {count} left",
+      "addToCartBtn": "Add to cart",
+      "buyNow": "Buy now · {price} →"
+    },
+    "cart": {
+      "title": "Your cart",
+      "itemCount": "{count, plural, =1 {# item} other {# items}}",
+      "closeLabel": "Close",
+      "removeLabel": "Remove",
+      "empty": "Your cart is empty.",
+      "continueShopping": "Continue shopping →",
+      "freeShipping": "🎉 Free shipping on the entire shop",
+      "progressMsg": "Only <b>{amount}</b> away from free shipping 🎉",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "shippingFree": "Free",
+      "total": "Total",
+      "checkoutBtn": "Checkout →"
+    },
+    "checkoutForm": {
+      "emptyCart": "Your cart is empty.",
+      "backToShop": "Back to shop →",
+      "contactTitle": "Your details",
+      "nameLabel": "First / Last name *",
+      "namePlaceholder": "John Smith",
+      "emailLabel": "Email *",
+      "emailPlaceholder": "john@example.com",
+      "phoneLabel": "Phone (optional)",
+      "phonePlaceholder": "+44 7000 000000",
+      "addressTitle": "Delivery address",
+      "recipientLabel": "Recipient name *",
+      "addressLabel": "Address *",
+      "addressPlaceholder": "12 Peace Street",
+      "address2Label": "Apt, suite, etc. (optional)",
+      "address2Placeholder": "Building B, Apt 4",
+      "postalLabel": "Postcode *",
+      "postalPlaceholder": "75001",
+      "cityLabel": "City *",
+      "cityPlaceholder": "Paris",
+      "errorFallback": "An error occurred. Please try again.",
+      "loading": "Redirecting to Stripe…",
+      "pay": "Pay {price} →",
+      "securePayment": "Secured by Stripe · SSL · Encrypted data",
+      "orderSummary": "Your order",
+      "cartSummary": "Your cart",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "shippingFree": "Free",
+      "freeShippingThreshold": "Free from {price} purchase",
+      "total": "Total"
+    },
+    "descriptionExpand": {
+      "showMore": "Show more ↓",
+      "showLess": "Show less ↑"
+    },
+    "cartButtonAria": "{count, plural, =1 {Cart (# item)} other {Cart (# items)}}",
+    "suivi": {
+      "metaTitle": "Order tracking — 3BeeStudio Shop",
+      "paymentConfirmed": "Payment confirmed",
+      "orderReceived": "Order received!",
+      "confirmationEmail": "A confirmation email has been sent to",
+      "eyebrow": "Shop · Order tracking",
+      "orderTitle": "Order #{ref}",
+      "now": "← now",
+      "trackingLabel": "Tracking number",
+      "summary": "Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "shippingFree": "Free",
+      "total": "Total",
+      "shippingAddress": "Delivery address",
+      "nextSteps": "Next steps",
+      "stepConfirmed1": "Your order is awaiting preparation in our studios",
+      "stepConfirmed2": "You will receive an email as soon as your order ships",
+      "stepProcessing": "Your order is being prepared — expected to ship within 2 to 3 days",
+      "stepShipped": "Your parcel is on its way! Estimated delivery: 2 to 3 business days",
+      "contactMsg": "Any questions? Write to us at <email/> mentioning your reference #{ref}",
+      "backToShop": "← Back to shop",
+      "statusLabels": {
+        "pending_payment": "Awaiting payment",
+        "confirmed": "Order received",
+        "processing": "In preparation",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      }
+    }
+  },
+  "portfolio": {
+    "metaTitle": "Portfolio — 3BeeStudio",
+    "metaDescription": "Coming soon: our 3D printing projects — custom creations, limited series and collaborations.",
+    "badge": "Coming soon",
+    "heading": "Projects incoming.",
+    "description": "Our custom creations, limited series and collaborations will be visible here soon. In the meantime, check out the shop or start a bespoke project.",
+    "ctaShop": "View the shop",
+    "ctaCustom": "Request a quote",
+    "hint": "3BeeStudio · French 3D printing studio"
+  },
+  "howItWorks": {
+    "eyebrow": "Custom",
+    "heading": "From sketch to your shelf.",
+    "subheading": "Three steps, zero friction. We talk with you, prototype, deliver.",
+    "step1Title": "The studio listens",
+    "step1Desc": "No long forms — a direct conversation with the maker. First 3D render in hand within 48h.",
+    "step2Title": "Prototype & iteration",
+    "step2Desc": "Test print, detailed photos, feedback. We refine until the perfect piece.",
+    "step3Title": "Production & delivery",
+    "step3Desc": "Short-run production or one-of-a-kind piece. Shipped within 5–7 days in France."
+  },
+  "boutiqueTeaser": {
+    "badge": "Coming soon",
+    "headingLine1": "Pieces to order",
+    "headingLine2": "directly online.",
+    "description": "Vases, lighting, 3D-printed accessories — our catalogue is coming soon. In the meantime, contact us for any order."
   }
 }
