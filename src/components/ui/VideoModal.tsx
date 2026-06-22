@@ -54,7 +54,7 @@ export default function VideoModal({ open, onClose, src }: VideoModalProps) {
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-3xl"
+        className="relative w-full max-w-sm"
         onClick={e => e.stopPropagation()}
       >
         {/* Close */}
@@ -69,7 +69,7 @@ export default function VideoModal({ open, onClose, src }: VideoModalProps) {
         {/* Video container */}
         <div
           className="relative overflow-hidden"
-          style={{ borderRadius: 20, border: '1px solid var(--line-amber)', background: '#000', aspectRatio: '16/9' }}
+          style={{ borderRadius: 20, border: '1px solid var(--line-amber)', background: '#000', aspectRatio: '9/16' }}
         >
           {src === '' ? (
             /* Placeholder — remplacer src par l'URL de la vidéo */

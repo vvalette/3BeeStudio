@@ -9,8 +9,7 @@ import Reveal from '@/components/ui/Reveal'
 import VideoModal from '@/components/ui/VideoModal'
 import NFCKeychain3D from '@/components/landing/NFCKeychain3D'
 
-// Remplacer par l'URL de la vraie vidéo (MP4 ou YouTube)
-const VIDEO_SRC = ''
+const VIDEO_SRC = '/video/video_demo_nfc_tag.mp4'
 
 function ArrowIcon() {
   return (
