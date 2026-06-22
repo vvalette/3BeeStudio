@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import type { ShopProduct } from '@/types/shop-product'
 import { effectivePrice } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
@@ -11,33 +11,88 @@ import { useCart } from './CartProvider'
 export default function AddToCartForm({ product }: { product: ShopProduct }) {
   const router = useRouter()
   const t = useTranslations('boutique.addToCart')
+  const locale = useLocale()
   const { addItem, open } = useCart()
   const [quantity, setQuantity] = useState(1)
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
 
   const maxQty = product.stock !== null ? product.stock : 99
   const effPrice = effectivePrice(product)
+  const hasCustomFields = product.custom_fields?.length > 0
 
-  const cartPayload = {
-    product_id:     product.id,
-    name:           product.name,
-    slug:           product.slug,
-    price:          effPrice,
-    original_price: product.sale_price !== null ? product.price : null,
-    image:          product.images[0] ?? null,
-    max_stock:      product.stock,
+  function validateFields(): boolean {
+    if (!hasCustomFields) return true
+    const errors: Record<string, boolean> = {}
+    for (const f of product.custom_fields) {
+      if (f.required && !fieldValues[f.key]?.trim()) errors[f.key] = true
+    }
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   function handleAdd() {
-    addItem(cartPayload, quantity)
+    if (!validateFields()) return
+    addItem({
+      product_id:          product.id,
+      name:                product.name,
+      slug:                product.slug,
+      price:               effPrice,
+      original_price:      product.sale_price !== null ? product.price : null,
+      image:               product.images[0] ?? null,
+      max_stock:           product.stock,
+      custom_field_values: hasCustomFields ? { ...fieldValues } : undefined,
+    }, quantity)
     open()
   }
 
   function handleBuyNow() {
+    if (!validateFields()) return
     router.push(`/boutique/commande?product=${product.id}&qty=${quantity}`)
   }
 
   return (
     <div className="space-y-4">
+      {/* Champs personnalisés */}
+      {hasCustomFields && (
+        <div className="space-y-3 rounded-xl border border-[var(--line)] bg-bg-1 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Personnalisation</p>
+          {product.custom_fields.map((field) => {
+            const label = (locale === 'en' && field.label_en) ? field.label_en : field.label
+            const hasError = fieldErrors[field.key]
+            return (
+              <div key={field.key}>
+                <label className="mb-1.5 block text-sm font-medium text-ink-1">
+                  {label}
+                  {field.required ? (
+                    <span className="ml-1 text-amber">*</span>
+                  ) : (
+                    <span className="ml-1.5 text-[11px] font-normal text-ink-3">(optionnel)</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  value={fieldValues[field.key] ?? ''}
+                  onChange={(e) => {
+                    setFieldValues((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    if (fieldErrors[field.key]) setFieldErrors((prev) => ({ ...prev, [field.key]: false }))
+                  }}
+                  autoComplete="off"
+                  className={[
+                    'w-full rounded-xl border px-4 py-2.5 text-sm text-ink-0 placeholder:text-ink-3 focus:outline-none transition-colors bg-bg-0',
+                    hasError ? 'border-red-400 focus:border-red-400' : 'border-[var(--line)] focus:border-amber',
+                  ].join(' ')}
+                  placeholder={label}
+                />
+                {hasError && (
+                  <p className="mt-1 text-[11px] text-red-400">Ce champ est obligatoire</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* Quantité */}
       <div className="flex items-center gap-3">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{t('quantity')}</span>
@@ -77,13 +132,15 @@ export default function AddToCartForm({ product }: { product: ShopProduct }) {
           </svg>
           {t('addToCartBtn')}
         </button>
-        <button
-          type="button"
-          onClick={handleBuyNow}
-          className="w-full cursor-pointer rounded-pill bg-amber py-3 font-bold text-bg-0 transition-opacity hover:opacity-90"
-        >
-          {t('buyNow', { price: formatPrice(effPrice * quantity) })}
-        </button>
+        {!hasCustomFields && (
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            className="w-full cursor-pointer rounded-pill bg-amber py-3 font-bold text-bg-0 transition-opacity hover:opacity-90"
+          >
+            {t('buyNow', { price: formatPrice(effPrice * quantity) })}
+          </button>
+        )}
       </div>
     </div>
   )

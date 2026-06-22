@@ -6,6 +6,13 @@ import { generateSlug } from '@/types/shop-product'
 import type { ShopProduct } from '@/types/shop-product'
 import { z } from 'zod'
 
+const customFieldSchema = z.object({
+  key:      z.string().min(1).max(50),
+  label:    z.string().min(1).max(80),
+  label_en: z.string().max(80).optional(),
+  required: z.boolean(),
+})
+
 const patchSchema = z.object({
   name:            z.string().min(2).max(120).optional(),
   slug:            z.string().optional(),
@@ -21,6 +28,7 @@ const patchSchema = z.object({
   active:          z.boolean().optional(),
   weight_grams:    z.number().int().positive().optional(),
   stl_url:         z.string().url().nullable().optional(),
+  custom_fields:   z.array(customFieldSchema).optional(),
 })
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -71,6 +79,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.active !== undefined)         updates.active         = d.active
   if (d.weight_grams !== undefined)   updates.weight_grams   = d.weight_grams
   if (d.stl_url !== undefined)        updates.stl_url        = d.stl_url
+  if (d.custom_fields !== undefined)  updates.custom_fields  = d.custom_fields
   if (d.slug !== undefined)           updates.slug           = d.slug
   else if (d.name && d.name !== product.name) updates.slug   = generateSlug(d.name)
   if (d.sale_price !== undefined)     updates.sale_price     = d.sale_price

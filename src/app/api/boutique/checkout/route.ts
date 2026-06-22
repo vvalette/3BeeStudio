@@ -8,8 +8,9 @@ import { z } from 'zod'
 
 const schema = z.object({
   items: z.array(z.object({
-    product_id: z.string().uuid(),
-    quantity:   z.number().int().min(1).max(100),
+    product_id:          z.string().uuid(),
+    quantity:            z.number().int().min(1).max(100),
+    custom_field_values: z.record(z.string().max(200)).optional(),
   })).min(1).max(20),
   email:         z.string().email(),
   name:          z.string().min(2),
@@ -51,10 +52,14 @@ export async function POST(req: Request) {
 
   const d = parsed.data
 
-  // Fusionne les quantités d'un même produit (sécurité)
-  const qtyByProduct = new Map<string, number>()
+  // Fusionne les quantités d'un même produit (sécurité) — conserve les custom_field_values du 1er item
+  const qtyByProduct = new Map<string, { quantity: number; custom_field_values?: Record<string, string> }>()
   for (const it of d.items) {
-    qtyByProduct.set(it.product_id, (qtyByProduct.get(it.product_id) ?? 0) + it.quantity)
+    const existing = qtyByProduct.get(it.product_id)
+    qtyByProduct.set(it.product_id, {
+      quantity:            (existing?.quantity ?? 0) + it.quantity,
+      custom_field_values: existing?.custom_field_values ?? it.custom_field_values,
+    })
   }
 
   // Récupère tous les produits en une requête (service_role — bypass RLS)
@@ -89,7 +94,8 @@ export async function POST(req: Request) {
   let subtotal = 0
 
   for (const product of products) {
-    const quantity  = qtyByProduct.get(product.id)!
+    const entry     = qtyByProduct.get(product.id)!
+    const quantity  = entry.quantity
     const unitPrice = product.sale_price ?? product.price
 
     if (product.stock !== null && product.stock < quantity)
@@ -119,11 +125,21 @@ export async function POST(req: Request) {
     }
 
     subtotal += unitPrice * quantity
+
+    // Enrichit les custom_field_values avec les libellés définis sur le produit
+    const rawCfv = entry.custom_field_values
+    const enrichedCfv = rawCfv && product.custom_fields?.length
+      ? product.custom_fields
+          .filter((f) => rawCfv[f.key] !== undefined)
+          .map((f) => ({ key: f.key, label: f.label, value: rawCfv[f.key] }))
+      : undefined
+
     orderItems.push({
       product_id:   product.id,
       product_name: product.name,
       quantity,
       unit_price:   unitPrice,
+      ...(enrichedCfv?.length ? { custom_field_values: enrichedCfv } : {}),
     })
   }
 
