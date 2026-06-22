@@ -4,27 +4,37 @@ import { Suspense, useState, useMemo } from 'react'
 import * as THREE from 'three'
 import { useTranslations } from 'next-intl'
 import { Canvas, useLoader } from '@react-three/fiber'
-import { OrbitControls, Center, Environment, Bounds } from '@react-three/drei'
+import { OrbitControls, Environment, Bounds } from '@react-three/drei'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 
 const AMBER = '#F59E0B'
 const DARK  = '#0A0A0B'
 
-function STLMesh({ url }: { url: string }) {
+function STLMesh({ url, userRot }: { url: string; userRot: [number, number, number] }) {
   const geometry = useLoader(STLLoader, url)
+
+  // Clone + center so the pivot is always the geometric center regardless of user rotation
+  const centered = useMemo(() => {
+    const g = geometry.clone()
+    g.computeBoundingBox()
+    g.center()
+    return g
+  }, [geometry])
+
   return (
-    <Center>
+    <group rotation={userRot}>
+      {/* -90° X : correction système de coordonnées STL (Z-up → Y-up) */}
       <group rotation={[-Math.PI / 2, 0, 0]}>
-        <mesh geometry={geometry} castShadow receiveShadow>
-          <meshStandardMaterial color="#F59E0B" roughness={0.4} metalness={0.1} />
+        <mesh geometry={centered} castShadow receiveShadow>
+          <meshStandardMaterial color={AMBER} roughness={0.4} metalness={0.1} />
         </mesh>
       </group>
-    </Center>
+    </group>
   )
 }
 
-function ThreeMFMesh({ url }: { url: string }) {
+function ThreeMFMesh({ url, userRot }: { url: string; userRot: [number, number, number] }) {
   const group = useLoader(ThreeMFLoader, url)
 
   const recolored = useMemo(() => {
@@ -49,19 +59,30 @@ function ThreeMFMesh({ url }: { url: string }) {
       node.material = replaced.length === 1 ? replaced[0] : replaced
     })
 
+    // Center the group so its bounding box center is at origin — pivot is always the geometric center
+    const box = new THREE.Box3().setFromObject(clone)
+    const center = box.getCenter(new THREE.Vector3())
+    clone.position.sub(center)
+
     return clone
   }, [group])
 
   return (
-    <Center>
+    <group rotation={userRot}>
       <primitive object={recolored} />
-    </Center>
+    </group>
   )
 }
 
-function Scene({ url }: { url: string }) {
+function Scene({ url, rotation }: { url: string; rotation?: { x: number; y: number; z: number } }) {
   const [autoRotate, setAutoRotate] = useState(true)
   const is3mf = url.toLowerCase().endsWith('.3mf')
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const userRot: [number, number, number] = [
+    toRad(rotation?.x ?? 0),
+    toRad(rotation?.y ?? 0),
+    toRad(rotation?.z ?? 0),
+  ]
   return (
     <>
       <ambientLight intensity={0.6} />
@@ -69,7 +90,7 @@ function Scene({ url }: { url: string }) {
       <directionalLight position={[-10, -10, -5]} intensity={0.3} />
       <Suspense fallback={null}>
         <Bounds fit clip observe margin={1.4}>
-          {is3mf ? <ThreeMFMesh url={url} /> : <STLMesh url={url} />}
+          {is3mf ? <ThreeMFMesh url={url} userRot={userRot} /> : <STLMesh url={url} userRot={userRot} />}
         </Bounds>
         <Environment preset="studio" />
       </Suspense>
@@ -95,12 +116,12 @@ function Loader({ label }: { label: string }) {
   )
 }
 
-export default function STLViewer({ url, height = 380, fill = false }: { url: string; height?: number; fill?: boolean }) {
+export default function STLViewer({ url, height = 380, fill = false, rotation }: { url: string; height?: number; fill?: boolean; rotation?: { x: number; y: number; z: number } }) {
   const t = useTranslations('boutique.viewer')
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1"
-      style={fill ? { height: '100%' } : { height }}
+      className={fill ? 'relative w-full h-full overflow-hidden bg-bg-1' : 'relative w-full overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1'}
+      style={fill ? undefined : { height }}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >
@@ -116,7 +137,7 @@ export default function STLViewer({ url, height = 380, fill = false }: { url: st
       </div>
 
       <Canvas camera={{ fov: 45 }} shadows gl={{ antialias: true }}>
-        <Scene url={url} />
+        <Scene url={url} rotation={rotation} />
       </Canvas>
 
       <Suspense fallback={<Loader label={t('loading')} />}><></></Suspense>

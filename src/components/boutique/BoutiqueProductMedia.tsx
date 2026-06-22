@@ -43,7 +43,7 @@ export default function BoutiqueProductMedia({ product }: { product: ShopProduct
       {/* Visuel principal */}
       <div className={`aspect-square w-full overflow-hidden rounded-2xl bg-bg-1 ${tab === '3d' && has3D ? '' : 'border border-[var(--line)]'}`}>
         {tab === '3d' && has3D ? (
-          <STLViewerWrapper url={product.stl_url!} fill />
+          <STLViewerWrapper url={product.stl_url!} fill rotation={product.model_rotation ?? undefined} />
         ) : hasImages ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={product.images[active]} alt={product.name} className="h-full w-full object-cover" />

@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const revalidate = 60
 
 export default async function HomePage() {
-  const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category'
+  const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category, model_rotation'
 
   const { data: featuredData } = await supabase
     .from('shop_products')

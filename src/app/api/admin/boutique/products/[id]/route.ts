@@ -31,6 +31,7 @@ const patchSchema = z.object({
   custom_fields:   z.array(customFieldSchema).optional(),
   category:        z.string().max(80).nullable().optional(),
   featured:        z.boolean().optional(),
+  model_rotation:  z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable().optional(),
 })
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -84,6 +85,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.custom_fields !== undefined)  updates.custom_fields  = d.custom_fields
   if (d.category !== undefined)       updates.category       = d.category
   if (d.featured !== undefined)       updates.featured       = d.featured
+  if (d.model_rotation !== undefined) updates.model_rotation = d.model_rotation
   if (d.slug !== undefined)           updates.slug           = d.slug
   else if (d.name && d.name !== product.name) updates.slug   = generateSlug(d.name)
   if (d.sale_price !== undefined)     updates.sale_price     = d.sale_price
