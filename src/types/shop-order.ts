@@ -11,6 +11,7 @@ export interface ShopOrderItem {
   product_name: string
   quantity: number
   unit_price: number // centimes
+  custom_field_values?: Array<{ key: string; label: string; value: string }>
 }
 
 export interface ShopOrder {

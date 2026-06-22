@@ -7,4 +7,5 @@ export interface CartItem {
   image: string | null
   quantity: number
   max_stock: number | null    // null = illimité
+  custom_field_values?: Record<string, string>
 }

@@ -170,13 +170,25 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
 
             {/* Articles */}
             <Card title="Articles commandés">
-              <ul className="space-y-2.5">
+              <ul className="space-y-4">
                 {order.items.map((item, i) => (
-                  <li key={i} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="text-ink-1">
-                      <span className="font-mono text-ink-3">{item.quantity}×</span> {item.product_name}
-                    </span>
-                    <span className="font-mono text-ink-2">{formatPrice(item.unit_price * item.quantity)}</span>
+                  <li key={i} className="space-y-2">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="text-ink-1">
+                        <span className="font-mono text-ink-3">{item.quantity}×</span> {item.product_name}
+                      </span>
+                      <span className="font-mono text-ink-2">{formatPrice(item.unit_price * item.quantity)}</span>
+                    </div>
+                    {item.custom_field_values && item.custom_field_values.length > 0 && (
+                      <ul className="ml-4 space-y-1 rounded-lg border border-[var(--line-amber)] bg-amber/5 px-3 py-2">
+                        {item.custom_field_values.map((cfv) => (
+                          <li key={cfv.key} className="flex items-baseline gap-2 text-[12px]">
+                            <span className="shrink-0 text-ink-3">{cfv.label} :</span>
+                            <span className="font-semibold text-ink-0">{cfv.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -71,7 +71,11 @@ export default function CheckoutClient({ forcedItems }: Props) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+        items: items.map((i) => ({
+          product_id: i.product_id,
+          quantity:   i.quantity,
+          ...(i.custom_field_values ? { custom_field_values: i.custom_field_values } : {}),
+        })),
         email,
         name,
         phone: phone || undefined,

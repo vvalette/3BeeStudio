@@ -1,3 +1,10 @@
+export interface ProductCustomField {
+  key: string
+  label: string
+  label_en?: string
+  required: boolean
+}
+
 export interface ShopProduct {
   id: string
   created_at: string
@@ -18,6 +25,7 @@ export interface ShopProduct {
   stripe_product_id: string | null
   stripe_price_id: string | null
   stl_url: string | null
+  custom_fields: ProductCustomField[]
 }
 
 export const SHOP_FREE_SHIPPING_THRESHOLD = 5000 // 50 € en centimes

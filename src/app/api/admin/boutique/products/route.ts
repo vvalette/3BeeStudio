@@ -5,6 +5,13 @@ import { isAuthenticated } from '@/lib/auth'
 import { generateSlug } from '@/types/shop-product'
 import { z } from 'zod'
 
+const customFieldSchema = z.object({
+  key:      z.string().min(1).max(50),
+  label:    z.string().min(1).max(80),
+  label_en: z.string().max(80).optional(),
+  required: z.boolean(),
+})
+
 const createSchema = z.object({
   name:            z.string().min(2).max(120),
   slug:            z.string().optional(),
@@ -20,6 +27,7 @@ const createSchema = z.object({
   active:          z.boolean().default(true),
   weight_grams:    z.number().int().positive().default(100),
   stl_url:         z.string().url().nullable().optional(),
+  custom_fields:   z.array(customFieldSchema).default([]),
 })
 
 export async function GET() {
@@ -78,6 +86,7 @@ export async function POST(req: Request) {
       active:            d.active,
       weight_grams:      d.weight_grams,
       stl_url:           d.stl_url ?? null,
+      custom_fields:     d.custom_fields,
       stripe_product_id: stripeProduct.id,
       stripe_price_id:   stripePrice.id,
     })
