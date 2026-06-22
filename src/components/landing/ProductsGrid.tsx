@@ -7,15 +7,15 @@ import BoutiqueProductCard from '@/components/boutique/BoutiqueProductCard'
 
 interface Props {
   products: ShopProduct[]
-  heading?: string
-  subtitle?: string
+  popular?: boolean
 }
 
-export default async function ProductsGrid({ products, heading, subtitle }: Props) {
+export default async function ProductsGrid({ products, popular = false }: Props) {
   const t = await getTranslations('productsGrid')
 
-  const displayHeading = heading || t('heading')
-  const displaySubtitle = subtitle || t('subtitle')
+  const displayEyebrow  = popular ? t('popularEyebrow')  : t('eyebrow')
+  const displayHeading  = popular ? t('popularHeading')  : t('heading')
+  const displaySubtitle = popular ? t('popularSubtitle') : t('subtitle')
 
   if (products.length === 0) return null
 
@@ -26,7 +26,7 @@ export default async function ProductsGrid({ products, heading, subtitle }: Prop
         <Reveal className="mb-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
+              <div className="mb-3"><Eyebrow>{displayEyebrow}</Eyebrow></div>
               <h2
                 className="font-sans font-bold text-ink-0"
                 style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}

@@ -147,6 +147,9 @@
     "eyebrow": "Boutique",
     "heading": "Nos pièces signature.",
     "subtitle": "Objets imprimés à la main dans nos studios. Chaque pièce est unique.",
+    "popularEyebrow": "Boutique · Coups de cœur",
+    "popularHeading": "Nos favoris du moment.",
+    "popularSubtitle": "Une sélection de nos pièces les plus appréciées, imprimées à la main en France.",
     "viewAll": "TOUT VOIR →",
     "comingSoon": "Bientôt disponible",
     "bannerTitle": "La boutique arrive<br></br><honey>très bientôt.</honey>",
@@ -745,7 +748,13 @@
       "cancelBanner": "Paiement annulé — votre panier a été conservé.",
       "empty": "Les produits arrivent bientôt…",
       "metaTitle": "Boutique — 3BeeStudio",
-      "metaDescription": "Objets imprimés en 3D à la main dans nos studios français. Décoration, accessoires, pièces uniques."
+      "metaDescription": "Objets imprimés en 3D à la main dans nos studios français. Décoration, accessoires, pièces uniques.",
+      "tabs": {
+        "popular": "Populaire",
+        "all": "Tout voir"
+      },
+      "tabEmpty": "Aucun produit dans cette catégorie pour l'instant.",
+      "popularBadge": "Populaire"
     },
     "product": {
       "breadcrumb": "Boutique",

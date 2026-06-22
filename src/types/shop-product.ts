@@ -26,6 +26,8 @@ export interface ShopProduct {
   stripe_price_id: string | null
   stl_url: string | null
   custom_fields: ProductCustomField[]
+  category: string | null
+  featured: boolean
 }
 
 export const SHOP_FREE_SHIPPING_THRESHOLD = 5000 // 50 € en centimes

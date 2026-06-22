@@ -31,14 +31,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const revalidate = 60
 
 export default async function HomePage() {
-  const { data: productsData } = await supabase
+  const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category'
+
+  const { data: featuredData } = await supabase
     .from('shop_products')
-    .select('id, name, slug, subtitle, description, price, images, stock, stl_url')
+    .select(SELECT)
+    .eq('active', true)
+    .eq('featured', true)
+    .order('created_at', { ascending: false })
+    .limit(8)
+
+  const hasFeatured = (featuredData ?? []).length > 0
+
+  const { data: fallbackData } = hasFeatured ? { data: null } : await supabase
+    .from('shop_products')
+    .select(SELECT)
     .eq('active', true)
     .order('created_at', { ascending: false })
     .limit(8)
 
-  const products = (productsData ?? []) as ShopProduct[]
+  const products = ((hasFeatured ? featuredData : fallbackData) ?? []) as ShopProduct[]
 
   return (
     <div className="bg-bg-0 text-ink-0 w-full">
@@ -46,7 +58,7 @@ export default async function HomePage() {
       <Hero />
       <NFCSection />
       <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
-      <ProductsGrid products={products} />
+      <ProductsGrid products={products} popular={hasFeatured} />
       <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
       <CustomCTA />
       <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />

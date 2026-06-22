@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import type { ShopProduct, ProductCustomField } from '@/types/shop-product'
 import { generateSlug } from '@/types/shop-product'
+import type { ShopCategoryRow } from '@/types/shop-category'
+import Select from '@/components/ui/Select'
 import { formatPrice } from '@/lib/utils'
 import ImageCropModal from './ImageCropModal'
 
 interface Props {
   product?: ShopProduct
+  initialCategories?: ShopCategoryRow[]
 }
 
 // ── Upload image ───────────────────────────────────────────────────────────────
@@ -185,13 +188,20 @@ function StlUpload({ stlUrl, onChange }: { stlUrl: string | null; onChange: (url
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'model/stl': ['.stl'], 'application/octet-stream': ['.stl'], 'application/vnd.ms-pki.stl': ['.stl'] },
+    accept: {
+      'model/stl':                    ['.stl'],
+      'model/3mf':                    ['.3mf'],
+      'application/octet-stream':     ['.stl', '.3mf'],
+      'application/vnd.ms-pki.stl':   ['.stl'],
+      'application/vnd.ms-3mfdocument': ['.3mf'],
+    },
     maxFiles: 1,
     disabled: uploading,
   })
 
   if (stlUrl) {
     const filename = decodeURIComponent(stlUrl.split('/').pop() ?? stlUrl).replace(/^\d+-[a-z0-9]+\./, '')
+    const fileExt  = filename.split('.').pop()?.toUpperCase() ?? 'STL'
     return (
       <div className="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber shrink-0">
@@ -199,7 +209,7 @@ function StlUpload({ stlUrl, onChange }: { stlUrl: string | null; onChange: (url
         </svg>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-ink-0">{filename}</p>
-          <p className="text-[11px] text-ink-3">Fichier STL chargé</p>
+          <p className="text-[11px] text-ink-3">Modèle {fileExt} chargé</p>
         </div>
         <button
           type="button"
@@ -233,8 +243,8 @@ function StlUpload({ stlUrl, onChange }: { stlUrl: string | null; onChange: (url
           </svg>
         )}
         <div>
-          <p className="text-sm font-medium">{uploading ? 'Upload en cours…' : 'Glisser ou cliquer pour ajouter un fichier STL'}</p>
-          <p className="text-[11px]">Format .stl · max 50 Mo</p>
+          <p className="text-sm font-medium">{uploading ? 'Upload en cours…' : 'Glisser ou cliquer pour ajouter un modèle 3D'}</p>
+          <p className="text-[11px]">Format .stl ou .3mf · max 50 Mo</p>
         </div>
       </div>
       {error && <p className="text-[12px] text-red-400">{error}</p>}
@@ -244,7 +254,7 @@ function StlUpload({ stlUrl, onChange }: { stlUrl: string | null; onChange: (url
 
 // ── Formulaire principal ───────────────────────────────────────────────────────
 
-export default function AdminBoutiqueProductForm({ product }: Props) {
+export default function AdminBoutiqueProductForm({ product, initialCategories = [] }: Props) {
   const router = useRouter()
   const isEdit = !!product
 
@@ -265,12 +275,45 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
   const [stock, setStock]             = useState(product?.stock !== null && product?.stock !== undefined ? String(product.stock) : '')
   const [weightGrams, setWeightGrams] = useState(product ? String(product.weight_grams) : '100')
   const [customFields, setCustomFields] = useState<ProductCustomField[]>(product?.custom_fields ?? [])
+  const [categories, setCategories]   = useState<ShopCategoryRow[]>(initialCategories)
+  const [category, setCategory]       = useState<string>(product?.category ?? '')
+  const [featured, setFeatured]       = useState(product?.featured ?? false)
+  // Création inline de catégorie
+  const [showNewCat, setShowNewCat]   = useState(false)
+  const [newCatLabel, setNewCatLabel] = useState('')
+  const [newCatLabelEn, setNewCatLabelEn] = useState('')
+  const [newCatSaving, setNewCatSaving]   = useState(false)
+  const [newCatError, setNewCatError]     = useState<string | null>(null)
   const [active, setActive]           = useState(product?.active ?? true)
   const [saving, setSaving]           = useState(false)
   const [deleting, setDeleting]       = useState(false)
   const [error, setError]             = useState<string | null>(null)
 
   const slugValue = slug || (name ? generateSlug(name) : '')
+
+  async function handleCreateCategory(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newCatLabel.trim()) return
+    setNewCatError(null)
+    setNewCatSaving(true)
+    const res = await fetch('/api/admin/boutique/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label: newCatLabel.trim(), label_en: newCatLabelEn.trim() || undefined }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setNewCatError(data.error ?? 'Erreur lors de la création')
+      setNewCatSaving(false)
+      return
+    }
+    setCategories((prev) => [...prev, data])
+    setCategory(data.key)
+    setShowNewCat(false)
+    setNewCatLabel('')
+    setNewCatLabelEn('')
+    setNewCatSaving(false)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -308,6 +351,8 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
       weight_grams: parseInt(weightGrams, 10) || 100,
       active,
       custom_fields: customFields,
+      category: category || null,
+      featured,
     }
 
     const url    = isEdit ? `/api/admin/boutique/products/${product!.id}` : '/api/admin/boutique/products'
@@ -512,8 +557,8 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
 
           {/* Fichier STL */}
           <div>
-            <label className={labelClass}>Modèle 3D (.stl) — optionnel</label>
-            <p className="mb-2 text-[11px] text-ink-3">Permet au client de visualiser le produit en 3D sur la fiche produit.</p>
+            <label className={labelClass}>Modèle 3D (.stl / .3mf) — optionnel</label>
+            <p className="mb-2 text-[11px] text-ink-3">Permet au client de visualiser le produit en 3D. Le format .3mf supporte les couleurs multiples.</p>
             <StlUpload stlUrl={stlUrl} onChange={setStlUrl} />
           </div>
 
@@ -603,6 +648,90 @@ export default function AdminBoutiqueProductForm({ product }: Props) {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Catégorie + Mis en avant */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className={labelClass}>Catégorie</label>
+              <Select
+                value={category}
+                onChange={setCategory}
+                placeholder="— Aucune catégorie —"
+                options={[
+                  { value: '', label: '— Aucune catégorie —' },
+                  ...categories.map((cat) => ({ value: cat.key, label: cat.label })),
+                ]}
+              />
+
+              {/* Création inline */}
+              {!showNewCat ? (
+                <button
+                  type="button"
+                  onClick={() => setShowNewCat(true)}
+                  className="flex cursor-pointer items-center gap-1.5 text-[11px] font-medium text-ink-3 hover:text-amber transition-colors"
+                >
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 3v10M3 8h10" /></svg>
+                  Nouvelle catégorie
+                </button>
+              ) : (
+                <form onSubmit={handleCreateCategory} className="rounded-xl border border-[var(--line-amber)] bg-amber/5 p-3 space-y-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-amber">Nouvelle catégorie</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-ink-3 mb-1">Libellé FR *</label>
+                      <input
+                        className={inputClass}
+                        value={newCatLabel}
+                        onChange={(e) => setNewCatLabel(e.target.value)}
+                        placeholder="Ex : Jeux & Loisirs"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-ink-3 mb-1">Libellé EN</label>
+                      <input
+                        className={inputClass}
+                        value={newCatLabelEn}
+                        onChange={(e) => setNewCatLabelEn(e.target.value)}
+                        placeholder="E.g. Games & Leisure"
+                      />
+                    </div>
+                  </div>
+                  {newCatError && <p className="text-[11px] text-red-400">{newCatError}</p>}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={newCatSaving || !newCatLabel.trim()}
+                      className="cursor-pointer rounded-lg bg-amber px-3 py-1.5 text-[12px] font-bold text-bg-0 hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      {newCatSaving ? 'Création…' : 'Créer'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowNewCat(false); setNewCatLabel(''); setNewCatLabelEn(''); setNewCatError(null) }}
+                      className="cursor-pointer rounded-lg border border-[var(--line)] px-3 py-1.5 text-[12px] text-ink-3 hover:text-ink-1 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+            <div className="flex flex-col justify-end pb-0.5">
+              <label className={labelClass}>Mise en avant</label>
+              <button
+                type="button"
+                onClick={() => setFeatured((v) => !v)}
+                className={['flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all', featured ? 'border-amber/40 bg-amber/10 text-amber' : 'border-[var(--line)] bg-bg-1 text-ink-3'].join(' ')}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={featured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {featured ? 'Populaire' : 'Non mis en avant'}
+              </button>
+            </div>
           </div>
 
           {/* Poids + Actif */}

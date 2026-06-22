@@ -1,11 +1,15 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useMemo } from 'react'
+import * as THREE from 'three'
 import { useTranslations } from 'next-intl'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, Center, Environment, Bounds } from '@react-three/drei'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
+
+const AMBER = '#F59E0B'
+const DARK  = '#0A0A0B'
 
 function STLMesh({ url }: { url: string }) {
   const geometry = useLoader(STLLoader, url)
@@ -22,9 +26,35 @@ function STLMesh({ url }: { url: string }) {
 
 function ThreeMFMesh({ url }: { url: string }) {
   const group = useLoader(ThreeMFLoader, url)
+
+  const recolored = useMemo(() => {
+    const clone  = group.clone(true)
+    const matMap = new Map<string, THREE.MeshStandardMaterial>()
+    let count = 0
+
+    clone.traverse((node) => {
+      if (!(node instanceof THREE.Mesh)) return
+      const originals: THREE.Material[] = Array.isArray(node.material) ? node.material : [node.material]
+      const replaced = originals.map((m) => {
+        if (!matMap.has(m.uuid)) {
+          matMap.set(m.uuid, new THREE.MeshStandardMaterial({
+            color:     count === 0 ? AMBER : DARK,
+            roughness: 0.4,
+            metalness: count === 0 ? 0.15 : 0.05,
+          }))
+          count++
+        }
+        return matMap.get(m.uuid)!
+      })
+      node.material = replaced.length === 1 ? replaced[0] : replaced
+    })
+
+    return clone
+  }, [group])
+
   return (
     <Center>
-      <primitive object={group} />
+      <primitive object={recolored} />
     </Center>
   )
 }

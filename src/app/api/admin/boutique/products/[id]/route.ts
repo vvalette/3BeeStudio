@@ -29,6 +29,8 @@ const patchSchema = z.object({
   weight_grams:    z.number().int().positive().optional(),
   stl_url:         z.string().url().nullable().optional(),
   custom_fields:   z.array(customFieldSchema).optional(),
+  category:        z.string().max(80).nullable().optional(),
+  featured:        z.boolean().optional(),
 })
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -80,6 +82,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.weight_grams !== undefined)   updates.weight_grams   = d.weight_grams
   if (d.stl_url !== undefined)        updates.stl_url        = d.stl_url
   if (d.custom_fields !== undefined)  updates.custom_fields  = d.custom_fields
+  if (d.category !== undefined)       updates.category       = d.category
+  if (d.featured !== undefined)       updates.featured       = d.featured
   if (d.slug !== undefined)           updates.slug           = d.slug
   else if (d.name && d.name !== product.name) updates.slug   = generateSlug(d.name)
   if (d.sale_price !== undefined)     updates.sale_price     = d.sale_price

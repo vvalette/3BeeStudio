@@ -1,9 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import type { ShopProduct } from '@/types/shop-product'
+import type { ShopCategoryRow } from '@/types/shop-category'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@/i18n/routing'
-import BoutiqueProductCard from '@/components/boutique/BoutiqueProductCard'
+import BoutiqueCatalog from '@/components/boutique/BoutiqueCatalog'
 
 export const revalidate = 60
 
@@ -26,13 +27,13 @@ export default async function BoutiquePage({ params, searchParams }: Props) {
   const { cancelled } = await searchParams
   const t = await getTranslations({ locale, namespace: 'boutique.page' })
 
-  const { data } = await supabase
-    .from('shop_products')
-    .select('*')
-    .eq('active', true)
-    .order('created_at', { ascending: false })
+  const [{ data: productsData }, { data: catsData }] = await Promise.all([
+    supabase.from('shop_products').select('*').eq('active', true).order('created_at', { ascending: false }),
+    supabase.from('shop_categories').select('*').order('sort_order').order('created_at'),
+  ])
 
-  const products = (data ?? []) as ShopProduct[]
+  const products   = (productsData ?? []) as ShopProduct[]
+  const categories = (catsData ?? []) as ShopCategoryRow[]
 
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-8 pb-16">
@@ -56,17 +57,13 @@ export default async function BoutiquePage({ params, searchParams }: Props) {
           </div>
         )}
 
-        {/* Grille produits */}
+        {/* Catalogue avec tabs catégories */}
         {products.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--line)] py-24 text-center">
             <p className="text-ink-3">{t('empty')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <BoutiqueProductCard key={product.id} product={product} locale={locale} />
-            ))}
-          </div>
+          <BoutiqueCatalog products={products} categories={categories} locale={locale} />
         )}
       </div>
     </main>
