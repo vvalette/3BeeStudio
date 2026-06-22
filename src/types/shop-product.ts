@@ -28,6 +28,7 @@ export interface ShopProduct {
   custom_fields: ProductCustomField[]
   category: string | null
   featured: boolean
+  model_rotation: { x: number; y: number; z: number } | null
 }
 
 export const SHOP_FREE_SHIPPING_THRESHOLD = 5000 // 50 € en centimes

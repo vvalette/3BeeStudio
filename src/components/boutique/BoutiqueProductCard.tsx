@@ -110,7 +110,7 @@ export default function BoutiqueProductCard({
       onClick={() => { if (!wasDrag.current) router.push(`/boutique/${product.slug}`) }}
     >
       {/* Visuel */}
-      <div className="relative w-full overflow-hidden bg-bg-2" style={{ height: 220 }}>
+      <div className="relative w-full overflow-hidden bg-bg-2 aspect-[4/3]">
 
         {/* Couches empilées — toutes montées, opacité gère la visibilité */}
         {has3D && (
@@ -118,7 +118,7 @@ export default function BoutiqueProductCard({
             className="absolute inset-0 transition-opacity duration-700"
             style={{ opacity: active.type === '3d' ? 1 : 0, pointerEvents: active.type === '3d' ? 'auto' : 'none' }}
           >
-            <STLViewerWrapper url={product.stl_url!} height={220} />
+            <STLViewerWrapper url={product.stl_url!} fill rotation={product.model_rotation ?? undefined} />
           </div>
         )}
 

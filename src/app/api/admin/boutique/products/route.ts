@@ -30,6 +30,7 @@ const createSchema = z.object({
   custom_fields:   z.array(customFieldSchema).default([]),
   category:        z.string().max(80).nullable().optional(),
   featured:        z.boolean().default(false),
+  model_rotation:  z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable().optional(),
 })
 
 export async function GET() {
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
       custom_fields:     d.custom_fields,
       category:          d.category ?? null,
       featured:          d.featured,
+      model_rotation:    d.model_rotation ?? { x: 0, y: 0, z: 0 },
       stripe_product_id: stripeProduct.id,
       stripe_price_id:   stripePrice.id,
     })
