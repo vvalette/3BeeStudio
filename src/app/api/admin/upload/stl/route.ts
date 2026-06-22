@@ -17,16 +17,20 @@ export async function POST(req: Request) {
   if (file.size > MAX_SIZE)
     return NextResponse.json({ error: 'Fichier trop lourd (max 50 Mo)' }, { status: 400 })
 
-  // Vérifier l'extension (le MIME type des .stl n'est pas standardisé)
+  // Vérifier l'extension (les MIME types de ces formats 3D ne sont pas standardisés)
   const name = file.name.toLowerCase()
-  if (!name.endsWith('.stl'))
-    return NextResponse.json({ error: 'Seul le format STL est accepté' }, { status: 400 })
+  const is3mf = name.endsWith('.3mf')
+  const isStl = name.endsWith('.stl')
+  if (!isStl && !is3mf)
+    return NextResponse.json({ error: 'Seuls les formats STL et 3MF sont acceptés' }, { status: 400 })
 
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.stl`
+  const ext      = is3mf ? '3mf' : 'stl'
+  const mimeType = is3mf ? 'model/3mf' : 'model/stl'
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   const { error } = await supabaseAdmin.storage
     .from('stl-files')
-    .upload(filename, file, { contentType: 'model/stl', upsert: false })
+    .upload(filename, file, { contentType: mimeType, upsert: false })
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 })

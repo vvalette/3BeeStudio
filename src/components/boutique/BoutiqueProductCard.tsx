@@ -12,7 +12,17 @@ const SLIDE_DURATION = 5000
 
 type Slide = { type: '3d' } | { type: 'photo'; index: number }
 
-export default function BoutiqueProductCard({ product, locale }: { product: ShopProduct; locale?: string }) {
+export default function BoutiqueProductCard({
+  product,
+  locale,
+  showPopularBadge = false,
+  popularLabel = 'Populaire',
+}: {
+  product: ShopProduct
+  locale?: string
+  showPopularBadge?: boolean
+  popularLabel?: string
+}) {
   const router  = useRouter()
   const t = useTranslations('boutique.card')
   const wasDrag = useRef(false)
@@ -178,14 +188,20 @@ export default function BoutiqueProductCard({ product, locale }: { product: Shop
           </div>
         )}
 
-        {/* Badge promo */}
-        {discount !== null && !outOfStock && (
-          <div className="absolute left-2.5 top-2.5 z-10">
+        {/* Badges top-left */}
+        <div className="absolute left-2.5 top-2.5 z-10 flex flex-col gap-1.5">
+          {discount !== null && !outOfStock && (
             <span className="rounded-pill border border-red-500/30 bg-red-500/80 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
               -{discount}%
             </span>
-          </div>
-        )}
+          )}
+          {showPopularBadge && (
+            <span className="flex items-center gap-1 rounded-pill border border-amber/40 bg-bg-0/90 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-amber backdrop-blur-sm">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+              {popularLabel}
+            </span>
+          )}
+        </div>
 
         {outOfStock && (
           <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(10,10,11,0.6)' }}>

@@ -28,6 +28,8 @@ const createSchema = z.object({
   weight_grams:    z.number().int().positive().default(100),
   stl_url:         z.string().url().nullable().optional(),
   custom_fields:   z.array(customFieldSchema).default([]),
+  category:        z.string().max(80).nullable().optional(),
+  featured:        z.boolean().default(false),
 })
 
 export async function GET() {
@@ -87,6 +89,8 @@ export async function POST(req: Request) {
       weight_grams:      d.weight_grams,
       stl_url:           d.stl_url ?? null,
       custom_fields:     d.custom_fields,
+      category:          d.category ?? null,
+      featured:          d.featured,
       stripe_product_id: stripeProduct.id,
       stripe_price_id:   stripePrice.id,
     })
