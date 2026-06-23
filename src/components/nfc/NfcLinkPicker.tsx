@@ -224,16 +224,16 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
                 border: '1.5px solid rgba(245,158,11,0.6)',
                 boxShadow: '0 0 20px rgba(245,158,11,0.12)',
               } : {
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'var(--hi-03)',
+                border: '1px solid var(--line-07)',
               }}
             >
-              <span style={{ color: active ? '#F59E0B' : '#87878E' }} className="transition-colors">
+              <span style={{ color: active ? '#F59E0B' : 'var(--ink-2)' }} className="transition-colors">
                 {tp.icon}
               </span>
               <span
                 className="text-[11px] font-medium transition-colors"
-                style={{ color: active ? '#F59E0B' : '#C9C9CE' }}
+                style={{ color: active ? '#F59E0B' : 'var(--ink-1)' }}
               >
                 {t(`types.${tp.id}.label`)}
               </span>
@@ -294,8 +294,8 @@ export default function NfcLinkPicker({ value, onChange, error }: Props) {
         <div
           className="flex items-center overflow-hidden rounded-xl transition-all"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${error ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.08)'}`,
+            background: 'var(--hi-04)',
+            border: `1px solid ${error ? 'rgba(248,113,113,0.5)' : 'var(--line-08)'}`,
           }}
         >
           {cfg.prefix ? (
@@ -389,13 +389,13 @@ function VCardMeter({ vcard }: { vcard: string }) {
   return (
     <div
       className="space-y-2 rounded-xl p-3"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ background: 'var(--hi-03)', border: '1px solid var(--line-07)' }}
     >
       <div className="flex items-center justify-between text-[11px]">
         <span className="text-ink-3">{t('meter.label')}</span>
         <span className="font-mono font-semibold" style={{ color }}>{t('meter.bytes', { bytes, limit: NFC_CHIP_BYTE_LIMIT })}</span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+      <div className="h-1 overflow-hidden rounded-full" style={{ background: 'var(--line-08)' }}>
         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, background: color }} />
       </div>
       {over ? (
@@ -421,14 +421,14 @@ function ContactInput({ icon, value, onChange, placeholder, type = 'text', requi
   const filled = value.trim().length > 0
   const borderColor = error
     ? 'rgba(248,113,113,0.5)'
-    : filled ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.08)'
+    : filled ? 'rgba(245,158,11,0.3)' : 'var(--line-08)'
   return (
     <div>
       <div
         className="flex items-center overflow-hidden rounded-xl transition-colors"
-        style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${borderColor}` }}
+        style={{ background: 'var(--hi-04)', border: `1px solid ${borderColor}` }}
       >
-        <span className="pl-3.5 transition-colors" style={{ color: error ? '#f87171' : filled ? '#F59E0B' : '#54545A' }}>{icon}</span>
+        <span className="pl-3.5 transition-colors" style={{ color: error ? '#f87171' : filled ? '#F59E0B' : 'var(--ink-3)' }}>{icon}</span>
         <input
           type={type}
           value={value}

@@ -137,7 +137,7 @@ export default async function SuiviPage({
 
             <div
               className="relative mt-5 inline-flex items-center gap-2 rounded-pill px-4 py-2"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line-amber)' }}
+              style={{ background: 'var(--hi-04)', border: '1px solid var(--line-amber)' }}
             >
               <span className="text-[11px] text-ink-3">{t('success.reference')}</span>
               <span className="font-mono text-xs font-semibold tracking-wider text-amber-soft">
@@ -319,13 +319,13 @@ export default async function SuiviPage({
             <div className="flex items-center gap-4">
               <div
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line-amber)' }}
+                style={{ background: 'var(--hi-04)', border: '1px solid var(--line-amber)' }}
               >
                 {o.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={o.logo_url} alt={t('order.logoAlt', { company: o.company })} className="h-10 w-10 object-contain" />
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#54545A" strokeWidth="1.3">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" strokeWidth="1.3">
                     <rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
@@ -337,7 +337,7 @@ export default async function SuiviPage({
                 <p className="mt-0.5 truncate text-xs text-ink-3">{o.company}</p>
                 <span
                   className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-pill px-2 py-0.5"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}
+                  style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}
                 >
                   <span className="flex shrink-0 text-ink-3"><DestinationIcon value={o.nfc_url} size={10} /></span>
                   <span className="truncate font-mono text-[10px] text-ink-2">{formatDestination(o.nfc_url)}</span>

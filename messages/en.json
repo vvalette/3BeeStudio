@@ -7,7 +7,9 @@
     "contact": "Contact us",
     "home": "3BeeStudio — home",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
   },
   "footer": {
     "tagline1": "3D design studio and made-to-order manufacturing.",

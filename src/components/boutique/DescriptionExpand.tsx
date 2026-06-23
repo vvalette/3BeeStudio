@@ -39,7 +39,7 @@ export default function DescriptionExpand({ text }: { text: string }) {
         {!expanded && overflows && (
           <div
             className="absolute bottom-0 left-0 right-0 h-14 pointer-events-none"
-            style={{ background: 'linear-gradient(to top, #0A0A0B, transparent)' }}
+            style={{ background: 'linear-gradient(to top, var(--bg-0), transparent)' }}
           />
         )}
       </div>

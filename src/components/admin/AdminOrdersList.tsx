@@ -367,17 +367,17 @@ export default function AdminOrdersList({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(section === 'nfc' ? [
             { label: 'CA NFC encaissé',    value: formatPrice(stats.nfcRevenue),   accent: '#F59E0B', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
-            { label: 'Commandes NFC',      value: String(stats.nfcTotal),          accent: '#C9C9CE', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /></svg> },
+            { label: 'Commandes NFC',      value: String(stats.nfcTotal),          accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /></svg> },
             { label: 'En production',      value: String(stats.nfcProduction),     accent: '#fb923c', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" /></svg> },
             { label: 'Étiquettes à faire', value: String(stats.nfcNoLabel),        accent: '#a3e635', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8.6 1.5H14v5.4l-7 7-5.4-5.4 7-7z" /><circle cx="11" cy="4.6" r="1" fill="currentColor" stroke="none" /></svg> },
           ] : section === 'custom' ? [
             { label: 'CA acomptes reçus',  value: formatPrice(stats.customRevenue), accent: '#F59E0B', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
-            { label: 'Demandes totales',   value: String(stats.customTotal),        accent: '#C9C9CE', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /></svg> },
+            { label: 'Demandes totales',   value: String(stats.customTotal),        accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /></svg> },
             { label: 'Devis à envoyer',    value: String(stats.customPending),      accent: '#fbbf24', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H3a1 1 0 00-1 1v10l3-2h8a1 1 0 001-1V3a1 1 0 00-1-1z" /></svg> },
             { label: 'En production',      value: String(stats.customProduction),   accent: '#fb923c', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" /></svg> },
           ] : [
             { label: 'CA boutique',    value: formatPrice(stats.shopRevenue),  accent: '#38bdf8', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
-            { label: 'Commandes',      value: String(stats.shopTotal),         accent: '#C9C9CE', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
+            { label: 'Commandes',      value: String(stats.shopTotal),         accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
             { label: 'À traiter',      value: String(stats.shopActive),        accent: '#fbbf24', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 2" /></svg> },
             { label: 'En traitement',  value: String(stats.shopProduction),    accent: '#fb923c', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" /></svg> },
           ]).map((s) => (
@@ -660,12 +660,12 @@ function NfcList({
 
             {/* Contenu cliquable */}
             <Link href={`/admin/commandes/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
-              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}>
+              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 {order.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={order.logo_url} alt="" className="h-8 w-8 object-contain" />
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#54545A" strokeWidth="1.3"><rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" strokeWidth="1.3"><rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 )}
               </div>
 
@@ -678,7 +678,7 @@ function NfcList({
                 <p className="mt-0.5 truncate text-xs text-ink-3">
                   <span className="font-mono text-ink-2">{order.quantity} u.</span> · {order.email}
                 </p>
-                <span className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-pill px-2 py-0.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}>
+                <span className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-pill px-2 py-0.5" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                   <span className="flex shrink-0 text-ink-3"><DestinationIcon value={order.nfc_url} size={10} /></span>
                   <span className="truncate font-mono text-[10px] text-ink-2">{formatDestination(order.nfc_url)}</span>
                 </span>
@@ -744,7 +744,7 @@ function CustomList({
             </label>
 
             <Link href={`/admin/custom/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
-              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}>
+              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 <span className="font-mono text-sm font-bold text-ink-2">{order.name.slice(0, 2).toUpperCase()}</span>
               </div>
 
@@ -758,7 +758,7 @@ function CustomList({
                   {order.company ? <><span className="text-ink-2">{order.name}</span> · </> : null}{order.email}
                 </p>
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  <span className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
+                  <span className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
                     {PROJECT_TYPE_LABELS[order.project_type] ?? order.project_type}
                   </span>
                   <span className="text-[10px] text-ink-3">{order.budget_range}</span>
@@ -823,7 +823,7 @@ function ShopList({
             </label>
 
             <Link href={`/admin/boutique/commande/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
-              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}>
+              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 <span className="font-mono text-sm font-bold text-ink-2">{order.name.slice(0, 2).toUpperCase()}</span>
               </div>
 
@@ -837,7 +837,7 @@ function ShopList({
                 <p className="mt-0.5 truncate text-xs text-ink-3">{order.email}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {order.items.slice(0, 2).map((item, i) => (
-                    <span key={i} className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
+                    <span key={i} className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
                       {item.quantity}× {item.product_name}
                     </span>
                   ))}

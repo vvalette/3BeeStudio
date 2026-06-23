@@ -98,13 +98,13 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
           {/* Logo client */}
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}
+            style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}
           >
             {order.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={order.logo_url} alt="" className="h-9 w-9 object-contain" />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#54545A" strokeWidth="1.3">
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" strokeWidth="1.3">
                 <rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
@@ -219,7 +219,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
                 <div className="flex flex-col items-center gap-2">
                   <div
                     className="flex h-24 w-24 items-center justify-center rounded-xl"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--line-2)' }}
+                    style={{ background: 'var(--hi-05)', border: '1px solid var(--line-2)' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={order.logo_url} alt={`Logo ${order.company}`} className="h-20 w-20 object-contain" />
@@ -241,7 +241,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
                 {/* Quantité */}
                 <div
                   className="flex flex-col items-center rounded-xl px-5 py-3.5"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}
+                  style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}
                 >
                   <span className="font-mono text-2xl font-bold leading-tight text-ink-0">×{order.quantity}</span>
                   <span className="mt-0.5 text-[10px] text-ink-3">porte-clés</span>

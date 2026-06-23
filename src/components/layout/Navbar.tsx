@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import LocaleSwitcher from './LocaleSwitcher'
+import ThemeToggle from './ThemeToggle'
 import CartButton from '@/components/boutique/CartButton'
 
 const navLinks = [
@@ -66,7 +67,7 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
               width={180}
               height={44}
               priority
-              className="object-contain mix-blend-lighten"
+              className="object-contain dark:mix-blend-lighten"
               style={{ height: 32, width: 'auto' }}
             />
           </Link>
@@ -99,6 +100,8 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
           {/* ── Right : switcher + CTA + burger ── */}
           <div className="flex items-center gap-2.5">
             {showLocaleSwitcher && <LocaleSwitcher />}
+
+            <ThemeToggle />
 
             {showCart && <CartButton />}
 
@@ -157,11 +160,10 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
 
           {/* Switcher + CTA bottom */}
           <div className="relative px-8 pb-10 space-y-3">
-            {showLocaleSwitcher && (
-              <div className="flex justify-center">
-                <LocaleSwitcher />
-              </div>
-            )}
+            <div className="flex justify-center gap-3">
+              {showLocaleSwitcher && <LocaleSwitcher />}
+              <ThemeToggle />
+            </div>
             <Link
               href="/contact"
               onClick={() => setOpen(false)}

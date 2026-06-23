@@ -75,7 +75,7 @@ const columns = [
 export default function SiteFooter() {
   const t = useTranslations('footer')
   return (
-    <footer className="border-t border-[var(--line)]" style={{ background: '#050506' }}>
+    <footer className="border-t border-[var(--line)]" style={{ background: 'var(--footer-bg)' }}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
 
         {/* ── Main grid ── */}
@@ -89,7 +89,7 @@ export default function SiteFooter() {
                 alt="3BeeStudio"
                 width={160}
                 height={40}
-                className="object-contain mix-blend-lighten"
+                className="object-contain dark:mix-blend-lighten"
                 style={{ height: 28, width: 'auto' }}
               />
             </Link>

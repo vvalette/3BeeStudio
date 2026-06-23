@@ -1,6 +1,7 @@
 import { Manrope, JetBrains_Mono } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import Navbar from '@/components/layout/Navbar'
+import ThemeProvider from '@/components/layout/ThemeProvider'
 import AdminNav from '@/components/admin/AdminNav'
 import frMessages from '../../../messages/fr.json'
 import '@/styles/globals.css'
@@ -21,15 +22,17 @@ const jetbrains = JetBrains_Mono({
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${manrope.variable} ${jetbrains.variable} overflow-x-hidden`}>
-      <body className="bg-bg-0 text-ink-0 font-sans antialiased">
-        <NextIntlClientProvider locale="fr" messages={frMessages}>
-          <Navbar showLocaleSwitcher={false} showCart={false} />
-          <main className="pt-[72px]">
-            <AdminNav />
-            {children}
-          </main>
-        </NextIntlClientProvider>
+    <html lang="fr" suppressHydrationWarning className={`${manrope.variable} ${jetbrains.variable} overflow-x-hidden`}>
+      <body className="font-sans antialiased">
+        <ThemeProvider>
+          <NextIntlClientProvider locale="fr" messages={frMessages}>
+            <Navbar showLocaleSwitcher={false} showCart={false} />
+            <main className="pt-[72px]">
+              <AdminNav />
+              {children}
+            </main>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

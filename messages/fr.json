@@ -7,7 +7,9 @@
     "contact": "Nous contacter",
     "home": "3BeeStudio — accueil",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "switchToDark": "Passer en mode sombre",
+    "switchToLight": "Passer en mode clair"
   },
   "footer": {
     "tagline1": "Studio de design 3D et fabrication sur mesure.",

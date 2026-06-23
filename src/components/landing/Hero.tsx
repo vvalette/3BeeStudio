@@ -113,7 +113,7 @@ export default function Hero() {
             {/* Trust strip */}
             <div
               className="fade-up mt-10 inline-flex flex-wrap items-center gap-x-5 gap-y-2.5 border border-[var(--line)] px-5 py-4"
-              style={{ background: 'rgba(20,20,24,0.6)', backdropFilter: 'blur(12px)', borderRadius: 20 }}
+              style={{ background: 'var(--glass-hero)', backdropFilter: 'blur(12px)', borderRadius: 20 }}
             >
               {([
                 { Icon: PinIcon, label: t('trust.france') },
@@ -161,7 +161,7 @@ export default function Hero() {
                       width={420}
                       height={420}
                       priority
-                      className="absolute inset-0 object-contain mix-blend-lighten"
+                      className="absolute inset-0 object-contain dark:mix-blend-lighten"
                       style={{ clipPath: 'inset(0 0 36.2% 0)' }}
                     />
                     {/* Buse — point lumineux qui pulse pendant l'impression */}
@@ -182,7 +182,7 @@ export default function Hero() {
                     aria-hidden
                     width={420}
                     height={420}
-                    className="absolute inset-0 object-contain mix-blend-lighten"
+                    className="absolute inset-0 object-contain dark:mix-blend-lighten"
                     style={{ animation: 'print-text-up 1.4s 0.4s steps(6, end) both' }}
                   />
                   {/* Bord de couche lumineux qui descend pendant la construction */}

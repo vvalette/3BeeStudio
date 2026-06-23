@@ -86,7 +86,7 @@ export default function NfcPage() {
               <span
                 key={label}
                 className="inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-[11px] font-medium text-ink-1"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line-amber)', backdropFilter: 'blur(8px)' }}
+                style={{ background: 'var(--hi-04)', border: '1px solid var(--line-amber)', backdropFilter: 'blur(8px)' }}
               >
                 {icon}
                 {label}

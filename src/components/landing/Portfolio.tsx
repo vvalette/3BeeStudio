@@ -25,7 +25,7 @@ export default function Portfolio() {
             className="relative overflow-hidden"
             style={{
               borderRadius: 32,
-              background: 'linear-gradient(135deg, #141417 0%, #0A0A0B 100%)',
+              background: 'var(--surface-card)',
               border: '1px solid var(--line)',
             }}
           >
@@ -40,7 +40,7 @@ export default function Portfolio() {
             <svg aria-hidden className="absolute right-0 top-0 h-full" style={{ opacity: 0.06, width: 'auto' }} viewBox="0 0 300 300">
               <defs>
                 <pattern id="port-banner-tri" width="28" height="32" patternUnits="userSpaceOnUse">
-                  <path d="M14 3 L26 29 L2 29 Z" fill="none" stroke="white" strokeWidth="0.6" />
+                  <path d="M14 3 L26 29 L2 29 Z" fill="none" stroke="var(--deco-stroke)" strokeWidth="0.6" />
                 </pattern>
               </defs>
               <rect width="300" height="300" fill="url(#port-banner-tri)" />
@@ -93,13 +93,13 @@ export default function Portfolio() {
                       style={{
                         width: 80, height: 110,
                         borderRadius: 18,
-                        background: 'linear-gradient(160deg, #1E1E24, #0E0E12)',
+                        background: 'var(--surface-neutral)',
                         border: '1px solid var(--line)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >
                       <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style={{ opacity: 0.2 }}>
-                        <path d="M10 2 L18 17 L2 17 Z" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
+                        <path d="M10 2 L18 17 L2 17 Z" stroke="var(--deco-stroke)" strokeWidth="1.2" strokeLinejoin="round" />
                       </svg>
                     </div>
                     <div className="rounded-full" style={{ width: 40, height: 6, background: 'var(--line-2)' }} />
