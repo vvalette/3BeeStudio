@@ -37,7 +37,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 80px)',
+            backgroundImage: 'repeating-linear-gradient(90deg, var(--hi-015) 0px, var(--hi-015) 1px, transparent 1px, transparent 80px)',
           }}
         />
 
@@ -83,7 +83,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
           font-size: 16px;
           font-weight: 700;
           letter-spacing: -0.015em;
-          color: #FAFAFA;
+          color: var(--ink-0);
           margin-top: 3rem;
           margin-bottom: 1rem;
           display: flex;
@@ -103,7 +103,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
           font-family: var(--font-sans);
           font-size: 14px;
           font-weight: 600;
-          color: #C9C9CE;
+          color: var(--ink-1);
           margin-top: 1.75rem;
           margin-bottom: 0.5rem;
         }

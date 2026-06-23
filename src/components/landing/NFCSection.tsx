@@ -92,7 +92,7 @@ function Keychain() {
       <NFCKeychain3D url="/stl/3beestudio_badge_final.3mf" />
       {/* Tag */}
       <div className="mt-4 flex items-center gap-1.5 rounded-pill border border-[var(--line-amber)] px-3 py-1.5"
-        style={{ background: 'rgba(10,8,1,0.7)', backdropFilter: 'blur(8px)' }}>
+        style={{ background: 'var(--glass-amber-70)', backdropFilter: 'blur(8px)' }}>
         <span className="block h-1.5 w-1.5 rounded-full bg-amber" style={{ boxShadow: '0 0 6px var(--amber)' }} />
         <span className="font-mono text-amber-soft" style={{ fontSize: 9, letterSpacing: '0.08em' }}>{t('keychainTag')}</span>
       </div>
@@ -188,7 +188,7 @@ export default function NFCSection() {
           {/* ── Left: the full story scene ── */}
           <div
             className="relative overflow-hidden flex items-center justify-center p-8 sm:p-10"
-            style={{ borderRadius: 28, background: 'linear-gradient(155deg, #2A1C08 0%, #0A0A0B 70%)', border: '1px solid var(--line-amber)' }}
+            style={{ borderRadius: 28, background: 'var(--surface-amber-2)', border: '1px solid var(--line-amber)' }}
           >
             {/* Hex pattern */}
             <svg aria-hidden className="absolute inset-0 w-full h-full opacity-[0.18]">
@@ -223,7 +223,7 @@ export default function NFCSection() {
                   />
                 ))}
                 <div className="relative flex items-center justify-center h-12 w-12 rounded-full border border-[var(--line-amber)]"
-                  style={{ background: 'rgba(10,8,1,0.85)', backdropFilter: 'blur(8px)', boxShadow: '0 0 18px rgba(245,158,11,0.4)' }}>
+                  style={{ background: 'var(--glass-amber-85)', backdropFilter: 'blur(8px)', boxShadow: '0 0 18px rgba(245,158,11,0.4)' }}>
                   <NFCWaves />
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function NFCSection() {
               style={{
                 borderRadius: 24,
                 borderColor: 'var(--line-amber)',
-                background: 'linear-gradient(160deg, #2A1C08 0%, #100A02 60%)',
+                background: 'var(--surface-amber)',
               }}
             >
               {/* Déco hexagonale en fil de fer (cohérence section sur-mesure) */}
@@ -285,7 +285,7 @@ export default function NFCSection() {
                   <div
                     key={key}
                     className="flex items-center gap-2.5 rounded-lg border border-[var(--line-amber)] p-2.5 transition-colors hover:border-amber/50"
-                    style={{ background: 'rgba(10,8,1,0.5)' }}
+                    style={{ background: 'var(--glass-amber-50)' }}
                   >
                     <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(245,158,11,0.1)' }}>
                       <DestinationIcon name={key} />
@@ -321,7 +321,7 @@ export default function NFCSection() {
             <button
               onClick={() => setVideoOpen(true)}
               className="flex h-[54px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-pill border border-[var(--line-amber)] font-sans font-semibold text-[15px] text-amber-soft transition-all active:scale-[0.97] hover:bg-[rgba(245,158,11,0.06)]"
-              style={{ background: 'rgba(10,8,1,0.4)', backdropFilter: 'blur(8px)' }}
+              style={{ background: 'var(--glass-amber-40)', backdropFilter: 'blur(8px)' }}
             >
               <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
                 <path d="M2.5 1.5L10 6L2.5 10.5V1.5Z" />

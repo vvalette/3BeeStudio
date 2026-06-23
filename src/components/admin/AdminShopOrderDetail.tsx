@@ -90,7 +90,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
             </svg>
           </Link>
 
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
             <span className="font-mono text-sm font-bold text-ink-2">{order.name.slice(0, 2).toUpperCase()}</span>
           </div>
 

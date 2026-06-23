@@ -167,10 +167,10 @@ export default function NfcOrderForm() {
       ref={containerRef}
       className="scroll-mt-[88px] overflow-hidden rounded-2xl"
       style={{
-        background: 'rgba(16,16,19,0.85)',
+        background: 'var(--glass)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.07)',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset',
+        border: '1px solid var(--line-07)',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 1px 0 var(--hi-05) inset',
       }}
     >
       <ProgressBar step={step} onStepClick={goToStep} />
@@ -256,7 +256,7 @@ function ProgressBar({ step, onStepClick }: { step: number; onStepClick: (n: num
                       ? { background: '#F59E0B', color: '#0A0A0B', boxShadow: '0 0 12px rgba(245,158,11,0.45)' }
                       : active
                       ? { background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1.5px solid #F59E0B', boxShadow: '0 0 0 4px rgba(245,158,11,0.06)' }
-                      : { background: '#1C1C20', color: '#54545A', border: '1px solid rgba(255,255,255,0.08)' }
+                      : { background: 'var(--bg-3)', color: 'var(--ink-3)', border: '1px solid var(--line-08)' }
                   }
                 >
                   {done ? (
@@ -342,8 +342,8 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
             border: '1.5px solid rgba(245,158,11,0.45)',
             background: 'rgba(245,158,11,0.04)',
           } : {
-            border: '1.5px dashed rgba(255,255,255,0.12)',
-            background: 'rgba(255,255,255,0.02)',
+            border: '1.5px dashed var(--line-12)',
+            background: 'var(--hi-02)',
           }}
         >
           <input {...getInputProps()} />
@@ -369,13 +369,13 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
                   <div aria-hidden className="absolute -inset-2 rounded-full blur-lg" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%)' }} />
                   <div
                     className="relative flex h-24 w-24 items-center justify-center rounded-2xl"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(245,158,11,0.4)' }}
+                    style={{ background: 'var(--hi-05)', border: '1px solid rgba(245,158,11,0.4)' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={logoUrl} alt={t('config.previewAlt')} className="h-16 w-16 rounded-lg object-contain" />
                     <span
                       className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500"
-                      style={{ border: '2px solid #101013' }}
+                      style={{ border: '2px solid var(--bg-1)' }}
                     >
                       <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                         <path d="M2 5.5L4.5 8L9 3" stroke="#0A0A0B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -386,7 +386,7 @@ function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, 
                 <p className="text-sm font-semibold text-ink-0">{t('config.uploaded')}</p>
                 <div
                   className="mt-2.5 inline-flex max-w-full items-center gap-1.5 rounded-pill px-3 py-1"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}
+                  style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}
                 >
                   <svg className="shrink-0 text-ink-3" width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 1.5H4.5A1.5 1.5 0 003 3v10a1.5 1.5 0 001.5 1.5h7A1.5 1.5 0 0013 13V5.5L9 1.5z" /><path d="M9 1.5V5.5H13" />
@@ -505,8 +505,8 @@ function StepQuantity({ defaultValues, onBack, onNext }: {
                   border: '1.5px solid rgba(245,158,11,0.6)',
                   boxShadow: '0 0 20px rgba(245,158,11,0.15)',
                 } : {
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  background: 'var(--hi-03)',
+                  border: '1px solid var(--line-07)',
                 }}
               >
                 {popular && (
@@ -587,7 +587,7 @@ function StepQuantity({ defaultValues, onBack, onNext }: {
               amber: (chunks) => <span className="text-amber">{chunks}</span>,
             })}
           </div>
-          <div className="h-1 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }}>
+          <div className="h-1 overflow-hidden rounded-full" style={{ background: 'var(--line-07)' }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
@@ -740,7 +740,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
           <div
             className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl"
             style={{
-              background: 'radial-gradient(circle at 50% 30%, rgba(245,158,11,0.16), rgba(255,255,255,0.03) 75%)',
+              background: 'radial-gradient(circle at 50% 30%, rgba(245,158,11,0.16), var(--hi-03) 75%)',
               border: '1px solid rgba(245,158,11,0.3)',
               boxShadow: '0 0 24px rgba(245,158,11,0.12)',
             }}
@@ -749,7 +749,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
             <img src={logoUrl} alt={t('recap.logoAlt')} className="h-14 w-14 rounded-lg object-contain" />
             <span
               className="absolute -bottom-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500"
-              style={{ border: '2px solid #101013' }}
+              style={{ border: '2px solid var(--bg-1)' }}
               title={t('recap.logoValidated')}
             >
               <svg width="9" height="9" viewBox="0 0 11 11" fill="none">
@@ -775,7 +775,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
           {/* Quantité */}
           <div
             className="flex shrink-0 flex-col items-center rounded-xl px-3.5 py-2"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ background: 'var(--hi-04)', border: '1px solid var(--line-08)' }}
           >
             <span className="font-mono text-lg font-bold leading-tight text-ink-0">×{formData.quantity}</span>
             <span className="font-mono text-[10px] text-ink-3">{formatPrice(unitPrice)} /u</span>
@@ -861,9 +861,9 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
 
         <div
           className="flex items-center justify-center gap-2 px-5 py-3"
-          style={{ borderTop: '1px solid rgba(245,158,11,0.14)', background: 'rgba(10,8,1,0.35)' }}
+          style={{ borderTop: '1px solid rgba(245,158,11,0.14)', background: 'var(--glass-amber-35)' }}
         >
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="12" height="9" rx="1.5" stroke="#87878E" strokeWidth="1.2"/><path d="M4 4V3a3 3 0 016 0v1" stroke="#87878E" strokeWidth="1.2" strokeLinecap="round"/></svg>
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="12" height="9" rx="1.5" stroke="var(--ink-2)" strokeWidth="1.2"/><path d="M4 4V3a3 3 0 016 0v1" stroke="var(--ink-2)" strokeWidth="1.2" strokeLinecap="round"/></svg>
           <span className="text-[11px] text-ink-2">{t('recap.securePayment')}</span>
         </div>
       </div>
@@ -961,7 +961,7 @@ function RecapSection({ icon, title, onEdit, children }: {
   return (
     <section
       className="overflow-hidden rounded-2xl"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+      style={{ background: 'var(--hi-03)', border: '1px solid var(--line-07)' }}
     >
       <header className="flex items-center justify-between border-b border-[var(--line)] px-4 py-2.5">
         <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">
@@ -1063,7 +1063,7 @@ function BtnSecondary({ children, type = 'button', onClick, disabled }: {
       onClick={onClick}
       disabled={disabled}
       className="flex h-[52px] shrink-0 cursor-pointer items-center gap-2 rounded-pill border px-6 text-sm font-medium text-ink-2 transition-all active:scale-[0.97] hover:border-amber/30 hover:text-ink-1 disabled:cursor-not-allowed disabled:opacity-40"
-      style={{ borderColor: 'var(--line-amber)', background: 'rgba(10,8,1,0.4)' }}
+      style={{ borderColor: 'var(--line-amber)', background: 'var(--glass-amber-40)' }}
     >
       {children}
     </button>
@@ -1091,7 +1091,7 @@ function ArrowLeft() {
 const inputCls = [
   'w-full rounded-xl px-4 py-3 text-sm text-ink-0 font-sans',
   'placeholder:text-ink-3 transition-all outline-none',
-  'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)]',
+  'bg-[var(--hi-04)] border border-[var(--line-08)]',
   'focus:border-amber/40 focus:bg-[rgba(245,158,11,0.04)]',
 ].join(' ')
 

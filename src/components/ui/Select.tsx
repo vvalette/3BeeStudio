@@ -132,9 +132,9 @@ export default function Select({
         aria-expanded={open}
         className={`flex w-full cursor-pointer items-center justify-between outline-none transition-all disabled:cursor-not-allowed disabled:opacity-40 ${compact ? 'rounded-lg px-2.5 py-1.5 text-xs' : 'rounded-xl px-4 py-3 text-sm'}`}
         style={{
-          background: open ? 'rgba(245,158,11,0.04)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${invalid ? 'rgba(248,113,113,0.5)' : open ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.08)'}`,
-          color: selected ? '#FAFAFA' : '#54545A',
+          background: open ? 'rgba(245,158,11,0.04)' : 'var(--hi-04)',
+          border: `1px solid ${invalid ? 'rgba(248,113,113,0.5)' : open ? 'rgba(245,158,11,0.4)' : 'var(--line-08)'}`,
+          color: selected ? 'var(--ink-0)' : 'var(--ink-3)',
         }}
       >
         <span className="truncate">{selected ? selected.label : placeholder}</span>
@@ -146,7 +146,7 @@ export default function Select({
           className={`shrink-0 transition-transform duration-200 ${compact ? 'ml-1.5' : 'ml-2'}`}
           style={{ transform: open ? 'rotate(180deg)' : 'none' }}
         >
-          <path d="M4 6l4 4 4-4" stroke={open ? '#F59E0B' : '#87878E'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 6l4 4 4-4" stroke={open ? '#F59E0B' : 'var(--ink-2)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
 
@@ -159,10 +159,10 @@ export default function Select({
             top: rect.top,
             left: rect.left,
             width: rect.width,
-            background: 'rgba(22,22,25,0.98)',
+            background: 'var(--select-panel)',
             backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 24px 60px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset',
+            border: '1px solid var(--line-2)',
+            boxShadow: 'var(--select-shadow)',
             animation: 'fadeUp 160ms cubic-bezier(0.2,0.7,0.2,1) both',
           }}
         >
@@ -179,7 +179,7 @@ export default function Select({
                 className="mx-1.5 flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors"
                 style={{
                   background: isHighlight ? 'rgba(245,158,11,0.1)' : 'transparent',
-                  color: isSelected ? '#F59E0B' : isHighlight ? '#FAFAFA' : '#C9C9CE',
+                  color: isSelected ? '#F59E0B' : isHighlight ? 'var(--ink-0)' : 'var(--ink-1)',
                 }}
               >
                 <span className="truncate">{opt.label}</span>

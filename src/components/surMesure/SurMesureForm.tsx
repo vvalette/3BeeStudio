@@ -139,8 +139,8 @@ export default function SurMesureForm() {
                 s < step
                   ? { background: 'linear-gradient(180deg,#FBBF24,#F59E0B)', color: '#1A1300' }
                   : s === step
-                    ? { background: '#1C1C20', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.4)' }
-                    : { background: '#1C1C20', color: '#54545A', border: '1px solid rgba(255,255,255,0.08)' }
+                    ? { background: 'var(--bg-3)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.4)' }
+                    : { background: 'var(--bg-3)', color: 'var(--ink-3)', border: '1px solid var(--line-08)' }
               }
             >
               {s < step ? '✓' : s}
@@ -148,7 +148,7 @@ export default function SurMesureForm() {
             {s < 3 && (
               <div
                 className="h-[2px] flex-1 rounded-full transition-colors duration-500"
-                style={{ background: s < step ? 'linear-gradient(90deg,#FBBF24,#F59E0B)' : 'rgba(255,255,255,0.07)' }}
+                style={{ background: s < step ? 'linear-gradient(90deg,#FBBF24,#F59E0B)' : 'var(--line-07)' }}
               />
             )}
           </div>

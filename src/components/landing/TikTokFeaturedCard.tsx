@@ -73,7 +73,7 @@ export default function TikTokFeaturedCard({ thumbnailUrl, title, videoId, views
         <div className="flex-1 text-center lg:text-left">
           <div
             className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-[var(--line)]"
-            style={{ background: 'rgba(255,255,255,0.04)' }}
+            style={{ background: 'var(--hi-04)' }}
           >
             <TikTokIcon />
             <span className="font-mono text-ink-3 text-[10px] tracking-wider">TIKTOK · @3BEE.STUDIO</span>

@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
+import ThemeProvider from '@/components/layout/ThemeProvider'
 import CartProvider from '@/components/boutique/CartProvider'
 import CartDrawer from '@/components/boutique/CartDrawer'
 import { routing } from '@/i18n/routing'
@@ -55,8 +56,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0B',
-  colorScheme: 'dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0A0A0B' },
+  ],
+  colorScheme: 'light dark',
   width: 'device-width',
   initialScale: 1,
 }
@@ -82,16 +86,19 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html
       lang={locale}
+      suppressHydrationWarning
       className={`${manrope.variable} ${jetbrains.variable} overflow-x-hidden`}
     >
-      <body className="bg-bg-0 text-ink-0 font-sans antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <CartProvider>
-            <Navbar showLocaleSwitcher />
-            <main className="pt-[72px]">{children}</main>
-            <CartDrawer />
-          </CartProvider>
-        </NextIntlClientProvider>
+      <body className="font-sans antialiased">
+        <ThemeProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <CartProvider>
+              <Navbar showLocaleSwitcher />
+              <main className="pt-[72px]">{children}</main>
+              <CartDrawer />
+            </CartProvider>
+          </NextIntlClientProvider>
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -28,7 +28,7 @@ export default function CustomCTA() {
         <Reveal>
         <div
           className="relative overflow-hidden"
-          style={{ borderRadius: 32, background: 'linear-gradient(160deg, #2A1C08 0%, #100A02 60%)', border: '1px solid var(--line-amber)' }}
+          style={{ borderRadius: 32, background: 'var(--surface-amber)', border: '1px solid var(--line-amber)' }}
         >
           {/* Hex wireframe deco */}
           <svg aria-hidden className="absolute pointer-events-none" style={{ right: -40, top: -60, opacity: 0.4 }} width="420" height="420" viewBox="0 0 240 240">
@@ -64,7 +64,7 @@ export default function CustomCTA() {
                 })}
               </h2>
 
-              <p className="mb-8 text-[rgba(250,250,250,0.75)]" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.1rem)', lineHeight: 1.55, maxWidth: 420 }}>
+              <p className="mb-8 text-[color:var(--cta-text)]" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.1rem)', lineHeight: 1.55, maxWidth: 420 }}>
                 {t.rich('description', { br: () => <br /> })}
               </p>
 
@@ -82,7 +82,7 @@ export default function CustomCTA() {
               {stats.map((stat) => {
                 const value = 'value' in stat ? stat.value : t(`stats.${stat.id}.value`)
                 return (
-                  <div key={stat.id} className="px-6 py-8 lg:py-10" style={{ background: '#0E0801' }}>
+                  <div key={stat.id} className="px-6 py-8 lg:py-10" style={{ background: 'var(--surface-amber-tile)' }}>
                     <div
                       className="font-sans font-bold text-amber-soft"
                       style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', lineHeight: 1, transform: value === '∞' ? 'scale(1.6)' : 'none', transformOrigin: 'left center' }}
@@ -126,7 +126,7 @@ export default function CustomCTA() {
                     <h4 className="font-sans font-semibold text-ink-0 mb-2" style={{ fontSize: 18, lineHeight: 1.2, letterSpacing: '-0.015em' }}>
                       {t(`steps.${n}.title`)}
                     </h4>
-                    <p className="text-[rgba(250,250,250,0.65)]" style={{ fontSize: 14, lineHeight: 1.55 }}>
+                    <p className="text-[color:var(--cta-text-2)]" style={{ fontSize: 14, lineHeight: 1.55 }}>
                       {t(`steps.${n}.desc`)}
                     </p>
                   </div>

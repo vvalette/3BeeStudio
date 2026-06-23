@@ -12,7 +12,7 @@ export default function BoutiqueTeaser() {
             className="relative overflow-hidden"
             style={{
               borderRadius: 32,
-              background: 'linear-gradient(135deg, #141417 0%, #0A0A0B 100%)',
+              background: 'var(--surface-card)',
               border: '1px solid var(--line)',
             }}
           >
@@ -37,7 +37,7 @@ export default function BoutiqueTeaser() {
                   <path
                     d="M15 3 L27 10 L27 24 L15 31 L3 24 L3 10 Z"
                     fill="none"
-                    stroke="white"
+                    stroke="var(--deco-stroke)"
                     strokeWidth="0.6"
                   />
                 </pattern>
@@ -92,7 +92,7 @@ export default function BoutiqueTeaser() {
                         width: 80,
                         height: 100,
                         borderRadius: 18,
-                        background: 'linear-gradient(160deg, #1E1E24, #0E0E12)',
+                        background: 'var(--surface-neutral)',
                         border: '1px solid var(--line)',
                         display: 'flex',
                         alignItems: 'center',
@@ -100,8 +100,8 @@ export default function BoutiqueTeaser() {
                       }}
                     >
                       <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style={{ opacity: 0.2 }}>
-                        <rect x="3" y="3" width="14" height="14" rx="3" stroke="white" strokeWidth="1.2" />
-                        <path d="M3 8h14M8 8v9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+                        <rect x="3" y="3" width="14" height="14" rx="3" stroke="var(--deco-stroke)" strokeWidth="1.2" />
+                        <path d="M3 8h14M8 8v9" stroke="var(--deco-stroke)" strokeWidth="1.2" strokeLinecap="round" />
                       </svg>
                     </div>
                     <div

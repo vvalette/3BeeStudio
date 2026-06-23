@@ -10,7 +10,7 @@ export default function AnnouncementBanner({ href, label, cta }: Props) {
   return (
     <div
       className="relative w-full overflow-hidden border-y border-[var(--line-amber)]"
-      style={{ background: 'linear-gradient(90deg, #0E0801, #1A0F02, #0E0801)' }}
+      style={{ background: 'var(--banner-bg)' }}
     >
       {/* Subtle shimmer line */}
       <div

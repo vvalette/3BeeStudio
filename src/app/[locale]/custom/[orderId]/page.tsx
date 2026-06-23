@@ -86,7 +86,7 @@ export default async function SuiviMesurePage({
               })}
             </p>
             <div className="relative mt-5 inline-flex items-center gap-2 rounded-pill px-4 py-2"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line-amber)' }}>
+              style={{ background: 'var(--hi-04)', border: '1px solid var(--line-amber)' }}>
               <span className="text-[11px] text-ink-3">{t('submitted.reference')}</span>
               <span className="font-mono text-xs font-semibold tracking-wider text-amber-soft">
                 #{o.id.slice(0, 8).toUpperCase()}

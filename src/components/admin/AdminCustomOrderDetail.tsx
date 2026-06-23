@@ -96,7 +96,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
 
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-mono text-lg font-bold text-ink-2"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--line)' }}
+            style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}
           >
             {order.name.slice(0, 2).toUpperCase()}
           </div>
@@ -177,7 +177,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                 </div>
                 <div
                   className="rounded-xl p-4 text-sm leading-relaxed text-ink-1"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)' }}
+                  style={{ background: 'var(--hi-03)', border: '1px solid var(--line)' }}
                 >
                   {order.description}
                 </div>

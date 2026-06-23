@@ -6,8 +6,8 @@ interface ProductGlyphProps {
 }
 
 export default function ProductGlyph({ kind = 'default', tone = 'neutral' }: ProductGlyphProps) {
-  const stroke = tone === 'amber' ? '#F59E0B' : '#C9C9CE'
-  const glow   = tone === 'amber' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'
+  const stroke = tone === 'amber' ? '#F59E0B' : 'var(--ink-1)'
+  const glow   = tone === 'amber' ? 'rgba(245,158,11,0.2)' : 'var(--hi-05)'
 
   if (kind === 'vase') return (
     <svg viewBox="0 0 120 140" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden>
