@@ -1,11 +1,11 @@
 'use client'
 
-import { Suspense, useState, useMemo } from 'react'
-import { Canvas, useLoader } from '@react-three/fiber'
+import React, { Suspense, useRef, useMemo } from 'react'
+import { Canvas, useLoader, useFrame } from '@react-three/fiber'
 import { OrbitControls, Center, Environment, Bounds } from '@react-three/drei'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
-import { Mesh, MeshStandardMaterial } from 'three'
+import { Mesh, MeshStandardMaterial, Group } from 'three'
 
 const COLORS = [
   new MeshStandardMaterial({ color: '#F59E0B', roughness: 0.4, metalness: 0.1 }), // badge body — amber
@@ -46,8 +46,17 @@ function STLMesh({ url }: { url: string }) {
   )
 }
 
+function SwingGroup({ children }: { children: React.ReactNode }) {
+  const ref = useRef<Group>(null)
+  useFrame(({ clock }) => {
+    if (ref.current) {
+      ref.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.6) * 0.28
+    }
+  })
+  return <group ref={ref}>{children}</group>
+}
+
 function Scene({ url }: { url: string }) {
-  const [autoRotate, setAutoRotate] = useState(true)
   const is3mf = url.toLowerCase().endsWith('.3mf')
   return (
     <>
@@ -56,17 +65,13 @@ function Scene({ url }: { url: string }) {
       <directionalLight position={[-10, -10, -5]} intensity={0.4} />
       <Suspense fallback={null}>
         <Bounds fit clip observe margin={1.3}>
-          {is3mf ? <ThreeMFMesh url={url} /> : <STLMesh url={url} />}
+          <SwingGroup>
+            {is3mf ? <ThreeMFMesh url={url} /> : <STLMesh url={url} />}
+          </SwingGroup>
         </Bounds>
         <Environment preset="studio" />
       </Suspense>
-      <OrbitControls
-        enablePan={false}
-        enableZoom={false}
-        autoRotate={autoRotate}
-        autoRotateSpeed={2}
-        onStart={() => setAutoRotate(false)}
-      />
+      <OrbitControls enablePan={false} enableZoom={false} />
     </>
   )
 }
