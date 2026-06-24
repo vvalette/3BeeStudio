@@ -56,9 +56,9 @@ export default async function HomePage() {
     <div className="bg-bg-0 text-ink-0 w-full">
       <JsonLd data={localBusinessSchema()} />
       <Hero />
-      <NFCSection />
-      <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
       <ProductsGrid products={products} popular={hasFeatured} />
+      <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
+      <NFCSection />
       <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
       <CustomCTA />
       <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />

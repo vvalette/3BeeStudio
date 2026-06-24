@@ -2,16 +2,19 @@
 
 import { Suspense, useState, useMemo } from 'react'
 import * as THREE from 'three'
+import { useTheme } from 'next-themes'
 import { useTranslations } from 'next-intl'
 import { Canvas, useLoader } from '@react-three/fiber'
 import { OrbitControls, Environment, Bounds } from '@react-three/drei'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 
-const AMBER = '#F59E0B'
-const DARK  = '#0A0A0B'
+// Couleur du modèle : ambre en sombre, blanc cassé/crème neutre en mode clair
+const MODEL_DARK  = '#F59E0B'
+const MODEL_LIGHT = '#ECE8E0'
+const DARK        = '#0A0A0B'
 
-function STLMesh({ url, userRot }: { url: string; userRot: [number, number, number] }) {
+function STLMesh({ url, userRot, bodyColor }: { url: string; userRot: [number, number, number]; bodyColor: string }) {
   const geometry = useLoader(STLLoader, url)
 
   // Clone + center so the pivot is always the geometric center regardless of user rotation
@@ -27,14 +30,14 @@ function STLMesh({ url, userRot }: { url: string; userRot: [number, number, numb
       {/* -90° X : correction système de coordonnées STL (Z-up → Y-up) */}
       <group rotation={[-Math.PI / 2, 0, 0]}>
         <mesh geometry={centered} castShadow receiveShadow>
-          <meshStandardMaterial color={AMBER} roughness={0.4} metalness={0.1} />
+          <meshStandardMaterial color={bodyColor} roughness={0.4} metalness={0.1} />
         </mesh>
       </group>
     </group>
   )
 }
 
-function ThreeMFMesh({ url, userRot }: { url: string; userRot: [number, number, number] }) {
+function ThreeMFMesh({ url, userRot, bodyColor }: { url: string; userRot: [number, number, number]; bodyColor: string }) {
   const group = useLoader(ThreeMFLoader, url)
 
   const recolored = useMemo(() => {
@@ -48,7 +51,7 @@ function ThreeMFMesh({ url, userRot }: { url: string; userRot: [number, number, 
       const replaced = originals.map((m) => {
         if (!matMap.has(m.uuid)) {
           matMap.set(m.uuid, new THREE.MeshStandardMaterial({
-            color:     count === 0 ? AMBER : DARK,
+            color:     count === 0 ? bodyColor : DARK,
             roughness: 0.4,
             metalness: count === 0 ? 0.15 : 0.05,
           }))
@@ -65,7 +68,7 @@ function ThreeMFMesh({ url, userRot }: { url: string; userRot: [number, number, 
     clone.position.sub(center)
 
     return clone
-  }, [group])
+  }, [group, bodyColor])
 
   return (
     <group rotation={userRot}>
@@ -74,7 +77,7 @@ function ThreeMFMesh({ url, userRot }: { url: string; userRot: [number, number, 
   )
 }
 
-function Scene({ url, rotation }: { url: string; rotation?: { x: number; y: number; z: number } }) {
+function Scene({ url, rotation, bodyColor }: { url: string; rotation?: { x: number; y: number; z: number }; bodyColor: string }) {
   const [autoRotate, setAutoRotate] = useState(true)
   const is3mf = url.toLowerCase().endsWith('.3mf')
   const toRad = (d: number) => (d * Math.PI) / 180
@@ -90,7 +93,7 @@ function Scene({ url, rotation }: { url: string; rotation?: { x: number; y: numb
       <directionalLight position={[-10, -10, -5]} intensity={0.3} />
       <Suspense fallback={null}>
         <Bounds fit clip observe margin={1.4}>
-          {is3mf ? <ThreeMFMesh url={url} userRot={userRot} /> : <STLMesh url={url} userRot={userRot} />}
+          {is3mf ? <ThreeMFMesh url={url} userRot={userRot} bodyColor={bodyColor} /> : <STLMesh url={url} userRot={userRot} bodyColor={bodyColor} />}
         </Bounds>
         <Environment preset="studio" />
       </Suspense>
@@ -118,6 +121,8 @@ function Loader({ label }: { label: string }) {
 
 export default function STLViewer({ url, height = 380, fill = false, rotation }: { url: string; height?: number; fill?: boolean; rotation?: { x: number; y: number; z: number } }) {
   const t = useTranslations('boutique.viewer')
+  const { resolvedTheme } = useTheme()
+  const bodyColor = resolvedTheme === 'dark' ? MODEL_DARK : MODEL_LIGHT
   return (
     <div
       className={fill ? 'relative w-full h-full overflow-hidden bg-bg-1' : 'relative w-full overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1'}
@@ -137,7 +142,7 @@ export default function STLViewer({ url, height = 380, fill = false, rotation }:
       </div>
 
       <Canvas camera={{ fov: 45 }} shadows gl={{ antialias: true }}>
-        <Scene url={url} rotation={rotation} />
+        <Scene url={url} rotation={rotation} bodyColor={bodyColor} />
       </Canvas>
 
       <Suspense fallback={<Loader label={t('loading')} />}><></></Suspense>
