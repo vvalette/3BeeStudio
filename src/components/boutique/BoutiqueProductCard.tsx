@@ -33,10 +33,10 @@ export default function BoutiqueProductCard({
   const has3D     = !!product.stl_url
   const hasImages = product.images.length > 0
 
-  // Séquence : 3D en premier (si dispo), puis toutes les photos
+  // Séquence : photos en premier, puis 3D
   const slides: Slide[] = [
-    ...(has3D ? [{ type: '3d' } as Slide] : []),
     ...product.images.map((_, i) => ({ type: 'photo', index: i } as Slide)),
+    ...(has3D ? [{ type: '3d' } as Slide] : []),
   ]
   const total = slides.length
 
