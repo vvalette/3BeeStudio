@@ -1,6 +1,9 @@
+'use client'
+
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import Tooltip from '@/components/ui/Tooltip'
 
 /* ── Social SVG icons ── */
 function TikTokIcon() {
@@ -19,27 +22,18 @@ function InstagramIcon() {
   )
 }
 
-function PinterestIcon() {
+function EtsyIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
-    </svg>
-  )
-}
-
-function YouTubeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+      <path d="M9.194 4.116c0-.775.155-1.008.93-1.008h5.425c1.628 0 2.403.853 2.868 2.713l.31 1.24h1.24L19.58 2h-15.2C3 2 2.612 2.388 2.612 3.77v16.46c0 1.38.388 1.77 1.77 1.77h15.2l.542-5.14h-1.24l-.465 1.628c-.542 1.86-1.24 2.713-3.178 2.713H9.658c-.775 0-.93-.233-.93-1.008l-.155-6.2h3.876c1.55 0 1.86.542 2.093 2.093h1.24V11.01h-1.24c-.233 1.55-.542 2.093-2.093 2.093H8.574l.155-5.425h.465z" />
     </svg>
   )
 }
 
 const socials = [
-  { label: 'TikTok',    href: 'https://www.tiktok.com/@3bee.studio',         Icon: TikTokIcon },
-  { label: 'Instagram', href: 'https://www.instagram.com/3bee_studio_',      Icon: InstagramIcon },
-  { label: 'Pinterest', href: 'https://www.pinterest.fr/3beestudio/',         Icon: PinterestIcon },
-  { label: 'YouTube',   href: 'https://www.youtube.com/@3beestudio',         Icon: YouTubeIcon },
+  { label: 'TikTok',    href: 'https://www.tiktok.com/@3bee.studio',                              Icon: TikTokIcon },
+  { label: 'Instagram', href: 'https://www.instagram.com/3bee_studio_',                           Icon: InstagramIcon },
+  { label: 'Etsy',      href: 'https://www.etsy.com/shop/3BeeStudioFR?ref=dashboard-header',      Icon: EtsyIcon },
 ] as const
 
 const columns = [
@@ -102,17 +96,18 @@ export default function SiteFooter() {
             {/* Social icons */}
             <div className="flex gap-2.5">
               {socials.map(({ label, href, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-sm border border-[var(--line)] bg-bg-2 text-ink-2 transition-all hover:bg-bg-3 hover:text-amber hover:border-[var(--line-amber)]"
-                  style={{ borderRadius: 12 }}
-                >
-                  <Icon />
-                </a>
+                <Tooltip key={label} content={label} side="top">
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="flex h-10 w-10 items-center justify-center rounded-sm border border-[var(--line)] bg-bg-2 text-ink-2 transition-all hover:bg-bg-3 hover:text-amber hover:border-[var(--line-amber)] cursor-pointer"
+                    style={{ borderRadius: 12 }}
+                  >
+                    <Icon />
+                  </a>
+                </Tooltip>
               ))}
             </div>
           </div>
