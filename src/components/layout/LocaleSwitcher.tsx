@@ -2,17 +2,21 @@
 
 import { useLocale } from 'next-intl'
 import { useRouter, usePathname } from '@/i18n/navigation'
+import { useSearchParams } from 'next/navigation'
 
 export default function LocaleSwitcher() {
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const targetLocale = locale === 'fr' ? 'en' : 'fr'
   const label = locale === 'fr' ? 'EN' : 'FR'
 
   const handleSwitch = () => {
-    router.replace(pathname, { locale: targetLocale })
+    const qs = searchParams.toString()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    router.replace((qs ? `${pathname}?${qs}` : pathname) as any, { locale: targetLocale })
   }
 
   return (

@@ -8,6 +8,7 @@ import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-pro
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
 import Select from '@/components/ui/Select'
+import PhoneInput from '@/components/ui/PhoneInput'
 
 // Europe + DOM-TOM + principales destinations mondiales (Colissimo)
 const COUNTRY_CODES = [
@@ -44,10 +45,12 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const items = forcedItems ?? cart.items
   const { freeShippingEnabled } = cart
 
-  const [name, setName]                 = useState('')
-  const [email, setEmail]               = useState('')
-  const [phone, setPhone]               = useState('')
-  const [shippingName, setShippingName] = useState('')
+  const [firstName, setFirstName]                     = useState('')
+  const [lastName, setLastName]                       = useState('')
+  const [email, setEmail]                             = useState('')
+  const [phone, setPhone]                             = useState('')
+  const [shippingFirstName, setShippingFirstName]     = useState('')
+  const [shippingLastName, setShippingLastName]       = useState('')
   const [address, setAddress]           = useState('')
   const [address2, setAddress2]         = useState('')
   const [city, setCity]                 = useState('')
@@ -105,12 +108,12 @@ export default function CheckoutClient({ forcedItems }: Props) {
           ...(i.custom_field_values ? { custom_field_values: i.custom_field_values } : {}),
         })),
         email,
-        name,
+        name: `${firstName} ${lastName}`.trim(),
         phone: phone || undefined,
         locale,
         delivery_mode: deliveryMode,
         ...(isPickup ? {} : {
-          shipping_name:        shippingName || name,
+          shipping_name: `${shippingFirstName || firstName} ${shippingLastName || lastName}`.trim(),
           shipping_address:     address,
           shipping_address2:    address2 || undefined,
           shipping_city:        city,
@@ -212,17 +215,21 @@ export default function CheckoutClient({ forcedItems }: Props) {
           <legend className="mb-2 font-semibold text-ink-0">{t('contactTitle')}</legend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>{t('nameLabel')}</label>
-              <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('namePlaceholder')} required minLength={2} autoComplete="off" />
+              <label className={labelClass}>{t('firstNameLabel')}</label>
+              <input className={inputClass} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('firstNamePlaceholder')} required minLength={2} autoComplete="off" />
             </div>
             <div>
-              <label className={labelClass}>{t('emailLabel')}</label>
-              <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('emailPlaceholder')} required autoComplete="off" />
+              <label className={labelClass}>{t('lastNameLabel')}</label>
+              <input className={inputClass} value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('lastNamePlaceholder')} required minLength={2} autoComplete="off" />
             </div>
           </div>
           <div>
+            <label className={labelClass}>{t('emailLabel')}</label>
+            <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('emailPlaceholder')} required autoComplete="off" />
+          </div>
+          <div>
             <label className={labelClass}>{t('phoneLabelRequired')}</label>
-            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phonePlaceholder')} required minLength={8} autoComplete="off" />
+            <PhoneInput value={phone} onChange={setPhone} required />
           </div>
         </fieldset>
 
@@ -230,9 +237,15 @@ export default function CheckoutClient({ forcedItems }: Props) {
         {!isPickup && (
           <fieldset className="space-y-4">
             <legend className="mb-2 font-semibold text-ink-0">{t('addressTitle')}</legend>
-            <div>
-              <label className={labelClass}>{t('recipientLabel')}</label>
-              <input className={inputClass} value={shippingName} onChange={(e) => setShippingName(e.target.value)} placeholder={name || t('namePlaceholder')} required autoComplete="off" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>{t('shippingFirstNameLabel')}</label>
+                <input className={inputClass} value={shippingFirstName} onChange={(e) => setShippingFirstName(e.target.value)} placeholder={firstName || t('shippingFirstNamePlaceholder')} autoComplete="off" />
+              </div>
+              <div>
+                <label className={labelClass}>{t('shippingLastNameLabel')}</label>
+                <input className={inputClass} value={shippingLastName} onChange={(e) => setShippingLastName(e.target.value)} placeholder={lastName || t('shippingLastNamePlaceholder')} autoComplete="off" />
+              </div>
             </div>
             <div>
               <label className={labelClass}>{t('addressLabel')}</label>

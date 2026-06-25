@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
 import { PROJECT_TYPES, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS } from '@/types/custom-order'
+import PhoneInput from '@/components/ui/PhoneInput'
 
 type TFunc = (key: string) => string
 
@@ -18,11 +19,13 @@ const buildFullSchema = (t: TFunc) =>
     description:  z.string().min(20, t('errors.description')).max(2000),
     budget_range: z.string().min(1, t('errors.budget')),
     deadline:     z.string().min(1, t('errors.deadline')),
-    name:    z.string().min(2, t('errors.name')),
+    first_name: z.string().min(2, t('errors.firstName')),
+    last_name:  z.string().min(2, t('errors.lastName')),
     company: z.string().optional(),
     email:   z.string().email(t('errors.email')),
     phone:   z.string().min(8, t('errors.phone')),
-    shipping_name:        z.string().min(2, t('errors.shippingName')),
+    shipping_first_name: z.string().min(2, t('errors.shippingFirstName')),
+    shipping_last_name:  z.string().min(2, t('errors.shippingLastName')),
     shipping_address:     z.string().min(5, t('errors.shippingAddress')),
     shipping_city:        z.string().min(2, t('errors.shippingCity')),
     shipping_postal_code: z.string().min(4, t('errors.shippingPostal')),
@@ -80,6 +83,7 @@ export default function SurMesureForm() {
     watch,
     setValue,
     getValues,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(fullSchema),
@@ -93,8 +97,8 @@ export default function SurMesureForm() {
   async function nextStep() {
     const fields: (keyof FormData)[][] = [
       ['project_type', 'description', 'budget_range', 'deadline'],
-      ['name', 'company', 'email', 'phone'],
-      ['shipping_name', 'shipping_address', 'shipping_city', 'shipping_postal_code'],
+      ['first_name', 'last_name', 'company', 'email', 'phone'],
+      ['shipping_first_name', 'shipping_last_name', 'shipping_address', 'shipping_city', 'shipping_postal_code'],
     ]
     const ok = await trigger(fields[step - 1])
     if (ok) setStep((s) => s + 1)
@@ -104,10 +108,16 @@ export default function SurMesureForm() {
     setLoading(true)
     setApiError('')
     try {
+      const { first_name, last_name, shipping_first_name, shipping_last_name, ...rest } = data
+      const payload = {
+        ...rest,
+        name: `${first_name} ${last_name}`.trim(),
+        shipping_name: `${shipping_first_name} ${shipping_last_name}`.trim(),
+      }
       const res = await fetch('/api/custom/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       })
       const json = await res.json() as { order_id?: string; error?: string }
       if (!res.ok) throw new Error(json.error ?? t('errors.unexpected'))
@@ -255,22 +265,37 @@ export default function SurMesureForm() {
             <StepTitle num="02" title={t('step2.title')} sub={t('step2.sub')} />
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t('step2.name')} error={errors.name?.message}>
-                <input {...register('name')} className={inputCls} placeholder="Jean Dupont" autoComplete="off" />
+              <Field label={t('step2.firstName')} error={errors.first_name?.message}>
+                <input {...register('first_name')} className={inputCls} placeholder="Jean" autoComplete="off" />
               </Field>
-              <Field label={t('step2.company')} error={errors.company?.message}>
-                <input {...register('company')} className={inputCls} placeholder="Acme Corp" autoComplete="off" />
+              <Field label={t('step2.lastName')} error={errors.last_name?.message}>
+                <input {...register('last_name')} className={inputCls} placeholder="Dupont" autoComplete="off" />
               </Field>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t('step2.company')} error={errors.company?.message}>
+                <input {...register('company')} className={inputCls} placeholder="Acme Corp" autoComplete="off" />
+              </Field>
               <Field label={t('step2.email')} error={errors.email?.message}>
                 <input {...register('email')} type="email" className={inputCls} placeholder="vous@exemple.fr" autoComplete="off" />
               </Field>
-              <Field label={t('step2.phone')} error={errors.phone?.message}>
-                <input {...register('phone')} type="tel" className={inputCls} placeholder="+33 6 00 00 00 00" autoComplete="off" />
-              </Field>
             </div>
+
+            <Field label={t('step2.phone')} error={errors.phone?.message}>
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <PhoneInput
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    invalid={!!errors.phone}
+                    required
+                  />
+                )}
+              />
+            </Field>
 
             <div className="rounded-xl border border-[rgba(245,158,11,0.2)] bg-[rgba(245,158,11,0.04)] px-4 py-3">
               <p className="text-[13px] text-ink-2">
@@ -285,9 +310,14 @@ export default function SurMesureForm() {
           <>
             <StepTitle num="03" title={t('step3.title')} sub={t('step3.sub')} />
 
-            <Field label={t('step3.recipient')} error={errors.shipping_name?.message}>
-              <input {...register('shipping_name')} className={inputCls} placeholder="Jean Dupont" autoComplete="off" />
-            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t('step3.recipientFirstName')} error={errors.shipping_first_name?.message}>
+                <input {...register('shipping_first_name')} className={inputCls} placeholder="Jean" autoComplete="off" />
+              </Field>
+              <Field label={t('step3.recipientLastName')} error={errors.shipping_last_name?.message}>
+                <input {...register('shipping_last_name')} className={inputCls} placeholder="Dupont" autoComplete="off" />
+              </Field>
+            </div>
 
             <Field label={t('step3.address')} error={errors.shipping_address?.message}>
               <input {...register('shipping_address')} className={inputCls} placeholder="12 rue de la Paix" autoComplete="off" />
@@ -308,7 +338,7 @@ export default function SurMesureForm() {
               <RecapRow label={t('step3.recapProject')} value={values.project_type ? t(`projectTypes.${values.project_type}`) : ''} />
               <RecapRow label={t('step3.recapBudget')} value={budgetDisplay} />
               <RecapRow label={t('step3.recapDeadline')} value={deadlineDisplay} />
-              <RecapRow label={t('step3.recapContact')} value={[values.name, values.email].filter(Boolean).join(' · ')} />
+              <RecapRow label={t('step3.recapContact')} value={[[values.first_name, values.last_name].filter(Boolean).join(' '), values.email].filter(Boolean).join(' · ')} />
             </div>
           </>
         )}
