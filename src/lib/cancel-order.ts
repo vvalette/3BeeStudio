@@ -32,7 +32,7 @@ export async function refundAndCancelShipment(order: ShopOrder): Promise<CancelR
       result.boxtalCancelled = true
     } catch (e) {
       result.boxtalError = e instanceof Error ? e.message : String(e)
-      console.warn('[cancel] Annulation Boxtal impossible:', result.boxtalError)
+      console.error('[cancel] Annulation Boxtal impossible:', result.boxtalError)
     }
   }
 

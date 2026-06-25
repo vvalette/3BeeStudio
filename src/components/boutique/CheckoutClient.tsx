@@ -7,6 +7,9 @@ import type { CartItem } from '@/types/cart'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
+import Select from '@/components/ui/Select'
+
+const COUNTRY_CODES = ['FR', 'BE', 'CH', 'LU', 'MC'] as const
 
 interface Props {
   // En mode « Acheter maintenant », les articles sont imposés et le panier est ignoré
@@ -15,6 +18,7 @@ interface Props {
 
 export default function CheckoutClient({ forcedItems }: Props) {
   const t      = useTranslations('boutique.checkoutForm')
+  const tNfc   = useTranslations('nfc')
   const locale = useLocale()
   const cart   = useCart()
   const isBuyNow = !!forcedItems
@@ -29,13 +33,18 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const [address2, setAddress2]         = useState('')
   const [city, setCity]                 = useState('')
   const [postal, setPostal]             = useState('')
-  const [country]                       = useState('FR')
+  const [country, setCountry]           = useState('FR')
   const [deliveryMode, setDeliveryMode]           = useState<'delivery' | 'pickup'>('delivery')
   const [hasNewsletterDiscount, setHasDiscount]   = useState(false)
   const [loading, setLoading]                     = useState(false)
   const [error, setError]                         = useState<string | null>(null)
 
   const isPickup = deliveryMode === 'pickup'
+
+  const countryOptions = useMemo(
+    () => COUNTRY_CODES.map((c) => ({ value: c, label: tNfc(`countries.${c}`) })),
+    [tNfc]
+  )
 
   const { subtotal, discountAmount, shipping, total } = useMemo(() => {
     const subtotal      = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
@@ -193,8 +202,8 @@ export default function CheckoutClient({ forcedItems }: Props) {
             </div>
           </div>
           <div>
-            <label className={labelClass}>{t(isPickup ? 'phoneLabel' : 'phoneLabelRequired')}</label>
-            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phonePlaceholder')} required={!isPickup} minLength={!isPickup ? 8 : undefined} autoComplete="off" />
+            <label className={labelClass}>{t('phoneLabelRequired')}</label>
+            <input className={inputClass} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phonePlaceholder')} required minLength={8} autoComplete="off" />
           </div>
         </fieldset>
 
@@ -223,6 +232,10 @@ export default function CheckoutClient({ forcedItems }: Props) {
                 <label className={labelClass}>{t('cityLabel')}</label>
                 <input className={inputClass} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('cityPlaceholder')} required minLength={2} autoComplete="off" />
               </div>
+            </div>
+            <div>
+              <label className={labelClass}>{t('countryLabel')}</label>
+              <Select value={country} onChange={setCountry} options={countryOptions} />
             </div>
           </fieldset>
         )}

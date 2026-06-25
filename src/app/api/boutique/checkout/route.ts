@@ -14,7 +14,7 @@ const schema = z.object({
   })).min(1).max(20),
   email:         z.string().email(),
   name:          z.string().min(2),
-  phone:         z.string().optional(),
+  phone:         z.string().min(8),
   delivery_mode: z.enum(['delivery', 'pickup']).default('delivery'),
   locale:        z.enum(['fr', 'en']).default('fr'),
   // Adresse — requise uniquement pour la livraison à domicile
@@ -29,9 +29,6 @@ const schema = z.object({
     d.shipping_name && d.shipping_address && d.shipping_city && d.shipping_postal_code
   ),
   { message: 'Adresse de livraison requise pour la livraison à domicile' },
-).refine(
-  (d) => d.delivery_mode === 'pickup' || (!!d.phone && d.phone.replace(/[\s.\-()]/g, '').length >= 8),
-  { message: 'Téléphone requis pour la livraison (nécessaire au transporteur)', path: ['phone'] },
 )
 
 export async function POST(req: Request) {
@@ -165,7 +162,7 @@ export async function POST(req: Request) {
     .insert({
       email:                d.email,
       name:                 d.name,
-      phone:                d.phone ?? null,
+      phone:                d.phone,
       items:                orderItems,
       subtotal,
       discount_amount:      discountAmount,
