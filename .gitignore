@@ -29,6 +29,9 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
+# Docs locales (ne pas pousser)
+boxtal_api-v3.json
+
 # OS
 .DS_Store
 Thumbs.db

@@ -150,6 +150,7 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
         },
       },
       packages: [{
+        type: 'PARCEL',
         ...input.pkg,
         value: { value: Math.round(input.totalAmount / 100), currency: 'EUR' },
         content: { id: CONTENT_ID, description: input.description },
