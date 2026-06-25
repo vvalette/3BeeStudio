@@ -28,19 +28,31 @@ function splitName(fullName: string): { firstName: string; lastName: string } {
   return { firstName: parts[0], lastName: parts.slice(1).join(' ') }
 }
 
+// NFC : 10 g/badge + 30 g emballage
 function estimatePackage(qty: number) {
-  const weight = Math.round((qty * 0.015 + 0.05) * 1000) / 1000
-  if (qty <= 25) return { weight, length: 20, width: 15, height: 5 }
+  const weight = Math.round((qty * 0.010 + 0.03) * 1000) / 1000
+  if (qty <= 25)  return { weight, length: 20, width: 15, height: 5 }
   if (qty <= 100) return { weight, length: 30, width: 20, height: 10 }
   return { weight, length: 40, width: 30, height: 15 }
 }
 
-// Estimation du colis boutique : objets imprimés en 3D, ~250 g/pièce par défaut.
-function estimateShopPackage(itemCount: number) {
-  const weight = Math.max(0.2, Math.round(itemCount * 0.25 * 1000) / 1000)
-  if (itemCount <= 2) return { weight, length: 25, width: 20, height: 12 }
-  if (itemCount <= 5) return { weight, length: 35, width: 25, height: 20 }
+// Boutique : poids réel depuis les items + 50 g emballage.
+// Fallback 100 g/article si weight_grams absent (anciennes commandes).
+function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: number }>) {
+  const totalG = items.reduce((sum, i) => sum + i.quantity * (i.weight_grams ?? 100), 0) + 50
+  const weight = Math.max(0.1, Math.round(totalG) / 1000)
+  if (weight <= 0.25) return { weight, length: 20, width: 15, height: 8 }
+  if (weight <= 0.5)  return { weight, length: 25, width: 20, height: 12 }
+  if (weight <= 1.0)  return { weight, length: 35, width: 25, height: 20 }
   return { weight, length: 45, width: 35, height: 30 }
+}
+
+// Sélectionne l'offre Boxtal selon le poids total.
+// BOXTAL_SHIPPING_OFFER_CODE_LIGHT pour les petits colis (≤ 250 g).
+function selectOfferCode(weightKg: number): string {
+  const light = process.env.BOXTAL_SHIPPING_OFFER_CODE_LIGHT
+  if (light && weightKg <= 0.25) return light
+  return process.env.BOXTAL_SHIPPING_OFFER_CODE ?? 'POFR-ColissimoExpert'
 }
 
 // Forme normalisée d'une expédition, indépendante du type de commande.
@@ -143,7 +155,7 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
         content: { id: CONTENT_ID, description: input.description },
       }],
     },
-    shippingOfferCode: process.env.BOXTAL_SHIPPING_OFFER_CODE ?? 'POFR-ColissimoExpert',
+    shippingOfferCode: selectOfferCode(input.pkg.weight),
     labelType: 'PDF_A4',
   }
 
@@ -189,7 +201,6 @@ export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> 
 }
 
 export async function createShopBoxtalShipment(order: ShopOrder): Promise<BoxtalResult> {
-  const itemCount = order.items.reduce((s, i) => s + i.quantity, 0)
   return createShipment({
     externalId: order.id,
     recipientName: order.shipping_name ?? order.name,
@@ -201,7 +212,7 @@ export async function createShopBoxtalShipment(order: ShopOrder): Promise<Boxtal
     shipping_postal_code: order.shipping_postal_code,
     shipping_country: order.shipping_country,
     totalAmount: order.total_amount,
-    pkg: estimateShopPackage(itemCount),
+    pkg: estimateShopPackage(order.items),
     description: 'Objets imprimés en 3D — 3BeeStudio',
   })
 }
