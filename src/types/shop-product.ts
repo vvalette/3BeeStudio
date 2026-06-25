@@ -32,7 +32,7 @@ export interface ShopProduct {
 }
 
 export const SHOP_FREE_SHIPPING_THRESHOLD = 5000 // 50 € en centimes
-export const SHOP_SHIPPING_PRICE = 490           // 4,90 €
+export const SHOP_SHIPPING_PRICE = 690           // 6,90 €
 
 export function calcShopShipping(subtotal: number): number {
   return subtotal >= SHOP_FREE_SHIPPING_THRESHOLD ? 0 : SHOP_SHIPPING_PRICE
