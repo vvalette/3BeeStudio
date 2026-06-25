@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Tooltip from '@/components/ui/Tooltip'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 
 interface Testimonial {
   id: string
@@ -29,6 +30,7 @@ type EditForm = { name: string; role: string; body: string; avatar_gradient: str
 
 export default function AdminTestimonialsList({ initialItems }: { initialItems: Testimonial[] }) {
   const router = useRouter()
+  const { confirm, modal } = useConfirm()
   const [items, setItems] = useState<Testimonial[]>(initialItems)
   const [form, setForm] = useState(EMPTY_FORM)
   const [adding, setAdding] = useState(false)
@@ -56,7 +58,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
   }
 
   async function deleteItem(id: string) {
-    if (!confirm('Supprimer ce témoignage ?')) return
+    if (!await confirm({ title: 'Supprimer ce témoignage ?', confirmLabel: 'Supprimer', variant: 'danger' })) return
     const res = await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
     if (!res.ok) return
     setItems((prev) => prev.filter((t) => t.id !== id))
@@ -222,6 +224,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
           </div>
         ))}
       </div>
+      {modal}
     </div>
   )
 }

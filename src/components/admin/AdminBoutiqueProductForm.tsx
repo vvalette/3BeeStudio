@@ -8,6 +8,7 @@ import { generateSlug } from '@/types/shop-product'
 import type { ShopCategoryRow } from '@/types/shop-category'
 import dynamic from 'next/dynamic'
 import Select from '@/components/ui/Select'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 
 const STLViewerWrapper = dynamic(() => import('@/components/boutique/STLViewerWrapper'), { ssr: false })
 import { formatPrice } from '@/lib/utils'
@@ -259,6 +260,7 @@ function StlUpload({ stlUrl, onChange }: { stlUrl: string | null; onChange: (url
 
 export default function AdminBoutiqueProductForm({ product, initialCategories = [] }: Props) {
   const router = useRouter()
+  const { confirm, modal } = useConfirm()
   const isEdit = !!product
 
   const [lang, setLang]               = useState<'fr' | 'en'>('fr')
@@ -384,7 +386,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
 
   async function handleDelete() {
     if (!product) return
-    if (!confirm('Supprimer ce produit ? Il sera archivé dans Stripe et retiré de la boutique.')) return
+    if (!await confirm({ title: 'Supprimer ce produit ?', message: 'Il sera archivé dans Stripe et retiré de la boutique.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     const res = await fetch(`/api/admin/boutique/products/${product.id}`, { method: 'DELETE' })
     if (!res.ok) {
@@ -859,6 +861,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
           </div>
         </form>
       </div>
+      {modal}
     </main>
   )
 }

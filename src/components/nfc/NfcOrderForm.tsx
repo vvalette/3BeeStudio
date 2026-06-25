@@ -50,7 +50,18 @@ const buildAddressSchema = (t: TFunc) => z.object({
 
 const buildContactSchema = (t: TFunc) => buildCoordsSchema(t).merge(buildAddressSchema(t))
 
-const COUNTRY_CODES = ['FR', 'BE', 'CH', 'LU', 'MC'] as const
+const COUNTRY_CODES = [
+  'FR',
+  'GP', 'MQ', 'GF', 'RE', 'YT', 'NC', 'PF', 'PM', 'BL', 'MF',
+  'BE', 'CH', 'LU', 'MC',
+  'DE', 'IT', 'ES', 'PT', 'NL', 'AT', 'IE', 'SE', 'DK', 'FI',
+  'PL', 'CZ', 'HU', 'RO', 'GR', 'BG', 'HR', 'SK', 'SI',
+  'EE', 'LV', 'LT', 'CY', 'MT',
+  'GB', 'NO', 'IS', 'LI',
+  'US', 'CA', 'BR', 'AR', 'MX',
+  'JP', 'KR', 'AU', 'NZ', 'SG', 'HK',
+  'MA', 'TN', 'DZ', 'SN',
+] as const
 const SECTOR_KEYS = ['restaurant', 'beauty', 'wellness', 'realEstate', 'craftsman', 'retail', 'agency', 'other'] as const
 
 const QUANTITY_PRESETS = [5, 10, 25, 50, 100, 250]
@@ -613,11 +624,12 @@ function StepContact({ defaultValues, onBack, onNext }: {
   defaultValues: Partial<FormData>; onBack: () => void; onNext: (d: Contact) => void
 }) {
   const t = useTranslations('nfcForm')
+  const tCommon = useTranslations('common')
   const contactSchema = useMemo(() => buildContactSchema(t), [t])
   const sectorOptions = useMemo(() => SECTOR_KEYS.map((k) => t(`sectors.${k}`)), [t])
   const countryOptions = useMemo(
-    () => COUNTRY_CODES.map((c) => ({ value: c, label: t(`countries.${c}`) })),
-    [t],
+    () => COUNTRY_CODES.map((c) => ({ value: c, label: tCommon(`countries.${c}`) })),
+    [tCommon],
   )
   const { register, handleSubmit, control, formState: { errors } } = useForm<Contact>({
     resolver: zodResolver(contactSchema),
@@ -712,6 +724,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
   onBack: () => void; onEdit: (step: number) => void; onSubmit: () => void
 }) {
   const t = useTranslations('nfcForm')
+  const tCommon = useTranslations('common')
   const { unitPrice, subtotal, shipping, total } = calcOrder(formData.quantity)
   const [hasNewsletterDiscount, setHasNewsletterDiscount] = useState(false)
 
@@ -727,7 +740,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
   const finalTotal = discountedSubtotal + shipping
   const discountAmount = subtotal - discountedSubtotal
   const code = formData.shipping_country
-  const countryLabel = (COUNTRY_CODES as readonly string[]).includes(code) ? t(`countries.${code}`) : code
+  const countryLabel = (COUNTRY_CODES as readonly string[]).includes(code) ? tCommon(`countries.${code}`) : code
 
   return (
     <div className="space-y-5">

@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 import { ORDER_STATUS_LABELS, formatDestination, type Order, type OrderStatus } from '@/types/order'
 import { CUSTOM_STATUS_LABELS, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus } from '@/types/shop-order'
@@ -125,6 +126,7 @@ export default function AdminOrdersList({
   initialSection?: Section
 }) {
   const router = useRouter()
+  const { confirm, modal } = useConfirm()
   const [section, setSection]             = useState<Section>(initialSection ?? 'nfc')
   const [period, setPeriod]               = useState<Period>('all')
   const [nfcFilter, setNfcFilter]         = useState<NfcFilterKey>('active')
@@ -271,7 +273,7 @@ export default function AdminOrdersList({
 
   // ── Suppression ──
   async function deleteNfc(ids: string[]) {
-    if (!confirm(`Supprimer ${ids.length} commande${ids.length > 1 ? 's' : ''} NFC ? Cette action est irréversible.`)) return
+    if (!await confirm({ title: `Supprimer ${ids.length} commande${ids.length > 1 ? 's' : ''} NFC ?`, message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     await Promise.all(ids.map((id) => fetch(`/api/admin/orders/${id}`, { method: 'DELETE' })))
     setSelectedNfc(new Set())
@@ -280,7 +282,7 @@ export default function AdminOrdersList({
   }
 
   async function deleteCustom(ids: string[]) {
-    if (!confirm(`Supprimer ${ids.length} demande${ids.length > 1 ? 's' : ''} sur-mesure ? Cette action est irréversible.`)) return
+    if (!await confirm({ title: `Supprimer ${ids.length} demande${ids.length > 1 ? 's' : ''} sur-mesure ?`, message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     await Promise.all(ids.map((id) => fetch(`/api/admin/custom/${id}`, { method: 'DELETE' })))
     setSelectedCustom(new Set())
@@ -289,7 +291,7 @@ export default function AdminOrdersList({
   }
 
   async function deleteShop(ids: string[]) {
-    if (!confirm(`Supprimer ${ids.length} commande${ids.length > 1 ? 's' : ''} boutique ? Cette action est irréversible.`)) return
+    if (!await confirm({ title: `Supprimer ${ids.length} commande${ids.length > 1 ? 's' : ''} boutique ?`, message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     await Promise.all(ids.map((id) => fetch(`/api/admin/boutique/orders/${id}`, { method: 'DELETE' })))
     setSelectedShop(new Set())
@@ -516,6 +518,7 @@ export default function AdminOrdersList({
           </>
         )}
       </div>
+      {modal}
     </main>
   )
 }

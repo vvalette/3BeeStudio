@@ -33,7 +33,7 @@ export default function Select({
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const [highlight, setHighlight] = useState(0)
-  const [rect, setRect] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [rect, setRect] = useState<{ top?: number; bottom?: number; left: number; width: number } | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const items = options.map(normalize)
@@ -41,11 +41,18 @@ export default function Select({
 
   const close = useCallback(() => setOpen(false), [])
 
-  // Position du panneau sous le trigger (recalculé à l'ouverture, au scroll et au resize)
+  // Positionne le panneau en bas ou en haut selon l'espace disponible
   const updateRect = useCallback(() => {
     if (!triggerRef.current) return
     const r = triggerRef.current.getBoundingClientRect()
-    setRect({ top: r.bottom + 8, left: r.left, width: r.width })
+    const PANEL_H = 288 // max-h-72
+    const spaceBelow = window.innerHeight - r.bottom
+    const spaceAbove = r.top
+    if (spaceBelow < PANEL_H && spaceAbove > spaceBelow) {
+      setRect({ bottom: window.innerHeight - r.top + 8, left: r.left, width: r.width })
+    } else {
+      setRect({ top: r.bottom + 8, left: r.left, width: r.width })
+    }
   }, [])
 
   useLayoutEffect(() => {
@@ -154,9 +161,10 @@ export default function Select({
         <ul
           data-select-panel
           role="listbox"
-          className="no-scrollbar fixed z-[1000] max-h-60 overflow-auto rounded-xl py-1.5"
+          className="no-scrollbar fixed z-[1000] max-h-72 overflow-auto rounded-xl py-1.5"
           style={{
-            top: rect.top,
+            ...(rect.top !== undefined ? { top: rect.top } : {}),
+            ...(rect.bottom !== undefined ? { bottom: rect.bottom } : {}),
             left: rect.left,
             width: rect.width,
             background: 'var(--select-panel)',
