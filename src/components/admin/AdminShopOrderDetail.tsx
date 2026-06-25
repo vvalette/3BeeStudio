@@ -23,6 +23,9 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const [shippingError, setShippingError] = useState<string | null>(null)
   const [labelUrl, setLabelUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelResult, setCancelResult] = useState<{ stripeRefunded: boolean; boxtalCancelled: boolean; boxtalError: string | null } | null>(null)
+  const [cancelError, setCancelError] = useState<string | null>(null)
   const router = useRouter()
 
   const status = order.status
@@ -50,6 +53,25 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
       setShippingError(e instanceof Error ? e.message : 'Erreur Boxtal')
     } finally {
       setShipping(false)
+    }
+  }
+
+  async function cancelOrder() {
+    if (!window.confirm('Annuler cette commande ? Le client sera remboursé sur Stripe si le paiement a été encaissé.')) return
+    setCancelling(true)
+    setCancelError(null)
+    setCancelResult(null)
+    try {
+      const res = await fetch(`/api/admin/boutique/orders/${order.id}/cancel`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      setCancelResult(json)
+      setOrder(o => ({ ...o, status: 'cancelled' }))
+      router.refresh()
+    } catch (e) {
+      setCancelError(e instanceof Error ? e.message : 'Erreur inconnue')
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -333,6 +355,47 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                 )}
               </button>
             </Card>
+            {/* Annulation */}
+            {!['shipped', 'delivered', 'cancelled'].includes(order.status) && (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 space-y-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-400/70">Zone danger</p>
+
+                {cancelResult && (
+                  <div className="space-y-1 text-xs">
+                    <p className={cancelResult.stripeRefunded ? 'text-emerald-400' : 'text-ink-3'}>
+                      {cancelResult.stripeRefunded ? '✓ Remboursement Stripe effectué' : '— Pas de paiement à rembourser'}
+                    </p>
+                    {order.boxtal_order_id && (
+                      <p className={cancelResult.boxtalCancelled ? 'text-emerald-400' : 'text-amber'}>
+                        {cancelResult.boxtalCancelled
+                          ? '✓ Expédition Boxtal annulée'
+                          : `⚠ Boxtal : ${cancelResult.boxtalError ?? 'annulation impossible (déjà pris en charge ?)'}`}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {cancelError && <p className="text-xs text-red-400">{cancelError}</p>}
+
+                <button
+                  onClick={cancelOrder}
+                  disabled={cancelling}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {cancelling ? (
+                    <>
+                      <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeDasharray="40" strokeDashoffset="10" strokeLinecap="round" /></svg>
+                      Annulation…
+                    </>
+                  ) : (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M2 2l10 10M12 2L2 12" /></svg>
+                      Annuler la commande
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
