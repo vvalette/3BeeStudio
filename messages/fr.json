@@ -333,7 +333,11 @@
       "postalCode": "Code postal",
       "city": "Ville",
       "country": "Pays",
-      "countryPlaceholder": "Choisir un pays"
+      "countryPlaceholder": "Choisir un pays",
+      "recipientFirstName": "Prénom du destinataire",
+      "recipientLastName": "Nom du destinataire",
+      "recipientFirstNamePlaceholder": "Jean",
+      "recipientLastNamePlaceholder": "Dupont"
     },
     "sectors": {
       "restaurant": "Restaurant / Food",
@@ -523,7 +527,11 @@
       "shippingCity": "Ville requise",
       "shippingPostal": "Code postal requis",
       "unexpected": "Erreur inattendue",
-      "generic": "Une erreur est survenue"
+      "generic": "Une erreur est survenue",
+      "firstName": "Prénom requis",
+      "lastName": "Nom requis",
+      "shippingFirstName": "Prénom du destinataire requis",
+      "shippingLastName": "Nom du destinataire requis"
     },
     "projectTypes": {
       "cadeau": "Cadeau personnalisé",
@@ -563,7 +571,9 @@
       "company": "Société (optionnel)",
       "email": "Email *",
       "phone": "Téléphone *",
-      "notice": "<strong>Devis sous 48h ouvrées.</strong> Nous analyserons votre projet et vous enverrons une proposition détaillée à cette adresse email."
+      "notice": "<strong>Devis sous 48h ouvrées.</strong> Nous analyserons votre projet et vous enverrons une proposition détaillée à cette adresse email.",
+      "firstName": "Prénom *",
+      "lastName": "Nom *"
     },
     "step3": {
       "title": "Adresse de livraison",
@@ -576,7 +586,9 @@
       "recapProject": "Projet",
       "recapBudget": "Budget",
       "recapDeadline": "Délai",
-      "recapContact": "Contact"
+      "recapContact": "Contact",
+      "recipientFirstName": "Prénom destinataire *",
+      "recipientLastName": "Nom destinataire *"
     }
   },
   "common": {
@@ -899,7 +911,15 @@
       "freeShippingThreshold": "Offerte dès {price} d'achat",
       "newsletterDiscount": "Réduction newsletter (−10%)",
       "newsletterDiscountBadge": "Réduction newsletter −10% appliquée",
-      "total": "Total"
+      "total": "Total",
+      "firstNameLabel": "Prénom *",
+      "lastNameLabel": "Nom *",
+      "firstNamePlaceholder": "Marie",
+      "lastNamePlaceholder": "Dupont",
+      "shippingFirstNameLabel": "Prénom destinataire *",
+      "shippingLastNameLabel": "Nom destinataire *",
+      "shippingFirstNamePlaceholder": "Marie",
+      "shippingLastNamePlaceholder": "Dupont"
     },
     "descriptionExpand": {
       "showMore": "Voir plus ↓",

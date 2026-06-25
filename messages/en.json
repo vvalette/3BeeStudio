@@ -333,7 +333,11 @@
       "postalCode": "Postal code",
       "city": "City",
       "country": "Country",
-      "countryPlaceholder": "Choose a country"
+      "countryPlaceholder": "Choose a country",
+      "recipientFirstName": "Recipient first name",
+      "recipientLastName": "Recipient last name",
+      "recipientFirstNamePlaceholder": "John",
+      "recipientLastNamePlaceholder": "Smith"
     },
     "sectors": {
       "restaurant": "Restaurant / Food",
@@ -523,7 +527,11 @@
       "shippingCity": "City required",
       "shippingPostal": "Postal code required",
       "unexpected": "Unexpected error",
-      "generic": "An error occurred"
+      "generic": "An error occurred",
+      "firstName": "First name required",
+      "lastName": "Last name required",
+      "shippingFirstName": "Recipient first name required",
+      "shippingLastName": "Recipient last name required"
     },
     "projectTypes": {
       "cadeau": "Personalised gift",
@@ -563,7 +571,9 @@
       "company": "Company (optional)",
       "email": "Email *",
       "phone": "Phone *",
-      "notice": "<strong>Quote within 48 business hours.</strong> We'll review your project and send a detailed proposal to this email address."
+      "notice": "<strong>Quote within 48 business hours.</strong> We'll review your project and send a detailed proposal to this email address.",
+      "firstName": "First name *",
+      "lastName": "Last name *"
     },
     "step3": {
       "title": "Delivery address",
@@ -576,7 +586,9 @@
       "recapProject": "Project",
       "recapBudget": "Budget",
       "recapDeadline": "Timeline",
-      "recapContact": "Contact"
+      "recapContact": "Contact",
+      "recipientFirstName": "Recipient first name *",
+      "recipientLastName": "Recipient last name *"
     }
   },
   "common": {
@@ -899,7 +911,15 @@
       "freeShippingThreshold": "Free from {price} purchase",
       "newsletterDiscount": "Newsletter discount (−10%)",
       "newsletterDiscountBadge": "Newsletter discount −10% applied",
-      "total": "Total"
+      "total": "Total",
+      "firstNameLabel": "First name *",
+      "lastNameLabel": "Last name *",
+      "firstNamePlaceholder": "Mary",
+      "lastNamePlaceholder": "Smith",
+      "shippingFirstNameLabel": "Recipient first name *",
+      "shippingLastNameLabel": "Recipient last name *",
+      "shippingFirstNamePlaceholder": "Mary",
+      "shippingLastNamePlaceholder": "Smith"
     },
     "descriptionExpand": {
       "showMore": "Show more ↓",

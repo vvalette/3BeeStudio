@@ -9,6 +9,7 @@ import { calcOrder, getUnitPrice, formatDestination, isVCard, byteLength, NFC_CH
 import { formatPrice } from '@/lib/utils'
 import { useDropzone, type FileRejection } from 'react-dropzone'
 import Select from '@/components/ui/Select'
+import PhoneInput from '@/components/ui/PhoneInput'
 import NfcLinkPicker, { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 
 type TFunc = (key: string) => string
@@ -631,12 +632,22 @@ function StepContact({ defaultValues, onBack, onNext }: {
     () => COUNTRY_CODES.map((c) => ({ value: c, label: tCommon(`countries.${c}`) })),
     [tCommon],
   )
-  const { register, handleSubmit, control, formState: { errors } } = useForm<Contact>({
+  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<Contact>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
       ...defaultValues,
       shipping_country: defaultValues.shipping_country ?? 'FR',
     },
+  })
+
+  // Local state for first/last split — combined into shipping_name
+  const [shippingFirstName, setShippingFirstName] = useState(() => {
+    const parts = (defaultValues.shipping_name ?? '').split(' ')
+    return parts.length > 1 ? parts.slice(0, -1).join(' ') : (parts[0] ?? '')
+  })
+  const [shippingLastName, setShippingLastName] = useState(() => {
+    const parts = (defaultValues.shipping_name ?? '').split(' ')
+    return parts.length > 1 ? parts[parts.length - 1] : ''
   })
 
   return (
@@ -652,7 +663,18 @@ function StepContact({ defaultValues, onBack, onNext }: {
             <Input {...register('email')} type="email" placeholder="contact@entreprise.fr" autoComplete="off" />
           </Field>
           <Field label={t('contact.phone')} error={errors.phone?.message}>
-            <Input {...register('phone')} type="tel" placeholder="06 12 34 56 78" autoComplete="off" />
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  invalid={!!errors.phone}
+                  required
+                />
+              )}
+            />
           </Field>
           <Field label={t('contact.sector')} error={errors.sector?.message}>
             <Controller
@@ -674,9 +696,30 @@ function StepContact({ defaultValues, onBack, onNext }: {
 
       <SubSection title={t('contact.addressTitle')} hint={t('contact.addressHint')}>
         <div className="grid gap-4">
-          <Field label={t('contact.recipient')} error={errors.shipping_name?.message}>
-            <Input {...register('shipping_name')} placeholder={t('contact.recipientPlaceholder')} autoComplete="off" />
-          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t('contact.recipientFirstName')} error={errors.shipping_name?.message}>
+              <Input
+                value={shippingFirstName}
+                onChange={e => {
+                  setShippingFirstName(e.target.value)
+                  setValue('shipping_name', `${e.target.value} ${shippingLastName}`.trim(), { shouldValidate: true })
+                }}
+                placeholder={t('contact.recipientFirstNamePlaceholder')}
+                autoComplete="off"
+              />
+            </Field>
+            <Field label={t('contact.recipientLastName')}>
+              <Input
+                value={shippingLastName}
+                onChange={e => {
+                  setShippingLastName(e.target.value)
+                  setValue('shipping_name', `${shippingFirstName} ${e.target.value}`.trim(), { shouldValidate: true })
+                }}
+                placeholder={t('contact.recipientLastNamePlaceholder')}
+                autoComplete="off"
+              />
+            </Field>
+          </div>
           <Field label={t('contact.address')} error={errors.shipping_address?.message}>
             <Input {...register('shipping_address')} placeholder={t('contact.addressPlaceholder')} autoComplete="off" />
           </Field>
