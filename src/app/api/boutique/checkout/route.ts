@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     | { price_data: { currency: string; product: string; unit_amount: number }; quantity: number }
     | { price_data: { currency: string; product_data: { name: string; images?: string[] }; unit_amount: number }; quantity: number }
   )[] = []
-  const orderItems: { product_id: string; product_name: string; quantity: number; unit_price: number }[] = []
+  const orderItems: { product_id: string; product_name: string; quantity: number; unit_price: number; weight_grams?: number }[] = []
   let subtotal = 0
 
   for (const product of products) {
@@ -139,6 +139,7 @@ export async function POST(req: Request) {
       product_name: product.name,
       quantity,
       unit_price:   unitPrice,
+      weight_grams: product.weight_grams,
       ...(enrichedCfv?.length ? { custom_field_values: enrichedCfv } : {}),
     })
   }

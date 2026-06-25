@@ -11,6 +11,7 @@ export interface ShopOrderItem {
   product_name: string
   quantity: number
   unit_price: number // centimes
+  weight_grams?: number // poids unitaire du produit au moment de la commande
   custom_field_values?: Array<{ key: string; label: string; value: string }>
 }
 
