@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { ShopProduct } from '@/types/shop-product'
 import type { ShopOrder } from '@/types/shop-order'
 import { SHOP_STATUS_LABELS } from '@/types/shop-order'
@@ -33,7 +33,11 @@ export default function AdminBoutiqueProducts({
   freeShipping: boolean
 }) {
   const router = useRouter()
-  const [tab, setTab]                       = useState<Tab>('products')
+  const searchParams = useSearchParams()
+  const [tab, setTab] = useState<Tab>(() => {
+    const t = searchParams.get('tab')
+    return t === 'products' ? 'products' : 'orders'
+  })
   const [products, setProducts]             = useState(initialProducts)
   const [orderFilter, setOrderFilter]       = useState<'all' | 'active' | ShopOrderStatus>('active')
   const [orderQuery, setOrderQuery]         = useState('')
@@ -142,7 +146,7 @@ export default function AdminBoutiqueProducts({
           ]).map(({ key, label, icon, badge }) => (
             <button
               key={key}
-              onClick={() => setTab(key)}
+              onClick={() => { setTab(key); router.replace(key === 'products' ? '?tab=products' : '/admin/boutique', { scroll: false }) }}
               className={['flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all', tab === key ? 'bg-bg-0 text-ink-0 shadow-sm' : 'text-ink-3 hover:text-ink-1'].join(' ')}
             >
               <span style={{ color: tab === key ? 'var(--amber)' : 'currentColor' }}>{icon}</span>
