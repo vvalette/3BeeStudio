@@ -92,7 +92,10 @@ async function boxtalFetch(path: string, options: RequestInit = {}) {
       ...(options.headers as Record<string, string> | undefined),
     },
   })
-  const json = await res.json()
+  // 204 No Content (ex: DELETE réussi) — pas de corps à parser
+  if (res.status === 204) return null
+  const text = await res.text()
+  const json = text ? JSON.parse(text) : null
   if (!res.ok) {
     const code = json?.errors?.[0]?.code ?? json?.message ?? `HTTP ${res.status}`
     throw new Error(`Boxtal ${path}: ${code}`)
@@ -232,7 +235,7 @@ export async function createShopBoxtalShipment(order: ShopOrder): Promise<Boxtal
 
 // Retourne null si l'annulation est impossible (colis déjà pris en charge).
 export async function cancelBoxtalShipment(boxtalOrderId: string): Promise<void> {
-  await boxtalFetch(`/v3.1/shipping-order/${boxtalOrderId}`, { method: 'DELETE' })
+  await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}`, { method: 'DELETE' })
 }
 
 export async function getBoxtalLabel(boxtalOrderId: string): Promise<string> {
