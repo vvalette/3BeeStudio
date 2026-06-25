@@ -9,7 +9,26 @@ import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
 import Select from '@/components/ui/Select'
 
-const COUNTRY_CODES = ['FR', 'BE', 'CH', 'LU', 'MC'] as const
+// Europe + DOM-TOM + principales destinations mondiales (Colissimo)
+const COUNTRY_CODES = [
+  'FR',
+  // DOM-TOM
+  'GP', 'MQ', 'GF', 'RE', 'YT', 'NC', 'PF', 'PM', 'BL', 'MF',
+  // Europe francophone proche
+  'BE', 'CH', 'LU', 'MC',
+  // EU
+  'DE', 'IT', 'ES', 'PT', 'NL', 'AT', 'IE', 'SE', 'DK', 'FI',
+  'PL', 'CZ', 'HU', 'RO', 'GR', 'BG', 'HR', 'SK', 'SI',
+  'EE', 'LV', 'LT', 'CY', 'MT',
+  // Hors-EU Europe
+  'GB', 'NO', 'IS', 'LI',
+  // Amériques
+  'US', 'CA', 'BR', 'AR', 'MX',
+  // Asie / Pacifique
+  'JP', 'KR', 'AU', 'NZ', 'SG', 'HK',
+  // Afrique / Maghreb
+  'MA', 'TN', 'DZ', 'SN',
+] as const
 
 interface Props {
   // En mode « Acheter maintenant », les articles sont imposés et le panier est ignoré
@@ -17,9 +36,9 @@ interface Props {
 }
 
 export default function CheckoutClient({ forcedItems }: Props) {
-  const t      = useTranslations('boutique.checkoutForm')
-  const tNfc   = useTranslations('nfc')
-  const locale = useLocale()
+  const t       = useTranslations('boutique.checkoutForm')
+  const tCommon = useTranslations('common')
+  const locale  = useLocale()
   const cart   = useCart()
   const isBuyNow = !!forcedItems
   const items = forcedItems ?? cart.items
@@ -42,8 +61,8 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const isPickup = deliveryMode === 'pickup'
 
   const countryOptions = useMemo(
-    () => COUNTRY_CODES.map((c) => ({ value: c, label: tNfc(`countries.${c}`) })),
-    [tNfc]
+    () => COUNTRY_CODES.map((c) => ({ value: c, label: tCommon(`countries.${c}`) })),
+    [tCommon]
   )
 
   const { subtotal, discountAmount, shipping, total } = useMemo(() => {

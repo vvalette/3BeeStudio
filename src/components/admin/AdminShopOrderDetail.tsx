@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT } from '@/lib/status-ui'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 
 // Statuts modifiables à la main par l'admin.
 const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'processing']
@@ -29,6 +30,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const router = useRouter()
+  const { confirm, modal } = useConfirm()
 
   const status = order.status
   const isPickup = order.delivery_mode === 'pickup'
@@ -59,7 +61,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   }
 
   async function cancelOrder() {
-    if (!window.confirm('Annuler cette commande ? Le client sera remboursé sur Stripe si le paiement a été encaissé.')) return
+    if (!await confirm({ title: 'Annuler cette commande ?', message: 'Le client sera remboursé sur Stripe si le paiement a été encaissé.', confirmLabel: 'Annuler la commande', variant: 'danger' })) return
     setCancelling(true)
     setCancelError(null)
     setCancelResult(null)
@@ -78,10 +80,9 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   }
 
   async function deleteOrder() {
-    const msg = order.status === 'pending_payment' || order.status === 'cancelled'
-      ? 'Supprimer définitivement cette commande ?'
-      : 'Supprimer définitivement cette commande ? Le client sera remboursé sur Stripe si le paiement a été encaissé.'
-    if (!window.confirm(msg)) return
+    const refundMsg = order.status !== 'pending_payment' && order.status !== 'cancelled'
+      ? 'Le client sera remboursé sur Stripe si le paiement a été encaissé.' : undefined
+    if (!await confirm({ title: 'Supprimer définitivement ?', message: refundMsg, confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     setDeleteError(null)
     try {
@@ -440,6 +441,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
           </div>
         </div>
       </div>
+      {modal}
     </main>
   )
 }

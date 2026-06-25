@@ -9,6 +9,7 @@ import { SHOP_STATUS_LABELS } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT, SHOP_STATUS_SHORT_LABELS, ALL_SHOP_STATUSES } from '@/lib/status-ui'
 import Tooltip from '@/components/ui/Tooltip'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 
 type Tab = 'products' | 'orders'
 type ShopOrderStatus = ShopOrder['status']
@@ -34,6 +35,7 @@ export default function AdminBoutiqueProducts({
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { confirm, modal } = useConfirm()
   const [tab, setTab] = useState<Tab>(() => {
     const t = searchParams.get('tab')
     return t === 'products' ? 'products' : 'orders'
@@ -72,7 +74,7 @@ export default function AdminBoutiqueProducts({
   }
 
   async function deleteProduct(product: ShopProduct) {
-    if (!confirm(`Supprimer « ${product.name} » ? Il sera archivé dans Stripe.`)) return
+    if (!await confirm({ title: `Supprimer « ${product.name} » ?`, message: 'Il sera archivé dans Stripe.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeletingId(product.id)
     const res = await fetch(`/api/admin/boutique/products/${product.id}`, { method: 'DELETE' })
     if (res.ok) {
@@ -369,6 +371,7 @@ export default function AdminBoutiqueProducts({
           </div>
         )}
       </div>
+      {modal}
     </main>
   )
 }
