@@ -217,6 +217,11 @@ export async function createShopBoxtalShipment(order: ShopOrder): Promise<Boxtal
   })
 }
 
+// Retourne null si l'annulation est impossible (colis déjà pris en charge).
+export async function cancelBoxtalShipment(boxtalOrderId: string): Promise<void> {
+  await boxtalFetch(`/v3.1/shipping-order/${boxtalOrderId}`, { method: 'DELETE' })
+}
+
 export async function getBoxtalLabel(boxtalOrderId: string): Promise<string> {
   const docsRes = await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}/shipping-document`)
   const docs = docsRes.content as { type: string; url: string }[]
