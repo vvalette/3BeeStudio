@@ -47,12 +47,24 @@ function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: num
   return { weight, length: 45, width: 35, height: 30 }
 }
 
-// Sélectionne l'offre Boxtal selon le poids total.
-// BOXTAL_SHIPPING_OFFER_CODE_LIGHT pour les petits colis (≤ 250 g).
-function selectOfferCode(weightKg: number): string {
-  const light = process.env.BOXTAL_SHIPPING_OFFER_CODE_LIGHT
-  if (light && weightKg <= 0.25) return light
-  return process.env.BOXTAL_SHIPPING_OFFER_CODE ?? 'POFR-ColissimoExpert'
+// Codes ISO des départements et territoires d'outre-mer français.
+const DOM_TOM = new Set(['GP', 'MQ', 'GF', 'RE', 'PM', 'YT', 'NC', 'PF', 'WF', 'BL', 'MF'])
+
+// Sélectionne l'offre Boxtal selon le pays et le poids.
+function selectOfferCode(country: string, weightKg: number): string {
+  const upper = country.toUpperCase()
+
+  if (upper !== 'FR' && !DOM_TOM.has(upper)) {
+    // International → Colissimo International (avec signature, plus sécurisé)
+    return 'POFR-ColissimoExpertInternational'
+  }
+
+  if (DOM_TOM.has(upper)) {
+    return 'POFR-ColissimoAccessOutreMer'
+  }
+
+  // France métropolitaine
+  return 'POFR-ColissimoAccess'
 }
 
 // Forme normalisée d'une expédition, indépendante du type de commande.
@@ -156,7 +168,7 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
         content: { id: CONTENT_ID, description: input.description },
       }],
     },
-    shippingOfferCode: selectOfferCode(input.pkg.weight),
+    shippingOfferCode: selectOfferCode(input.shipping_country ?? 'FR', input.pkg.weight),
     labelType: 'PDF_A4',
   }
 

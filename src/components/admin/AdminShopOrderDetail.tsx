@@ -8,7 +8,7 @@ import { formatPrice } from '@/lib/utils'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT } from '@/lib/status-ui'
 
 // Statuts modifiables à la main par l'admin.
-const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'processing', 'cancelled']
+const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'processing']
 
 // Statuts pilotés automatiquement par le suivi Boxtal (non modifiables à la main).
 const AUTO_STATUSES: ShopOrderStatus[] = ['shipped', 'delivered']
@@ -26,6 +26,8 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const [cancelling, setCancelling] = useState(false)
   const [cancelResult, setCancelResult] = useState<{ stripeRefunded: boolean; boxtalCancelled: boolean; boxtalError: string | null } | null>(null)
   const [cancelError, setCancelError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const router = useRouter()
 
   const status = order.status
@@ -72,6 +74,24 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
       setCancelError(e instanceof Error ? e.message : 'Erreur inconnue')
     } finally {
       setCancelling(false)
+    }
+  }
+
+  async function deleteOrder() {
+    const msg = order.status === 'pending_payment' || order.status === 'cancelled'
+      ? 'Supprimer définitivement cette commande ?'
+      : 'Supprimer définitivement cette commande ? Le client sera remboursé sur Stripe si le paiement a été encaissé.'
+    if (!window.confirm(msg)) return
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const res = await fetch(`/api/admin/boutique/orders/${order.id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      router.push('/admin/commandes')
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Erreur inconnue')
+      setDeleting(false)
     }
   }
 
@@ -379,7 +399,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
 
                 <button
                   onClick={cancelOrder}
-                  disabled={cancelling}
+                  disabled={cancelling || deleting}
                   className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-400 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {cancelling ? (
@@ -394,6 +414,27 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                     </>
                   )}
                 </button>
+
+                <div className="border-t border-red-500/15 pt-3">
+                  {deleteError && <p className="mb-2 text-xs text-red-400">{deleteError}</p>}
+                  <button
+                    onClick={deleteOrder}
+                    disabled={cancelling || deleting}
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-medium text-red-500/60 transition-colors hover:border-red-500/40 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deleting ? (
+                      <>
+                        <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeDasharray="40" strokeDashoffset="10" strokeLinecap="round" /></svg>
+                        Suppression…
+                      </>
+                    ) : (
+                      <>
+                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3.5h10M5.5 3.5V2.5h3V3.5M3.5 3.5l.7 8h6.6l.7-8" /></svg>
+                        Supprimer définitivement
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>
