@@ -40,26 +40,30 @@ export default function BoutiqueProductCard({
   ]
   const total = slides.length
 
-  const [activeIdx, setActiveIdx] = useState(0)
+  const [activeIdx, setActiveIdx] = useState(() =>
+    total > 1 ? Math.floor(Date.now() / SLIDE_DURATION) % total : 0
+  )
+  const timeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const manualRef   = useRef(false) // l'utilisateur a interagi → stop boucle
-
-  function startLoop() {
-    if (total <= 1) return
-    intervalRef.current = setInterval(() => {
-      setActiveIdx((i) => (i + 1) % total)
-    }, SLIDE_DURATION)
-  }
+  const manualRef   = useRef(false)
 
   function stopLoop() {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
+    if (timeoutRef.current)  { clearTimeout(timeoutRef.current);  timeoutRef.current  = null }
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null }
   }
 
   useEffect(() => {
-    startLoop()
+    if (total <= 1) return
+    // Synchronise toutes les cartes sur l'horloge globale
+    const msUntilNext = SLIDE_DURATION - (Date.now() % SLIDE_DURATION)
+    timeoutRef.current = setTimeout(() => {
+      if (manualRef.current) return
+      setActiveIdx(Math.floor(Date.now() / SLIDE_DURATION) % total)
+      intervalRef.current = setInterval(() => {
+        if (!manualRef.current)
+          setActiveIdx(Math.floor(Date.now() / SLIDE_DURATION) % total)
+      }, SLIDE_DURATION)
+    }, msUntilNext)
     return stopLoop
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [total])
