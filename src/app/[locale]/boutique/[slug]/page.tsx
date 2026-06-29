@@ -11,7 +11,8 @@ import AddToCartForm from '@/components/boutique/AddToCartForm'
 import BoutiqueProductMedia from '@/components/boutique/BoutiqueProductMedia'
 import DescriptionExpand from '@/components/boutique/DescriptionExpand'
 
-export const revalidate = 60
+// ISR long + revalidation à la demande via revalidateShop() (src/lib/revalidate.ts)
+export const revalidate = 3600
 
 export async function generateMetadata({
   params,

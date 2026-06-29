@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { generateSlug } from '@/types/shop-product'
 import type { ShopProduct } from '@/types/shop-product'
+import { revalidateShop } from '@/lib/revalidate'
 import { z } from 'zod'
 
 const customFieldSchema = z.object({
@@ -132,6 +133,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Revalide l'ancien et le nouveau slug (au cas où le produit a été renommé)
+  revalidateShop((updated as ShopProduct).slug, product.slug)
+
   return NextResponse.json(updated)
 }
 
@@ -142,7 +147,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params
   const { data: current } = await supabaseAdmin
     .from('shop_products')
-    .select('stripe_product_id, stripe_price_id')
+    .select('stripe_product_id, stripe_price_id, slug')
     .eq('id', id)
     .single()
 
@@ -155,6 +160,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const { error } = await supabaseAdmin.from('shop_products').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  revalidateShop((current as Pick<ShopProduct, 'slug'> | null)?.slug)
 
   return NextResponse.json({ success: true })
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendOrderConfirmation, sendShopOrderConfirmation } from '@/lib/resend'
+import { revalidateShop } from '@/lib/revalidate'
 import type { Order } from '@/types/order'
 import type { ShopOrder } from '@/types/shop-order'
 import Stripe from 'stripe'
@@ -56,6 +57,17 @@ export async function POST(req: Request) {
                 .then(({ error: rpcErr }) => {
                   if (rpcErr) console.error('[webhook] Erreur décrément stock:', item.product_id, rpcErr)
                 })
+            }
+
+            // Revalide les pages publiques pour refléter le nouveau stock
+            // (ISR long = pas de régénération auto avant 1h sans ça).
+            const productIds = (shopOrder.items ?? []).map((i) => i.product_id)
+            if (productIds.length > 0) {
+              const { data: rows } = await supabaseAdmin
+                .from('shop_products')
+                .select('slug')
+                .in('id', productIds)
+              revalidateShop(...(rows ?? []).map((r) => (r as { slug: string }).slug))
             }
 
             await sendShopOrderConfirmation(shopOrder).catch((err) =>
