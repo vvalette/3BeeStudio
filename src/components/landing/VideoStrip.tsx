@@ -6,6 +6,7 @@ import SocialVideoCard from './SocialVideoCard'
 const TIKTOK_VIDEOS = [
   { id: '7652319556232285473', label: 'BeeLid — Ikea Hack',           views: '9K' },
   { id: '7652624940654431510', label: '3BeeStudio — Impression 3D',   views: undefined },
+  { id: '7656800991987191073', label: '3BeeStudio — Impression 3D',   views: undefined },
 ]
 
 const INSTAGRAM_URL = 'https://www.instagram.com/3bee_studio_/'
@@ -48,7 +49,6 @@ export default async function VideoStrip() {
           </p>
         </Reveal>
 
-        {/* Deux vidéos TikTok */}
         <Reveal>
           <div className="flex flex-col sm:flex-row items-start justify-start gap-8">
             {TIKTOK_VIDEOS.map((v, i) => (
