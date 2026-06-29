@@ -6,7 +6,8 @@ import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@/i18n/routing'
 import BoutiqueCatalog from '@/components/boutique/BoutiqueCatalog'
 
-export const revalidate = 60
+// ISR long + revalidation à la demande via revalidateShop() (src/lib/revalidate.ts)
+export const revalidate = 3600
 
 type Props = {
   params: Promise<{ locale: Locale }>

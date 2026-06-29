@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { generateSlug } from '@/types/shop-product'
+import { revalidateShop } from '@/lib/revalidate'
 import { z } from 'zod'
 
 const customFieldSchema = z.object({
@@ -104,6 +105,8 @@ export async function POST(req: Request) {
     await stripe.products.update(stripeProduct.id, { active: false }).catch(() => null)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  revalidateShop(slug)
 
   return NextResponse.json(product, { status: 201 })
 }

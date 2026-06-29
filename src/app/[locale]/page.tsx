@@ -28,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export const revalidate = 60
+// ISR long : la home est servie depuis le cache CDN, régénérée à la demande
+// via revalidateShop() quand un produit change (voir src/lib/revalidate.ts).
+export const revalidate = 3600
 
 export default async function HomePage() {
   const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category, model_rotation'
