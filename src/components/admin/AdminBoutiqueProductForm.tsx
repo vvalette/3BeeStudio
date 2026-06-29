@@ -461,9 +461,14 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
               {/* Slug */}
               <div>
                 <label className={labelClass}>Slug URL</label>
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-ink-3">/boutique/</span>
-                  <input className={inputClass + ' pl-[80px]'} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={name ? generateSlug(name) : 'auto-généré'} />
+                <div className="flex items-center rounded-xl border border-[var(--line)] bg-bg-1 focus-within:border-amber transition-colors overflow-hidden">
+                  <span className="shrink-0 select-none border-r border-[var(--line)] bg-bg-2 px-3 py-2.5 text-sm text-ink-3">/boutique/</span>
+                  <input
+                    className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-ink-0 placeholder:text-ink-3 focus:outline-none"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder={name ? generateSlug(name) : 'auto-généré'}
+                  />
                 </div>
                 {!slug && name && <p className="mt-1 text-[11px] text-ink-3">Sera : /boutique/{generateSlug(name)}</p>}
               </div>
