@@ -249,7 +249,7 @@ export default function AdminOrdersList({
 
   // ── Sélection NFC ──
   const toggleNfc = useCallback((id: string) => {
-    setSelectedNfc((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setSelectedNfc((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
   }, [])
   const toggleAllNfc = useCallback(() => {
     setSelectedNfc((prev) => prev.size === filteredNfc.length ? new Set() : new Set(filteredNfc.map((o) => o.id)))
@@ -257,7 +257,7 @@ export default function AdminOrdersList({
 
   // ── Sélection Custom ──
   const toggleCustom = useCallback((id: string) => {
-    setSelectedCustom((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setSelectedCustom((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
   }, [])
   const toggleAllCustom = useCallback(() => {
     setSelectedCustom((prev) => prev.size === filteredCustom.length ? new Set() : new Set(filteredCustom.map((o) => o.id)))
@@ -265,7 +265,7 @@ export default function AdminOrdersList({
 
   // ── Sélection Shop ──
   const toggleShop = useCallback((id: string) => {
-    setSelectedShop((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setSelectedShop((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
   }, [])
   const toggleAllShop = useCallback(() => {
     setSelectedShop((prev) => prev.size === filteredShop.length ? new Set() : new Set(filteredShop.map((o) => o.id)))
@@ -666,7 +666,7 @@ function NfcList({
               <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 {order.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={order.logo_url} alt="" className="h-8 w-8 object-contain" />
+                  <img src={order.logo_url} alt="" loading="lazy" className="h-8 w-8 object-contain" />
                 ) : (
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" strokeWidth="1.3"><rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 )}

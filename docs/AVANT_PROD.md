@@ -38,7 +38,7 @@
 ### 2. Stripe — config Live
 
 - [ ] Activer le compte en mode Live
-- [ ] Créer l'endpoint webhook prod : `https://3beestudio.fr/api/stripe/webhook` (events `checkout.session.completed` + `payment_intent.succeeded`)
+- [ ] Créer l'endpoint webhook prod : `https://3beestudio.fr/api/stripe/webhook` (events `checkout.session.completed` + `payment_intent.succeeded` + **`checkout.session.expired`** ⚠️ nouveau, voir §6)
 - [ ] Copier le `whsec_...` généré dans `STRIPE_WEBHOOK_SECRET`
 - [ ] ⚠️ Recréer les produits + prix en mode Live : les `stripe_product_id` / `stripe_price_id` créés en test ne fonctionnent pas en Live. Recréer chaque produit boutique via l'admin une fois en clés Live.
 
@@ -60,6 +60,13 @@
 - [ ] Commande **NFC** complète (upload logo → lien → Stripe → email → page suivi)
 - [ ] **Devis sur-mesure** : depuis l'admin, envoyer un devis → lien d'acompte Stripe → email client
 - [ ] Login admin + déconnexion + accès refusé sans cookie
+
+### 6. Actions issues du plan d'amélioration (`docs/todo/PLAN_AMELIORATION.md`, appliqué le 2026-07-02)
+
+- [ ] **⚠️ Action manuelle obligatoire — Stripe Dashboard** : ajouter l'événement `checkout.session.expired` à l'endpoint webhook existant (Developers → Webhooks → endpoint `/api/stripe/webhook` → « Add events »). Sans ça, les paniers/commandes NFC abandonnés ne libèrent plus la promo newsletter et restent en `pending_payment` indéfiniment. À faire **sur l'endpoint test actuel** dès maintenant, et sur l'endpoint Live lors du passage en prod (§2 ci-dessus).
+- [ ] Optionnel — nettoyage des logos orphelins (bucket `logos`, uploadés mais jamais rattachés à une commande finalisée) : pas d'automatisation en place, à faire manuellement de temps en temps depuis Supabase Storage, ou implémenter plus tard une route cron dédiée.
+- Aucune nouvelle variable d'environnement requise par ce plan.
+- Aucune migration SQL requise par ce plan (le nettoyage des commandes expirées est une suppression de ligne `pending_payment`, pas un nouveau statut — pas de contrainte DB à faire évoluer).
 
 ---
 

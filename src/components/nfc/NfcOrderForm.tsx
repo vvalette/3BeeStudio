@@ -11,6 +11,7 @@ import { useDropzone, type FileRejection } from 'react-dropzone'
 import Select from '@/components/ui/Select'
 import PhoneInput from '@/components/ui/PhoneInput'
 import NfcLinkPicker, { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
+import { Link } from '@/i18n/navigation'
 
 type TFunc = (key: string) => string
 
@@ -768,7 +769,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
 }) {
   const t = useTranslations('nfcForm')
   const tCommon = useTranslations('common')
-  const { unitPrice, subtotal, shipping, total } = calcOrder(formData.quantity)
+  const { unitPrice, subtotal, shipping } = calcOrder(formData.quantity)
   const [hasNewsletterDiscount, setHasNewsletterDiscount] = useState(false)
 
   useEffect(() => {
@@ -957,7 +958,7 @@ function StepRecap({ formData, logoUrl, submitting, submitError, onBack, onEdit,
 
       <p className="text-center text-[11px] text-ink-3">
         {t.rich('recap.consent', {
-          cgv: (chunks) => <a href="/cgv" className="text-amber/60 underline hover:text-amber transition-colors">{chunks}</a>,
+          cgv: (chunks) => <Link href="/cgv" target="_blank" rel="noopener noreferrer" className="text-amber/60 underline hover:text-amber transition-colors">{chunks}</Link>,
         })}
       </p>
     </div>

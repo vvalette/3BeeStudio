@@ -3,6 +3,9 @@ import { createHmac, timingSafeEqual } from 'crypto'
 
 export const ADMIN_COOKIE_NAME = 'admin_token'
 
+// Durée de validité d'une session admin — alignée sur le maxAge du cookie (login route).
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7 // 7 jours
+
 function getAdminPassword(): string {
   const pw = process.env.ADMIN_PASSWORD
   if (!pw) throw new Error('ADMIN_PASSWORD non défini')
@@ -17,12 +20,18 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb)
 }
 
-// Token de session dérivé du mot de passe via HMAC.
-// Le mot de passe brut n'est jamais stocké dans le cookie.
-export function getSessionToken(): string {
+// Signature dérivée du mot de passe + de l'expiration — un token volé devient inutilisable après `exp`,
+// et changer ADMIN_PASSWORD invalide toutes les sessions existantes (comportement conservé).
+function sign(exp: number): string {
   return createHmac('sha256', getAdminPassword())
-    .update('admin-session-v1')
+    .update(`admin-session-v1.${exp}`)
     .digest('hex')
+}
+
+// Token de session structuré `exp.signature`. Le mot de passe brut n'est jamais stocké dans le cookie.
+export function getSessionToken(): string {
+  const exp = Date.now() + SESSION_MAX_AGE_SECONDS * 1000
+  return `${exp}.${sign(exp)}`
 }
 
 // Vérifie le mot de passe saisi au login (constant-time).
@@ -31,13 +40,21 @@ export function verifyPassword(input: unknown): boolean {
   return safeEqual(input, getAdminPassword())
 }
 
-// Vérifie le cookie de session présent sur les routes/pages admin.
+// Vérifie le cookie de session présent sur les routes/pages admin (signature + expiration).
 export async function isAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies()
   const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value
   if (!token) return false
+
+  const dotIndex = token.indexOf('.')
+  if (dotIndex === -1) return false
+  const expStr = token.slice(0, dotIndex)
+  const signature = token.slice(dotIndex + 1)
+  const exp = Number(expStr)
+  if (!Number.isFinite(exp) || exp < Date.now()) return false
+
   try {
-    return safeEqual(token, getSessionToken())
+    return safeEqual(signature, sign(exp))
   } catch {
     return false
   }

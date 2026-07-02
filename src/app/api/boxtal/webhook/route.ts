@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       console.error('[boxtal-webhook] erreur mise à jour shipped:', nfcErr ?? shopErr)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
-    console.log(`[boxtal-webhook] ${boxtalOrderId} → shipped (${status}, tracking: ${trackingNumber ?? 'N/A'})`)
+    console.info('[boxtal-webhook]', JSON.stringify({ event: 'shipped', boxtalOrderId, status, trackingNumber: trackingNumber ?? null }))
   } else if (status === 'DELIVERED') {
     const { error: nfcErr } = await supabaseAdmin
       .from('orders')
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
       console.error('[boxtal-webhook] erreur mise à jour delivered:', nfcErr ?? shopErr)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
-    console.log(`[boxtal-webhook] ${boxtalOrderId} → delivered`)
+    console.info('[boxtal-webhook]', JSON.stringify({ event: 'delivered', boxtalOrderId }))
   }
 
   return NextResponse.json({ received: true })

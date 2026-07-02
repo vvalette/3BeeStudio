@@ -33,13 +33,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Seul le format SVG est accepté' }, { status: 400 })
   }
 
-  // Sécurité : rejeter les SVG contenant des vecteurs XSS courants
+  // Sécurité : rejeter les SVG contenant des vecteurs XSS courants.
+  // Origine Supabase Storage isolée de 3beestudio.fr = mitigation supplémentaire (pas de cookie/session
+  // à voler côté origine du bucket), mais cette allowlist reste la première ligne de défense.
   const text = await file.text()
   const dangerous =
     /<script[\s>]/i.test(text) ||
     /javascript:/i.test(text) ||
     /on\w+\s*=/i.test(text) ||
-    /<foreignObject/i.test(text)
+    /<foreignObject/i.test(text) ||
+    /<use[\s>]/i.test(text) ||
+    /xlink:href\s*=/i.test(text) ||
+    /\bhref\s*=/i.test(text) ||
+    /<animate/i.test(text) ||
+    /<set[\s>]/i.test(text) ||
+    /<style[\s>]/i.test(text)
   if (dangerous) {
     return NextResponse.json({ error: 'SVG non conforme (contenu interdit détecté)' }, { status: 400 })
   }

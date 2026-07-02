@@ -102,7 +102,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
           >
             {order.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={order.logo_url} alt="" className="h-9 w-9 object-contain" />
+              <img src={order.logo_url} alt="" loading="lazy" className="h-9 w-9 object-contain" />
             ) : (
               <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--ink-3)" strokeWidth="1.3">
                 <rect x="2" y="2" width="12" height="12" rx="2" /><circle cx="6" cy="6" r="1.3" /><path d="M2 11l3.5-3.5L9 11l2.5-2.5L14 11" strokeLinecap="round" strokeLinejoin="round" />
@@ -222,7 +222,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
                     style={{ background: 'var(--hi-05)', border: '1px solid var(--line-2)' }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={order.logo_url} alt={`Logo ${order.company}`} className="h-20 w-20 object-contain" />
+                    <img src={order.logo_url} alt={`Logo ${order.company}`} loading="lazy" className="h-20 w-20 object-contain" />
                   </div>
                   <a
                     href={order.logo_url}

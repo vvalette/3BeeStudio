@@ -132,7 +132,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
       {/* List */}
       <div className="flex flex-col gap-3">
         {items.length === 0 && (
-          <p className="text-ink-2 text-sm text-center py-12">Aucun témoignage pour l'instant.</p>
+          <p className="text-ink-2 text-sm text-center py-12">Aucun témoignage pour l&apos;instant.</p>
         )}
         {items.map((item) => (
           <div key={item.id} className="border border-[var(--line)] bg-bg-2 rounded-xl overflow-hidden" style={{ opacity: item.visible ? 1 : 0.45 }}>
@@ -293,7 +293,7 @@ function FormFields({
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Ordre d'affichage</label>
+          <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Ordre d&apos;affichage</label>
           <input
             type="number"
             value={form.display_order}

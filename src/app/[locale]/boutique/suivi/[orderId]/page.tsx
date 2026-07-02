@@ -10,6 +10,7 @@ import { SHOP_STATUS_STEPS } from '@/types/shop-order'
 import { SHOP_STATUS_PILL } from '@/lib/status-ui'
 import { formatPrice } from '@/lib/utils'
 import CartClearer from '@/components/boutique/CartClearer'
+import { Link } from '@/i18n/navigation'
 
 export async function generateMetadata({
   params,
@@ -290,9 +291,9 @@ export default async function SuiviBoutiquePage({
           })}
         </p>
 
-        <a href="/boutique" className="flex cursor-pointer items-center justify-center gap-2 rounded-pill border border-[var(--line)] py-3 text-sm font-medium text-ink-2 hover:text-ink-0 transition-colors">
+        <Link href="/boutique" className="flex cursor-pointer items-center justify-center gap-2 rounded-pill border border-[var(--line)] py-3 text-sm font-medium text-ink-2 hover:text-ink-0 transition-colors">
           {t('backToShop')}
-        </a>
+        </Link>
       </div>
     </main>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import Image from 'next/image'
 import { useRouter } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
 import { useCart } from './CartProvider'
@@ -107,10 +108,9 @@ export default function CartDrawer() {
               <ul className="space-y-4">
                 {items.map((item) => (
                   <li key={item.product_id} className="flex gap-3">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--line)] bg-bg-2">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--line)] bg-bg-2">
                       {item.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-ink-3">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="3" /><path d="m3 9 4-4 4 4 4-4 4 4" /></svg>

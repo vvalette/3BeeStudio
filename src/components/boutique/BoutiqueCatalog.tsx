@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import type { ShopProduct } from '@/types/shop-product'
+import type { ShopProductCard } from '@/types/shop-product'
 import type { ShopCategoryRow } from '@/types/shop-category'
 import BoutiqueProductCard from './BoutiqueProductCard'
 
 interface Props {
-  products: ShopProduct[]
+  products: ShopProductCard[]
   categories: ShopCategoryRow[]
   locale: string
 }

@@ -152,7 +152,13 @@ export async function POST(req: Request) {
     },
     success_url: `${appUrl}/suivi/${order.id}?payment=success`,
     cancel_url: `${appUrl}/nfc?cancelled=true`,
-    metadata: { order_id: order.id },
+    // Expire après 30 min (minimum Stripe) — au-delà, checkout.session.expired
+    // nettoie la commande fantôme et libère la promo newsletter (cf. webhook).
+    expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+    metadata: {
+      order_id: order.id,
+      ...(hasNewsletterDiscount ? { newsletter_promo_email: data.email } : {}),
+    },
   })
 
   // 3. Stocker l'ID de session Stripe
