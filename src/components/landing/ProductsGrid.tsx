@@ -2,11 +2,11 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
-import type { ShopProduct } from '@/types/shop-product'
+import type { ShopProductCard } from '@/types/shop-product'
 import BoutiqueProductCard from '@/components/boutique/BoutiqueProductCard'
 
 interface Props {
-  products: ShopProduct[]
+  products: ShopProductCard[]
   popular?: boolean
 }
 

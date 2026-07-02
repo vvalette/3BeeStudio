@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { CartItem } from '@/types/cart'
@@ -306,8 +307,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
             <li key={item.product_id} className="flex gap-3">
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[var(--line)] bg-bg-2">
                 {item.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                  <Image src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
                 ) : (
                   <div className="flex h-full items-center justify-center text-ink-3">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="3" /></svg>

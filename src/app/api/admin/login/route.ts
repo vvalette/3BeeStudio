@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { ADMIN_COOKIE_NAME, getSessionToken, verifyPassword } from '@/lib/auth'
+import { ADMIN_COOKIE_NAME, SESSION_MAX_AGE_SECONDS, getSessionToken, verifyPassword } from '@/lib/auth'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 jours
+    maxAge: SESSION_MAX_AGE_SECONDS,
     path: '/',
   })
 

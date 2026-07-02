@@ -91,7 +91,7 @@ export default function ImageCropModal({ src, onConfirm, onCancel }: Props) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 sm:p-4">
       <div className="flex w-full max-w-lg flex-col gap-4 rounded-t-2xl sm:rounded-2xl border border-[var(--line)] bg-bg-1 p-5 max-h-[92dvh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ink-0">Recadrer l'image</h2>
+          <h2 className="text-sm font-semibold text-ink-0">Recadrer l&apos;image</h2>
           <button type="button" onClick={onCancel} className="cursor-pointer text-ink-3 hover:text-ink-0 transition-colors">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M4 4l10 10M14 4L4 14" />

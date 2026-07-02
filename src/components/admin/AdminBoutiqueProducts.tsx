@@ -7,7 +7,7 @@ import type { ShopProduct } from '@/types/shop-product'
 import type { ShopOrder } from '@/types/shop-order'
 import { SHOP_STATUS_LABELS } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
-import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT, SHOP_STATUS_SHORT_LABELS, ALL_SHOP_STATUSES } from '@/lib/status-ui'
+import { SHOP_STATUS_PILL, SHOP_STATUS_SHORT_LABELS, ALL_SHOP_STATUSES } from '@/lib/status-ui'
 import Tooltip from '@/components/ui/Tooltip'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 
@@ -207,7 +207,7 @@ export default function AdminBoutiqueProducts({
                 <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden border border-[var(--line)] bg-bg-2 flex items-center justify-center">
                   {product.images[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                    <img src={product.images[0]} alt={product.name} loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-3">
                       <rect x="3" y="3" width="18" height="18" rx="3" /><path d="m3 9 4-4 4 4 4-4 4 4" /><circle cx="8" cy="14" r="2" />

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { ShopProduct } from '@/types/shop-product'
+import type { ShopProductCard } from '@/types/shop-product'
 import type { ShopCategoryRow } from '@/types/shop-category'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
@@ -29,11 +29,15 @@ export default async function BoutiquePage({ params, searchParams }: Props) {
   const t = await getTranslations({ locale, namespace: 'boutique.page' })
 
   const [{ data: productsData }, { data: catsData }] = await Promise.all([
-    supabase.from('shop_products').select('*').eq('active', true).order('created_at', { ascending: false }),
+    supabase
+      .from('shop_products')
+      .select('id, slug, name, name_en, subtitle, subtitle_en, price, sale_price, stock, images, stl_url, model_rotation, category, featured')
+      .eq('active', true)
+      .order('created_at', { ascending: false }),
     supabase.from('shop_categories').select('*').order('sort_order').order('created_at'),
   ])
 
-  const products   = (productsData ?? []) as ShopProduct[]
+  const products   = (productsData ?? []) as ShopProductCard[]
   const categories = (catsData ?? []) as ShopCategoryRow[]
 
   return (

@@ -141,7 +141,7 @@ export default function STLViewer({ url, height = 380, fill = false, rotation }:
         <span className="text-[10px] text-ink-3">{t('hint')}</span>
       </div>
 
-      <Canvas camera={{ fov: 45 }} shadows gl={{ antialias: true }}>
+      <Canvas camera={{ fov: 45 }} shadows gl={{ antialias: true }} dpr={[1, 1.5]}>
         <Scene url={url} rotation={rotation} bodyColor={bodyColor} />
       </Canvas>
 

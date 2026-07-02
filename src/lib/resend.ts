@@ -22,7 +22,6 @@ export async function sendOrderConfirmation(order: Order): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
   const from = getFrom()
 
-  console.log('[resend] Rendu du template email…')
   const html = await render(
     OrderConfirmation({
       company: order.company,
@@ -34,7 +33,6 @@ export async function sendOrderConfirmation(order: Order): Promise<void> {
       appUrl,
     }),
   )
-  console.log('[resend] Template rendu, envoi vers', order.email, 'depuis', from)
 
   const { data, error } = await resend.emails.send({
     from,
@@ -49,7 +47,7 @@ export async function sendOrderConfirmation(order: Order): Promise<void> {
     throw new Error(`Resend error ${error.name}: ${error.message}`)
   }
 
-  console.log('[resend] Email envoyé — id:', data?.id, '→', order.email)
+  console.info('[resend]', JSON.stringify({ type: 'order_confirmation', orderId: order.id, resendId: data?.id }))
 }
 
 export async function sendCustomOrderConfirmation(order: CustomOrder): Promise<void> {
@@ -67,7 +65,7 @@ export async function sendCustomOrderConfirmation(order: CustomOrder): Promise<v
   })
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
-  console.log('[resend] Confirmation sur-mesure envoyée — id:', data?.id, '→', order.email)
+  console.info('[resend]', JSON.stringify({ type: 'custom_order_confirmation', orderId: order.id, resendId: data?.id }))
 }
 
 export async function sendCustomOrderAdminNotification(order: CustomOrder): Promise<void> {
@@ -85,7 +83,7 @@ export async function sendCustomOrderAdminNotification(order: CustomOrder): Prom
   })
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
-  console.log('[resend] Notification admin sur-mesure — id:', data?.id)
+  console.info('[resend]', JSON.stringify({ type: 'custom_order_admin_notification', orderId: order.id, resendId: data?.id }))
 }
 
 // Cache en mémoire pour éviter un appel API à chaque inscription
@@ -103,7 +101,7 @@ async function getAudienceId(): Promise<string | null> {
   }
 
   _audienceId = data.data[0].id
-  console.log('[resend] Audience auto-découverte:', _audienceId)
+  console.info('[resend]', JSON.stringify({ type: 'audience_discovered', audienceId: _audienceId }))
   return _audienceId
 }
 
@@ -145,7 +143,7 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
   })
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
-  console.log('[resend] Confirmation boutique — id:', data?.id, '→', order.email)
+  console.info('[resend]', JSON.stringify({ type: 'shop_order_confirmation', orderId: order.id, resendId: data?.id }))
 }
 
 export async function sendNewsletterWelcome(email: string, locale = 'fr'): Promise<void> {
@@ -168,5 +166,5 @@ export async function sendNewsletterWelcome(email: string, locale = 'fr'): Promi
   })
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
-  console.log('[resend] Email bienvenue newsletter — id:', data?.id, '→', email)
+  console.info('[resend]', JSON.stringify({ type: 'newsletter_welcome', resendId: data?.id }))
 }

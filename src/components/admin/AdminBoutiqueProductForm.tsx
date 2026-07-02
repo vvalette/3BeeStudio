@@ -92,7 +92,7 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
           {images.map((url, i) => (
             <div key={i} className="group relative h-20 w-20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="" className="h-full w-full rounded-xl object-cover border border-[var(--line)]" />
+              <img src={url} alt="" loading="lazy" className="h-full w-full rounded-xl object-cover border border-[var(--line)]" />
               <button
                 type="button"
                 onClick={() => removeImage(url)}
@@ -147,7 +147,7 @@ function ImageDropzone({ images, onChange }: { images: string[]; onChange: (imgs
                   e.target.value = ''
                 }}
               />
-              Choisir depuis l'appareil
+              Choisir depuis l&apos;appareil
             </label>
           )}
         </div>
@@ -581,7 +581,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
             <div>
               <div className="mb-2">
                 <label className={labelClass}>Orientation du modèle 3D</label>
-                <p className="text-[11px] text-ink-3 -mt-1">Ajuste l'angle d'affichage dans la boutique. La rotation X/Y/Z est en degrés.</p>
+                <p className="text-[11px] text-ink-3 -mt-1">Ajuste l&apos;angle d&apos;affichage dans la boutique. La rotation X/Y/Z est en degrés.</p>
               </div>
 
               {/* Mini viewer live */}

@@ -1,5 +1,6 @@
 import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import { Link } from '@/i18n/navigation'
 import type { ShopProduct } from '@/types/shop-product'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD, effectivePrice, discountPercent } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
@@ -72,7 +73,7 @@ export default async function ProductPage({
 
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-[12px] text-ink-3">
-          <a href="/boutique" className="hover:text-ink-1 transition-colors">{t('breadcrumb')}</a>
+          <Link href="/boutique" className="hover:text-ink-1 transition-colors">{t('breadcrumb')}</Link>
           <span>/</span>
           <span className="text-ink-2">{displayName}</span>
         </nav>

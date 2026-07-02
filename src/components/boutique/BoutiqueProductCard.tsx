@@ -1,9 +1,10 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useRouter } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
-import type { ShopProduct } from '@/types/shop-product'
+import type { ShopProductCard } from '@/types/shop-product'
 import { discountPercent } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import STLViewerWrapper from './STLViewerWrapper'
@@ -18,7 +19,7 @@ export default function BoutiqueProductCard({
   showPopularBadge = false,
   popularLabel = 'Populaire',
 }: {
-  product: ShopProduct
+  product: ShopProductCard
   locale?: string
   showPopularBadge?: boolean
   popularLabel?: string
@@ -26,6 +27,8 @@ export default function BoutiqueProductCard({
   const router  = useRouter()
   const t = useTranslations('boutique.card')
   const wasDrag = useRef(false)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
   const isEn = locale === 'en'
   const displayName    = (isEn && product.name_en)    ? product.name_en    : product.name
   const displaySubtitle = (isEn && product.subtitle_en) ? product.subtitle_en : product.subtitle
@@ -65,7 +68,6 @@ export default function BoutiqueProductCard({
       }, SLIDE_DURATION)
     }, msUntilNext)
     return stopLoop
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [total])
 
   function goTo(idx: number) {
@@ -73,6 +75,19 @@ export default function BoutiqueProductCard({
     stopLoop()
     setActiveIdx(idx)
   }
+
+  // N'active le contexte WebGL du viewer 3D que si la carte est visible à l'écran
+  // (les navigateurs limitent le nombre de contextes WebGL simultanés).
+  useEffect(() => {
+    if (!has3D || !cardRef.current) return
+    const el = cardRef.current
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin: '200px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [has3D])
 
   const active = slides[activeIdx]
   const outOfStock = product.stock !== null && product.stock === 0
@@ -109,6 +124,7 @@ export default function BoutiqueProductCard({
 
   return (
     <div
+      ref={cardRef}
       className="group relative block rounded-2xl border border-[var(--line)] bg-bg-1 overflow-hidden hover:border-[var(--line-amber)] transition-all duration-200 hover:shadow-amber hover:scale-[1.02] hover:z-10 cursor-pointer"
       onPointerDown={handlePointerDown}
       onClick={() => { if (!wasDrag.current) router.push(`/boutique/${product.slug}`) }}
@@ -116,12 +132,9 @@ export default function BoutiqueProductCard({
       {/* Visuel */}
       <div className="relative w-full overflow-hidden bg-bg-2 aspect-[4/3]">
 
-        {/* Couches empilées — toutes montées, opacité gère la visibilité */}
-        {has3D && (
-          <div
-            className="absolute inset-0 transition-opacity duration-700"
-            style={{ opacity: active.type === '3d' ? 1 : 0, pointerEvents: active.type === '3d' ? 'auto' : 'none' }}
-          >
+        {/* Le viewer 3D n'est monté (contexte WebGL) que sur son slide actif et carte visible — pas de fondu, cut assumé. */}
+        {has3D && active.type === '3d' && inView && (
+          <div className="absolute inset-0">
             <STLViewerWrapper url={product.stl_url!} fill rotation={product.model_rotation ?? undefined} />
           </div>
         )}
@@ -135,11 +148,12 @@ export default function BoutiqueProductCard({
               pointerEvents: active.type === 'photo' && active.index === i ? 'auto' : 'none',
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={src}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
         ))}

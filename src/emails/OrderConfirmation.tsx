@@ -126,7 +126,7 @@ export default function OrderConfirmation({
           {/* CTA suivi */}
           <Section style={{ ...section, textAlign: 'center' }}>
             <Text style={{ ...intro, textAlign: 'center', marginBottom: 20 }}>
-              Suivez l'avancement de votre commande en temps réel :
+              Suivez l&apos;avancement de votre commande en temps réel :
             </Text>
             <Link href={trackingUrl} style={ctaButton}>
               Suivre ma commande →
@@ -141,7 +141,7 @@ export default function OrderConfirmation({
               Une question ? Répondez simplement à cet email.
             </Text>
             <Text style={{ ...footerText, marginTop: 8 }}>
-              3BeeStudio · Studio d'impression 3D français
+              3BeeStudio · Studio d&apos;impression 3D français
             </Text>
           </Section>
 

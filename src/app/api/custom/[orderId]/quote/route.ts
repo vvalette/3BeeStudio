@@ -9,7 +9,6 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { Resend } from 'resend'
-import type { CustomOrder } from '@/types/custom-order'
 
 const schema = z.object({
   deposit_amount: z.number().int().positive(), // en centimes

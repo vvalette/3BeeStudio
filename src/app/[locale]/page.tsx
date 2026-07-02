@@ -5,7 +5,7 @@ import { localBusinessSchema } from '@/lib/schema'
 import JsonLd from '@/components/seo/JsonLd'
 import type { Locale } from '@/i18n/routing'
 import { supabase } from '@/lib/supabase'
-import type { ShopProduct } from '@/types/shop-product'
+import type { ShopProductCard } from '@/types/shop-product'
 import Hero            from '@/components/landing/Hero'
 import NFCSection      from '@/components/landing/NFCSection'
 import VideoStrip      from '@/components/landing/VideoStrip'
@@ -52,7 +52,7 @@ export default async function HomePage() {
     .order('created_at', { ascending: false })
     .limit(8)
 
-  const products = ((hasFeatured ? featuredData : fallbackData) ?? []) as ShopProduct[]
+  const products = ((hasFeatured ? featuredData : fallbackData) ?? []) as ShopProductCard[]
 
   return (
     <div className="bg-bg-0 text-ink-0 w-full">

@@ -1,4 +1,3 @@
-import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { cancelBoxtalShipment } from '@/lib/boxtal'
 import type { ShopOrder } from '@/types/shop-order'

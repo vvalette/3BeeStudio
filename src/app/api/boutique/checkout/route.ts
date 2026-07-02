@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
-import { calcShopShipping } from '@/types/shop-product'
+import { calcShopShipping, mergeCartQuantities, computeNewsletterDiscount } from '@/types/shop-product'
 import type { ShopProduct } from '@/types/shop-product'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { z } from 'zod'
@@ -50,14 +50,7 @@ export async function POST(req: Request) {
   const d = parsed.data
 
   // Fusionne les quantités d'un même produit (sécurité) — conserve les custom_field_values du 1er item
-  const qtyByProduct = new Map<string, { quantity: number; custom_field_values?: Record<string, string> }>()
-  for (const it of d.items) {
-    const existing = qtyByProduct.get(it.product_id)
-    qtyByProduct.set(it.product_id, {
-      quantity:            (existing?.quantity ?? 0) + it.quantity,
-      custom_field_values: existing?.custom_field_values ?? it.custom_field_values,
-    })
-  }
+  const qtyByProduct = mergeCartQuantities(d.items)
 
   // Récupère tous les produits en une requête (service_role — bypass RLS)
   const { data: productsRaw, error: productsError } = await supabaseAdmin
@@ -153,7 +146,7 @@ export async function POST(req: Request) {
     .maybeSingle()
 
   const hasNewsletterDiscount = newsletterSub !== null
-  const discountAmount        = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
+  const discountAmount        = hasNewsletterDiscount ? computeNewsletterDiscount(subtotal) : 0
   const total                 = subtotal - discountAmount + shipping
 
   // Crée la commande en base
@@ -274,9 +267,13 @@ export async function POST(req: Request) {
     },
     success_url: `${appUrl}${prefix}/boutique/suivi/${order.id}?payment=success`,
     cancel_url:  `${appUrl}${prefix}/boutique?cancelled=true`,
+    // Expire après 30 min (minimum Stripe) — au-delà, checkout.session.expired
+    // nettoie la commande fantôme et libère la promo newsletter (cf. webhook).
+    expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
     metadata: {
       shop_order_id: order.id,
       type:          'shop_order',
+      ...(hasNewsletterDiscount ? { newsletter_promo_email: d.email } : {}),
     },
   })
 

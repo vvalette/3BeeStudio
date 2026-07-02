@@ -92,7 +92,7 @@ export default function CustomOrderAdmin({ order, appUrl }: Props) {
               href={`${appUrl}/admin/custom/${order.id}`}
               style={{ display: 'inline-block', background: 'linear-gradient(180deg,#FBBF24,#F59E0B)', color: '#1A1300', fontSize: 14, fontWeight: 700, borderRadius: 999, padding: '12px 28px', textDecoration: 'none' }}
             >
-              Ouvrir dans l'admin →
+              Ouvrir dans l&apos;admin →
             </Link>
           </Section>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { ShopProduct } from '@/types/shop-product'
 import STLViewerWrapper from './STLViewerWrapper'
 
@@ -41,12 +42,18 @@ export default function BoutiqueProductMedia({ product }: { product: ShopProduct
       )}
 
       {/* Visuel principal */}
-      <div className={`aspect-square w-full overflow-hidden rounded-2xl bg-bg-1 ${tab === '3d' && has3D ? '' : 'border border-[var(--line)]'}`}>
+      <div className={`relative aspect-square w-full overflow-hidden rounded-2xl bg-bg-1 ${tab === '3d' && has3D ? '' : 'border border-[var(--line)]'}`}>
         {tab === '3d' && has3D ? (
           <STLViewerWrapper url={product.stl_url!} fill rotation={product.model_rotation ?? undefined} />
         ) : hasImages ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={product.images[active]} alt={product.name} className="h-full w-full object-cover" />
+          <Image
+            src={product.images[active]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+            className="object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-ink-3">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8">
@@ -63,12 +70,11 @@ export default function BoutiqueProductMedia({ product }: { product: ShopProduct
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`aspect-square overflow-hidden rounded-xl border transition-colors ${
+              className={`relative aspect-square overflow-hidden rounded-xl border transition-colors ${
                 active === i ? 'border-[var(--line-amber)]' : 'border-[var(--line)] hover:border-[var(--line-2)]'
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img} alt="" className="h-full w-full object-cover cursor-pointer" />
+              <Image src={img} alt="" fill sizes="80px" loading="lazy" className="object-cover cursor-pointer" />
             </button>
           ))}
         </div>

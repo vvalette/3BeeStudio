@@ -56,10 +56,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
-    { media: '(prefers-color-scheme: dark)', color: '#0A0A0B' },
-  ],
+  // Thème clair par défaut (pas de suivi OS) — statique pour rester cohérent avec le reste du site.
+  themeColor: '#FFFFFF',
   colorScheme: 'light dark',
   width: 'device-width',
   initialScale: 1,
@@ -81,7 +79,18 @@ export default async function LocaleLayout({ children, params }: Props) {
     notFound()
   }
 
-  const messages = await getMessages()
+  const allMessages = await getMessages()
+
+  // N'envoie au client que les namespaces réellement consommés par des composants 'use client'
+  // (navbar, panier, formulaires NFC/sur-mesure/boutique…). Le reste (pages légales, sections
+  // landing statiques, pages de suivi…) est rendu côté serveur via useTranslations/getTranslations
+  // en RSC et n'a jamais besoin du provider client — ~55% de payload i18n en moins.
+  const CLIENT_NAMESPACES = [
+    'nav', 'footer', 'boutique', 'common', 'newsletter', 'nfcSection', 'nfcForm', 'nfcLink', 'surMesureForm',
+  ] as const
+  const messages = Object.fromEntries(
+    CLIENT_NAMESPACES.filter((ns) => ns in allMessages).map((ns) => [ns, allMessages[ns]])
+  )
 
   return (
     <html

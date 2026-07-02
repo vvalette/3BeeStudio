@@ -51,7 +51,7 @@ function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: num
 const DOM_TOM = new Set(['GP', 'MQ', 'GF', 'RE', 'PM', 'YT', 'NC', 'PF', 'WF', 'BL', 'MF'])
 
 // Sélectionne l'offre Boxtal selon le pays et le poids.
-function selectOfferCode(country: string, weightKg: number): string {
+function selectOfferCode(country: string): string {
   const upper = country.toUpperCase()
 
   if (upper !== 'FR' && !DOM_TOM.has(upper)) {
@@ -171,7 +171,7 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
         content: { id: CONTENT_ID, description: input.description },
       }],
     },
-    shippingOfferCode: selectOfferCode(input.shipping_country ?? 'FR', input.pkg.weight),
+    shippingOfferCode: selectOfferCode(input.shipping_country ?? 'FR'),
     labelType: 'PDF_A4',
   }
 
