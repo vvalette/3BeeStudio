@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Manrope, JetBrains_Mono } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages } from 'next-intl/server'
+import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import ThemeProvider from '@/components/layout/ThemeProvider'
@@ -78,6 +78,10 @@ export default async function LocaleLayout({ children, params }: Props) {
   if (!(routing.locales as readonly string[]).includes(locale)) {
     notFound()
   }
+
+  // Rendu statique : sans cet appel, next-intl lit les headers de la requête
+  // et force TOUTES les pages [locale] en dynamique (aucun cache CDN).
+  setRequestLocale(locale)
 
   const allMessages = await getMessages()
 

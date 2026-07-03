@@ -1,7 +1,9 @@
-import { getLocale } from 'next-intl/server'
 import { redirect } from '@/i18n/navigation'
+import type { Locale } from '@/i18n/routing'
 
-export default async function SurMesurePage() {
-  const locale = await getLocale()
+type Props = { params: Promise<{ locale: Locale }> }
+
+export default async function SurMesurePage({ params }: Props) {
+  const { locale } = await params
   redirect({ href: '/custom', locale })
 }

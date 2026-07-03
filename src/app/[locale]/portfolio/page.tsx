@@ -1,5 +1,6 @@
+import { use } from 'react'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@/i18n/routing'
 import { Link } from '@/i18n/navigation'
@@ -16,7 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function PortfolioPage() {
+export default function PortfolioPage({ params }: Props) {
+  const { locale } = use(params)
+  setRequestLocale(locale)
   const t = useTranslations('portfolio')
   return (
     <main className="relative min-h-[calc(100dvh-72px)] bg-bg-0 flex items-center justify-center overflow-hidden">

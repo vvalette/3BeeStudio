@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { buildAlternates } from '@/lib/seo'
 import { localBusinessSchema } from '@/lib/schema'
 import JsonLd from '@/components/seo/JsonLd'
@@ -32,7 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // via revalidateShop() quand un produit change (voir src/lib/revalidate.ts).
 export const revalidate = 3600
 
-export default async function HomePage() {
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category, model_rotation'
 
   const { data: featuredData } = await supabase

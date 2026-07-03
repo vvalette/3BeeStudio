@@ -12,16 +12,22 @@ import { revalidatePath } from 'next/cache'
  * `localePrefix: 'as-needed'`.
  */
 export function revalidateShop(...slugs: (string | null | undefined)[]) {
+  // Chaque chemin est décliné avec le préfixe interne `/fr` : le préfixe est
+  // masqué dans l'URL publique, mais les entrées de cache ISR vivent sous
+  // /[locale]/… — on couvre les deux formes pour être sûr d'invalider.
   // Home (grille produits featured)
   revalidatePath('/')
+  revalidatePath('/fr')
   revalidatePath('/en')
   // Catalogue boutique
   revalidatePath('/boutique')
+  revalidatePath('/fr/boutique')
   revalidatePath('/en/boutique')
   // Fiches produit concernées (slug courant + ancien slug si renommé)
   for (const slug of slugs) {
     if (!slug) continue
     revalidatePath(`/boutique/${slug}`)
+    revalidatePath(`/fr/boutique/${slug}`)
     revalidatePath(`/en/boutique/${slug}`)
   }
 }
