@@ -43,32 +43,26 @@ export default function BoutiqueProductCard({
   ]
   const total = slides.length
 
-  // Démarre toujours sur la photo 0 : la page est prérendue statiquement, un
-  // index basé sur Date.now() serait figé au build (carte blanche si le HTML
-  // arrive sur le slide 3D) et divergerait du client à l'hydratation.
-  // La synchro sur l'horloge globale reprend au premier tick de l'effet.
+  // Démarre toujours sur la photo 0 (première du tableau `slides`) : garantit
+  // qu'une photo s'affiche en premier, jamais le 3D, et reste cohérent entre
+  // le HTML prérendu statiquement et l'hydratation côté client.
   const [activeIdx, setActiveIdx] = useState(0)
-  const timeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const manualRef   = useRef(false)
 
   function stopLoop() {
-    if (timeoutRef.current)  { clearTimeout(timeoutRef.current);  timeoutRef.current  = null }
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null }
   }
 
   useEffect(() => {
     if (total <= 1) return
-    // Synchronise toutes les cartes sur l'horloge globale
-    const msUntilNext = SLIDE_DURATION - (Date.now() % SLIDE_DURATION)
-    timeoutRef.current = setTimeout(() => {
-      if (manualRef.current) return
-      setActiveIdx(Math.floor(Date.now() / SLIDE_DURATION) % total)
-      intervalRef.current = setInterval(() => {
-        if (!manualRef.current)
-          setActiveIdx(Math.floor(Date.now() / SLIDE_DURATION) % total)
-      }, SLIDE_DURATION)
-    }, msUntilNext)
+    // Cycle local séquentiel à partir de la photo 0 (indice de montage) :
+    // garantit qu'une photo est toujours affichée en premier, jamais le 3D.
+    // Un sync sur l'horloge globale peut retomber sur le slide 3D dans les
+    // millisecondes suivant le montage — ce cas est exactement le bug rapporté.
+    intervalRef.current = setInterval(() => {
+      if (!manualRef.current) setActiveIdx((i) => (i + 1) % total)
+    }, SLIDE_DURATION)
     return stopLoop
   }, [total])
 
