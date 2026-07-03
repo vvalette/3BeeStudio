@@ -43,9 +43,11 @@ export default function BoutiqueProductCard({
   ]
   const total = slides.length
 
-  const [activeIdx, setActiveIdx] = useState(() =>
-    total > 1 ? Math.floor(Date.now() / SLIDE_DURATION) % total : 0
-  )
+  // Démarre toujours sur la photo 0 : la page est prérendue statiquement, un
+  // index basé sur Date.now() serait figé au build (carte blanche si le HTML
+  // arrive sur le slide 3D) et divergerait du client à l'hydratation.
+  // La synchro sur l'horloge globale reprend au premier tick de l'effet.
+  const [activeIdx, setActiveIdx] = useState(0)
   const timeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const manualRef   = useRef(false)
@@ -139,24 +141,31 @@ export default function BoutiqueProductCard({
           </div>
         )}
 
-        {product.images.map((src, i) => (
-          <div
-            key={i}
-            className="absolute inset-0 transition-opacity duration-700"
-            style={{
-              opacity: active.type === 'photo' && active.index === i ? 1 : 0,
-              pointerEvents: active.type === 'photo' && active.index === i ? 'auto' : 'none',
-            }}
-          >
-            <Image
-              src={src}
-              alt={product.name}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
-        ))}
+        {product.images.map((src, i) => {
+          const isActive = active.type === 'photo' && active.index === i
+          // Tant que le viewer 3D n'est pas monté (hors viewport → pas de WebGL),
+          // la photo 0 reste visible pour éviter une carte blanche.
+          const isFallbackFor3D = active.type === '3d' && !inView && i === 0
+          return (
+            <div
+              key={i}
+              className="absolute inset-0 transition-opacity duration-700"
+              style={{
+                opacity: isActive || isFallbackFor3D ? 1 : 0,
+                pointerEvents: isActive ? 'auto' : 'none',
+              }}
+            >
+              <Image
+                src={src}
+                alt={product.name}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                loading={i === 0 ? 'eager' : undefined}
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+          )
+        })}
 
         {!has3D && !hasImages && (
           <div className="flex h-full items-center justify-center text-ink-3">
