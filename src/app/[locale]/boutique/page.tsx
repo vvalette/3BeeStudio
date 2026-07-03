@@ -1,17 +1,18 @@
+import { Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { ShopProductCard } from '@/types/shop-product'
 import type { ShopCategoryRow } from '@/types/shop-category'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { Locale } from '@/i18n/routing'
 import BoutiqueCatalog from '@/components/boutique/BoutiqueCatalog'
+import CancelBanner from '@/components/boutique/CancelBanner'
 
 // ISR long + revalidation à la demande via revalidateShop() (src/lib/revalidate.ts)
 export const revalidate = 3600
 
 type Props = {
   params: Promise<{ locale: Locale }>
-  searchParams: Promise<{ cancelled?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,9 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function BoutiquePage({ params, searchParams }: Props) {
+export default async function BoutiquePage({ params }: Props) {
   const { locale } = await params
-  const { cancelled } = await searchParams
+  setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'boutique.page' })
 
   const [{ data: productsData }, { data: catsData }] = await Promise.all([
@@ -55,12 +56,10 @@ export default async function BoutiquePage({ params, searchParams }: Props) {
           </p>
         </header>
 
-        {/* Bannière annulation */}
-        {cancelled === 'true' && (
-          <div className="mb-6 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm text-amber text-center">
-            {t('cancelBanner')}
-          </div>
-        )}
+        {/* Bannière annulation (?cancelled=true, lu côté client) */}
+        <Suspense fallback={null}>
+          <CancelBanner />
+        </Suspense>
 
         {/* Catalogue avec tabs catégories */}
         {products.length === 0 ? (

@@ -2,19 +2,19 @@
 
 import { useLocale } from 'next-intl'
 import { useRouter, usePathname } from '@/i18n/navigation'
-import { useSearchParams } from 'next/navigation'
 
 export default function LocaleSwitcher() {
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   const targetLocale = locale === 'fr' ? 'en' : 'fr'
   const label = locale === 'fr' ? 'EN' : 'FR'
 
   const handleSwitch = () => {
-    const qs = searchParams.toString()
+    // Lu au clic (pas via useSearchParams) : évite le bailout CSR/Suspense
+    // qui casserait le prerender statique de toutes les pages via la Navbar.
+    const qs = window.location.search.replace(/^\?/, '')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     router.replace((qs ? `${pathname}?${qs}` : pathname) as any, { locale: targetLocale })
   }

@@ -1,5 +1,6 @@
+import { use } from 'react'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
 import SurMesureForm from '@/components/surMesure/SurMesureForm'
 import Eyebrow from '@/components/ui/Eyebrow'
@@ -21,7 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const STAT_IDS = ['quote', 'prototype', 'delivery'] as const
 const STEP_IDS = ['describe', 'quote', 'production'] as const
 
-export default function CustomPage() {
+export default function CustomPage({ params }: Props) {
+  const { locale } = use(params)
+  setRequestLocale(locale)
   const t = useTranslations('customPage')
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0">

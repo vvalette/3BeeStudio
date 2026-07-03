@@ -1,5 +1,6 @@
+import { use } from 'react'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
 import NfcOrderForm from '@/components/nfc/NfcOrderForm'
 import NfcFaq from '@/components/nfc/NfcFaq'
@@ -20,7 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function NfcPage() {
+export default function NfcPage({ params }: Props) {
+  const { locale } = use(params)
+  setRequestLocale(locale)
   const t = useTranslations('nfcPage')
   return (
     <main className="relative min-h-[calc(100dvh-72px)] overflow-hidden bg-bg-0">

@@ -7,13 +7,20 @@ import { formatPrice } from '@/lib/utils'
 import { buildAlternates } from '@/lib/seo'
 import type { Locale } from '@/i18n/routing'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import AddToCartForm from '@/components/boutique/AddToCartForm'
 import BoutiqueProductMedia from '@/components/boutique/BoutiqueProductMedia'
 import DescriptionExpand from '@/components/boutique/DescriptionExpand'
 
 // ISR long + revalidation à la demande via revalidateShop() (src/lib/revalidate.ts)
 export const revalidate = 3600
+
+// Pré-génère les fiches produit au build ; les nouveaux slugs sont rendus
+// à la demande puis mis en cache (dynamicParams par défaut).
+export async function generateStaticParams() {
+  const { data } = await supabase.from('shop_products').select('slug').eq('active', true)
+  return (data ?? []).map(({ slug }) => ({ slug }))
+}
 
 export async function generateMetadata({
   params,
@@ -45,6 +52,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string; locale: Locale }>
 }) {
   const { slug, locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'boutique.product' })
 
   const { data, error } = await supabaseAdmin
