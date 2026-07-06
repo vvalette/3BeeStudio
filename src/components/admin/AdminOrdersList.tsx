@@ -764,7 +764,7 @@ function CustomList({
                   <span className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
                     {PROJECT_TYPE_LABELS[order.project_type] ?? order.project_type}
                   </span>
-                  <span className="text-[10px] text-ink-3">{order.budget_range}</span>
+                  {order.budget_range && <span className="text-[10px] text-ink-3">{order.budget_range}</span>}
                 </div>
               </div>
 

@@ -21,8 +21,9 @@ export interface CustomOrder {
   // Projet
   project_type: string
   description: string
-  budget_range: string
-  deadline: string
+  budget_range: string | null
+  deadline: string | null
+  reference_file_url: string | null
 
   // Statut
   status: CustomOrderStatus

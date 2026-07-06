@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useForm, Controller } from 'react-hook-form'
+import { useDropzone, type FileRejection } from 'react-dropzone'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/navigation'
-import { PROJECT_TYPES, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS } from '@/types/custom-order'
+import { PROJECT_TYPES } from '@/types/custom-order'
 import PhoneInput from '@/components/ui/PhoneInput'
 
 type TFunc = (key: string) => string
@@ -17,8 +18,6 @@ const buildFullSchema = (t: TFunc) =>
   z.object({
     project_type: z.string().min(1, t('errors.projectType')),
     description:  z.string().min(20, t('errors.description')).max(2000),
-    budget_range: z.string().min(1, t('errors.budget')),
-    deadline:     z.string().min(1, t('errors.deadline')),
     first_name: z.string().min(2, t('errors.firstName')),
     last_name:  z.string().min(2, t('errors.lastName')),
     company: z.string().optional(),
@@ -72,6 +71,10 @@ export default function SurMesureForm() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+  const [refFile, setRefFile] = useState<File | null>(null)
+  const [refFileUrl, setRefFileUrl] = useState<string | null>(null)
+  const [refUploading, setRefUploading] = useState(false)
+  const [refUploadError, setRefUploadError] = useState<string | null>(null)
   const router = useRouter()
 
   const fullSchema = useMemo(() => buildFullSchema(t), [t])
@@ -91,17 +94,33 @@ export default function SurMesureForm() {
   })
 
   const projectType = watch('project_type')
-  const budgetRange = watch('budget_range')
-  const deadline    = watch('deadline')
 
   async function nextStep() {
     const fields: (keyof FormData)[][] = [
-      ['project_type', 'description', 'budget_range', 'deadline'],
+      ['project_type', 'description'],
       ['first_name', 'last_name', 'company', 'email', 'phone'],
       ['shipping_first_name', 'shipping_last_name', 'shipping_address', 'shipping_city', 'shipping_postal_code'],
     ]
     const ok = await trigger(fields[step - 1])
     if (ok) setStep((s) => s + 1)
+  }
+
+  async function handleRefFileAccepted(file: File) {
+    setRefFile(file)
+    setRefUploadError(null)
+    setRefUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload/custom-reference', { method: 'POST', body: fd })
+      const json = await res.json() as { url?: string; error?: string }
+      if (!res.ok) throw new Error(json.error ?? t('errors.upload'))
+      setRefFileUrl(json.url ?? null)
+    } catch (e) {
+      setRefUploadError(e instanceof Error ? e.message : t('errors.upload'))
+    } finally {
+      setRefUploading(false)
+    }
   }
 
   async function onSubmit(data: FormData) {
@@ -113,6 +132,7 @@ export default function SurMesureForm() {
         ...rest,
         name: `${first_name} ${last_name}`.trim(),
         shipping_name: `${shipping_first_name} ${shipping_last_name}`.trim(),
+        reference_file_url: refFileUrl,
       }
       const res = await fetch('/api/custom/order', {
         method: 'POST',
@@ -129,10 +149,6 @@ export default function SurMesureForm() {
   }
 
   const values = getValues()
-  const budgetIdx = BUDGET_RANGES.indexOf(values.budget_range as (typeof BUDGET_RANGES)[number])
-  const deadlineIdx = DEADLINES.indexOf(values.deadline as (typeof DEADLINES)[number])
-  const budgetDisplay = budgetIdx >= 0 ? t(`budget.${BUDGET_KEYS[budgetIdx]}`) : ''
-  const deadlineDisplay = deadlineIdx >= 0 ? t(`deadline.${DEADLINE_KEYS[deadlineIdx]}`) : ''
 
   return (
     <div
@@ -168,8 +184,6 @@ export default function SurMesureForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Champs pilotés via setValue — doivent être enregistrés en permanence */}
         <input type="hidden" {...register('project_type')} />
-        <input type="hidden" {...register('budget_range')} />
-        <input type="hidden" {...register('deadline')} />
 
         {/* ── Étape 1 : Projet ── */}
         {step === 1 && (
@@ -217,44 +231,16 @@ export default function SurMesureForm() {
               </p>
             </div>
 
-            <Field label={t('step1.budget')} error={errors.budget_range?.message}>
-              <div className="flex flex-col gap-2">
-                {BUDGET_RANGES.map((b, i) => (
-                  <button
-                    key={b}
-                    type="button"
-                    onClick={() => setValue('budget_range', b, { shouldValidate: true })}
-                    className="cursor-pointer rounded-xl border px-4 py-2.5 text-left text-[13px] font-medium transition-all"
-                    style={{
-                      background: budgetRange === b ? 'rgba(245,158,11,0.1)' : 'var(--bg-2)',
-                      border: budgetRange === b ? '1px solid rgba(245,158,11,0.45)' : '1px solid var(--line)',
-                      color: budgetRange === b ? '#FBBF24' : 'var(--ink-1)',
-                    }}
-                  >
-                    {t(`budget.${BUDGET_KEYS[i]}`)}
-                  </button>
-                ))}
-              </div>
-            </Field>
-
-            <Field label={t('step1.deadline')} error={errors.deadline?.message}>
-              <div className="flex flex-wrap gap-2">
-                {DEADLINES.map((d, i) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setValue('deadline', d, { shouldValidate: true })}
-                    className="cursor-pointer rounded-pill border px-4 py-2 text-[13px] font-medium transition-all"
-                    style={{
-                      background: deadline === d ? 'rgba(245,158,11,0.1)' : 'var(--bg-2)',
-                      border: deadline === d ? '1px solid rgba(245,158,11,0.45)' : '1px solid var(--line)',
-                      color: deadline === d ? '#FBBF24' : 'var(--ink-1)',
-                    }}
-                  >
-                    {t(`deadline.${DEADLINE_KEYS[i]}`)}
-                  </button>
-                ))}
-              </div>
+            <Field label={t('step1.referenceFile')} error={refUploadError ?? undefined}>
+              <ReferenceFileDropzone
+                file={refFile}
+                fileUrl={refFileUrl}
+                uploading={refUploading}
+                onFileAccepted={handleRefFileAccepted}
+                onRemove={() => { setRefFile(null); setRefFileUrl(null); setRefUploadError(null) }}
+                t={t}
+              />
+              <p className="mt-2 text-[12px] text-ink-3">{t('step1.referenceFileHint')}</p>
             </Field>
           </>
         )}
@@ -336,8 +322,7 @@ export default function SurMesureForm() {
             <div className="rounded-xl border border-[var(--line)] bg-bg-2 p-4 space-y-2">
               <p className="text-[11px] font-mono uppercase tracking-[0.12em] text-ink-3 mb-3">{t('step3.recap')}</p>
               <RecapRow label={t('step3.recapProject')} value={values.project_type ? t(`projectTypes.${values.project_type}`) : ''} />
-              <RecapRow label={t('step3.recapBudget')} value={budgetDisplay} />
-              <RecapRow label={t('step3.recapDeadline')} value={deadlineDisplay} />
+              {refFile && <RecapRow label={t('step3.recapFile')} value={refFile.name} />}
               <RecapRow label={t('step3.recapContact')} value={[[values.first_name, values.last_name].filter(Boolean).join(' '), values.email].filter(Boolean).join(' · ')} />
             </div>
           </>
@@ -381,6 +366,78 @@ export default function SurMesureForm() {
           )}
         </div>
       </form>
+    </div>
+  )
+}
+
+function ReferenceFileDropzone({ file, fileUrl, uploading, onFileAccepted, onRemove, t }: {
+  file: File | null
+  fileUrl: string | null
+  uploading: boolean
+  onFileAccepted: (f: File) => void
+  onRemove: () => void
+  t: TFunc
+}) {
+  const [rejectError, setRejectError] = useState<string | null>(null)
+
+  const onDrop = useCallback((accepted: File[]) => {
+    if (accepted[0]) {
+      setRejectError(null)
+      onFileAccepted(accepted[0])
+    }
+  }, [onFileAccepted])
+
+  const onDropRejected = useCallback((rejections: FileRejection[]) => {
+    const code = rejections[0]?.errors[0]?.code
+    if (code === 'file-too-large') setRejectError(t('step1.referenceFileTooLarge'))
+    else setRejectError(t('step1.referenceFileRejectGeneric'))
+  }, [t])
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    onDropRejected,
+    maxSize: 20 * 1024 * 1024,
+    multiple: false,
+  })
+
+  return (
+    <div>
+      <div
+        {...getRootProps()}
+        className="cursor-pointer rounded-xl border px-4 py-5 text-center transition-all"
+        style={isDragActive ? {
+          border: '2px dashed #F59E0B',
+          background: 'rgba(245,158,11,0.07)',
+        } : file ? {
+          border: '1px solid rgba(245,158,11,0.45)',
+          background: 'rgba(245,158,11,0.04)',
+        } : {
+          border: '1.5px dashed var(--line-2)',
+          background: 'var(--bg-2)',
+        }}
+      >
+        <input {...getInputProps()} />
+        {file && uploading ? (
+          <p className="text-[13px] font-medium text-amber">{t('step1.referenceFileUploading')}</p>
+        ) : file ? (
+          <div className="flex items-center justify-center gap-2">
+            {fileUrl && <span className="text-emerald-400">✓</span>}
+            <span className="truncate font-mono text-[12px] text-ink-1">{file.name}</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRemove() }}
+              className="cursor-pointer text-[11px] font-semibold text-red-400 underline underline-offset-2"
+            >
+              {t('step1.referenceFileRemove')}
+            </button>
+          </div>
+        ) : (
+          <p className="text-[13px] text-ink-2">
+            {isDragActive ? t('step1.referenceFileDropHere') : t('step1.referenceFileDropPrompt')}
+          </p>
+        )}
+      </div>
+      {rejectError && <p className={errorCls}>{rejectError}</p>}
     </div>
   )
 }

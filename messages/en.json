@@ -517,8 +517,6 @@
     "errors": {
       "projectType": "Choose a project type",
       "description": "Describe your project in at least 20 characters",
-      "budget": "Select a budget range",
-      "deadline": "Select a timeline",
       "name": "Your name is required",
       "email": "Invalid email",
       "phone": "Phone number required",
@@ -531,7 +529,8 @@
       "firstName": "First name required",
       "lastName": "Last name required",
       "shippingFirstName": "Recipient first name required",
-      "shippingLastName": "Recipient last name required"
+      "shippingLastName": "Recipient last name required",
+      "upload": "Error uploading the file"
     },
     "projectTypes": {
       "cadeau": "Personalised gift",
@@ -561,8 +560,14 @@
       "description": "Describe your project",
       "descriptionPlaceholder": "E.g. \"I'd like a display stand with my daughter's name engraved on it, for a birthday gift.\" or \"A broken fan mount on my PC, ref. XYZ — I have the dimensions.\"",
       "disclaimer": "Not all projects can be made with 3D printing. If your request exceeds our capabilities or doesn't match our activity, we reserve the right to decline it — at no cost or commitment to you.",
-      "budget": "Estimated budget",
-      "deadline": "Desired timeline"
+      "referenceFile": "Photo, 3D file or document (optional)",
+      "referenceFileHint": "Any format (photo, STL, PDF…), 20 MB max.",
+      "referenceFileDropPrompt": "Click or drop a file here",
+      "referenceFileDropHere": "Drop the file here",
+      "referenceFileUploading": "Uploading…",
+      "referenceFileRemove": "Remove",
+      "referenceFileTooLarge": "File too large (max 20 MB)",
+      "referenceFileRejectGeneric": "This file can't be uploaded"
     },
     "step2": {
       "title": "Your details",
@@ -584,8 +589,7 @@
       "city": "City *",
       "recap": "Summary",
       "recapProject": "Project",
-      "recapBudget": "Budget",
-      "recapDeadline": "Timeline",
+      "recapFile": "File",
       "recapContact": "Contact",
       "recipientFirstName": "Recipient first name *",
       "recipientLastName": "Recipient last name *"
@@ -709,7 +713,8 @@
       "budget": "Budget",
       "deadline": "Timeline",
       "company": "Company",
-      "description": "Description"
+      "description": "Description",
+      "referenceFile": "📎 View the submitted file"
     },
     "contact": {
       "title": "A question about your project?",

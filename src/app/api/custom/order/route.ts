@@ -8,8 +8,7 @@ const schema = z.object({
   // Projet
   project_type: z.string().min(1),
   description:  z.string().min(20, 'Décrivez votre projet en au moins 20 caractères').max(2000),
-  budget_range: z.string().min(1),
-  deadline:     z.string().min(1),
+  reference_file_url: z.string().url().optional().nullable(),
 
   // Contact
   name:    z.string().min(2, 'Nom requis'),
@@ -66,8 +65,7 @@ export async function POST(req: Request) {
     .insert({
       project_type:         data.project_type,
       description:          data.description,
-      budget_range:         data.budget_range,
-      deadline:             data.deadline,
+      reference_file_url:   data.reference_file_url ?? null,
       name:                 data.name,
       company:              data.company ?? null,
       email:                data.email,

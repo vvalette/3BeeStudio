@@ -517,8 +517,6 @@
     "errors": {
       "projectType": "Choisissez un type de projet",
       "description": "Décrivez votre projet en au moins 20 caractères",
-      "budget": "Sélectionnez une fourchette",
-      "deadline": "Sélectionnez un délai",
       "name": "Votre nom est requis",
       "email": "Email invalide",
       "phone": "Numéro de téléphone requis",
@@ -531,7 +529,8 @@
       "firstName": "Prénom requis",
       "lastName": "Nom requis",
       "shippingFirstName": "Prénom du destinataire requis",
-      "shippingLastName": "Nom du destinataire requis"
+      "shippingLastName": "Nom du destinataire requis",
+      "upload": "Erreur lors de l'envoi du fichier"
     },
     "projectTypes": {
       "cadeau": "Cadeau personnalisé",
@@ -561,8 +560,14 @@
       "description": "Décrivez votre projet",
       "descriptionPlaceholder": "Ex : « Je voudrais un présentoir avec le prénom de ma fille gravé dessus, pour un cadeau d'anniversaire. » ou « Un support de ventilateur cassé sur mon PC, réf. XYZ — j'ai les dimensions. »",
       "disclaimer": "Tous les projets ne sont pas réalisables en impression 3D. Si votre demande dépasse nos capacités ou ne correspond pas à notre activité, nous nous réservons le droit de la refuser — sans frais ni engagement de votre côté.",
-      "budget": "Budget estimé",
-      "deadline": "Délai souhaité"
+      "referenceFile": "Photo, fichier 3D ou document (optionnel)",
+      "referenceFileHint": "Format libre (photo, STL, PDF…), 20 Mo max.",
+      "referenceFileDropPrompt": "Cliquez ou déposez un fichier ici",
+      "referenceFileDropHere": "Déposez le fichier ici",
+      "referenceFileUploading": "Envoi en cours…",
+      "referenceFileRemove": "Retirer",
+      "referenceFileTooLarge": "Fichier trop lourd (max 20 Mo)",
+      "referenceFileRejectGeneric": "Ce fichier ne peut pas être envoyé"
     },
     "step2": {
       "title": "Vos coordonnées",
@@ -584,8 +589,7 @@
       "city": "Ville *",
       "recap": "Récapitulatif",
       "recapProject": "Projet",
-      "recapBudget": "Budget",
-      "recapDeadline": "Délai",
+      "recapFile": "Fichier",
       "recapContact": "Contact",
       "recipientFirstName": "Prénom destinataire *",
       "recipientLastName": "Nom destinataire *"
@@ -709,7 +713,8 @@
       "budget": "Budget",
       "deadline": "Délai",
       "company": "Société",
-      "description": "Description"
+      "description": "Description",
+      "referenceFile": "📎 Voir le fichier envoyé"
     },
     "contact": {
       "title": "Une question sur votre projet ?",

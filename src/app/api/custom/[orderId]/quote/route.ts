@@ -64,7 +64,7 @@ export async function POST(
         unit_amount: deposit_amount,
         product_data: {
           name: `Acompte 50% — Projet sur-mesure #${orderId.slice(0, 8).toUpperCase()}`,
-          description: `${order.project_type} · ${order.budget_range}`,
+          description: order.project_type,
         },
       },
       quantity: 1,
