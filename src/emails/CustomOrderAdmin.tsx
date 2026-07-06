@@ -59,10 +59,15 @@ export default function CustomOrderAdmin({ order, appUrl }: Props) {
             <table width="100%" cellPadding={0} cellSpacing={0}>
               <tbody>
                 <Row label="Type" value={order.project_type} />
-                <Row label="Budget" value={order.budget_range} />
-                <Row label="Délai" value={order.deadline} />
               </tbody>
             </table>
+            {order.reference_file_url && (
+              <Text style={{ margin: '4px 0 0' }}>
+                <Link href={order.reference_file_url} style={{ color: amber, fontSize: 13, fontWeight: 600 }}>
+                  📎 Voir le fichier de référence
+                </Link>
+              </Text>
+            )}
             {order.description && (
               <>
                 <Hr style={{ borderColor: line, margin: '12px 0' }} />

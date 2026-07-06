@@ -172,8 +172,8 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
               <div className="space-y-3">
                 <div className="grid grid-cols-3 gap-3">
                   <InfoItem label="Type" value={order.project_type} />
-                  <InfoItem label="Budget" value={order.budget_range} />
-                  <InfoItem label="Délai" value={order.deadline} />
+                  {order.budget_range && <InfoItem label="Budget" value={order.budget_range} />}
+                  {order.deadline && <InfoItem label="Délai" value={order.deadline} />}
                 </div>
                 <div
                   className="rounded-xl p-4 text-sm leading-relaxed text-ink-1"
@@ -181,6 +181,16 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                 >
                   {order.description}
                 </div>
+                {order.reference_file_url && (
+                  <a
+                    href={order.reference_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                  >
+                    📎 Voir le fichier de référence
+                  </a>
+                )}
               </div>
             </Card>
 

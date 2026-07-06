@@ -211,8 +211,8 @@ export default async function SuiviMesurePage({
 
           <div className="space-y-4 p-6">
             <Row label={t('details.type')} value={projectLabel} />
-            <Row label={t('details.budget')} value={budgetLabel} />
-            <Row label={t('details.deadline')} value={deadlineLabel} />
+            {o.budget_range && <Row label={t('details.budget')} value={budgetLabel ?? ''} />}
+            {o.deadline && <Row label={t('details.deadline')} value={deadlineLabel ?? ''} />}
             {o.company && <Row label={t('details.company')} value={o.company} />}
 
             {o.description && (
@@ -220,6 +220,17 @@ export default async function SuiviMesurePage({
                 <p className="text-[11px] uppercase tracking-[0.1em] text-ink-3 mb-2">{t('details.description')}</p>
                 <p className="text-sm leading-relaxed text-ink-2 whitespace-pre-wrap">{o.description}</p>
               </div>
+            )}
+
+            {o.reference_file_url && (
+              <a
+                href={o.reference_file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+              >
+                {t('details.referenceFile')}
+              </a>
             )}
 
             {o.shipping_address && (

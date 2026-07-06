@@ -55,10 +55,15 @@ export default function CustomOrderConfirmation({ order, appUrl }: Props) {
               <tbody>
                 <Row label="Référence" value={ref} valueStyle={{ color: amber, fontFamily: 'monospace', fontWeight: 600 }} />
                 <Row label="Projet" value={order.project_type} />
-                <Row label="Budget" value={order.budget_range} />
-                <Row label="Délai" value={order.deadline} />
               </tbody>
             </table>
+            {order.reference_file_url && (
+              <Text style={{ margin: '12px 0 0' }}>
+                <Link href={order.reference_file_url} style={{ color: amber, fontSize: 13, fontWeight: 600 }}>
+                  📎 Voir le fichier de référence envoyé
+                </Link>
+              </Text>
+            )}
           </Section>
 
           {/* Description */}
