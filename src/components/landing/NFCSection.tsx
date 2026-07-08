@@ -88,8 +88,8 @@ function Keychain() {
   const t = useTranslations('nfcSection')
   return (
     <div className="relative flex flex-col items-center" style={{ animation: 'float 6s ease-in-out infinite' }}>
-      {/* Modèle 3D */}
-      <NFCKeychain3D url="/stl/3beestudio_badge_final.3mf" />
+      {/* Modèle 3D — plus compact sur mobile */}
+      <NFCKeychain3D url="/stl/3beestudio_badge_final.3mf" className="h-[150px] w-[150px] sm:h-[200px] sm:w-[200px]" />
       {/* Tag */}
       <div className="mt-4 flex items-center gap-1.5 rounded-pill border border-[var(--line-amber)] px-3 py-1.5"
         style={{ background: 'var(--glass-amber-70)', backdropFilter: 'blur(8px)' }}>
@@ -116,7 +116,10 @@ function PhoneMockup() {
           {/* Browser chrome */}
           <div className="px-2.5 py-1.5 border-b" style={{ background: '#f4f4f4', borderColor: '#e0e0e0' }}>
             <div className="flex items-center gap-1.5 rounded-md px-2 py-1" style={{ background: '#fff', border: '1px solid #e0e0e0' }}>
-              <span style={{ fontSize: 7, color: '#34C759' }}>🔒</span>
+              <svg width="7" height="9" viewBox="0 0 10 12" fill="none" aria-hidden>
+                <rect x="1" y="5" width="8" height="6" rx="1.5" fill="#A1A1AA" />
+                <path d="M3 5V3.5a2 2 0 1 1 4 0V5" stroke="#A1A1AA" strokeWidth="1.4" />
+              </svg>
               <span style={{ fontSize: 8, color: '#666', fontFamily: 'monospace' }}>instagram.com/3bee_studio_</span>
             </div>
           </div>
@@ -143,14 +146,22 @@ function PhoneMockup() {
                 ))}
               </div>
 
-              <div className="text-center py-1.5 rounded-md font-sans font-semibold" style={{ fontSize: 11, background: '#0095F6', color: '#fff' }}>
+              <div className="text-center py-1.5 rounded-md font-sans font-semibold" style={{ fontSize: 11, background: 'linear-gradient(180deg, #FBBF24, #F59E0B)', color: '#1A1300' }}>
                 {t('mock.follow')}
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-px" style={{ background: '#dbdbdb' }}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ aspectRatio: '1', background: ['#2A1C08','#1A1A1F','#161619','#1C1C20','#2A1C08','#1A1A1F'][i] }} />
+            {/* Feed : camaïeu miel/bronze cohérent avec la palette du site */}
+            <div className="grid grid-cols-3 gap-px" style={{ background: '#ece5d8' }}>
+              {[
+                'linear-gradient(135deg, #FFF1D0 0%, #F3C25C 100%)',
+                'linear-gradient(135deg, #C67F10 0%, #8A5410 100%)',
+                'linear-gradient(135deg, #FBD57E 0%, #E99B12 100%)',
+                'linear-gradient(135deg, #F7E7C8 0%, #DCC291 100%)',
+                'linear-gradient(135deg, #E9A21B 0%, #A96B0A 100%)',
+                'linear-gradient(135deg, #FFF7E6 0%, #EFD9AC 100%)',
+              ].map((bg, i) => (
+                <div key={i} style={{ aspectRatio: '1', background: bg }} />
               ))}
             </div>
           </div>
@@ -187,7 +198,7 @@ export default function NFCSection() {
 
           {/* ── Left: the full story scene ── */}
           <div
-            className="relative overflow-hidden flex items-center justify-center p-8 sm:p-10"
+            className="relative overflow-hidden flex items-center justify-center p-6 pb-14 sm:p-10 shadow-card"
             style={{ borderRadius: 28, background: 'var(--surface-amber-2)', border: '1px solid var(--line-amber)' }}
           >
             {/* Hex pattern */}
@@ -200,15 +211,19 @@ export default function NFCSection() {
               <rect width="100%" height="100%" fill="url(#nfc-hex)" />
             </svg>
             {/* Glow */}
-            <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 35% 40%, rgba(245,158,11,0.16), transparent 65%)' }} />
+            <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 40% 42%, rgba(245,158,11,0.20), transparent 62%)' }} />
 
-            {/* Scene: keychain → tap → phone */}
-            <div className="relative z-10 flex items-center justify-center w-full sm:flex-row">
-              {/* Keychain — caché sur mobile */}
-              <div className="hidden sm:flex flex-1 justify-end sm:pr-8"><Keychain /></div>
+            {/* Scene: keychain → signal → phone (verticale sur mobile, horizontale ≥ sm) */}
+            <div className="relative z-10 flex w-full flex-col items-center justify-center sm:flex-row">
+              {/* Keychain */}
+              <div className="flex justify-center sm:flex-1 sm:justify-end"><Keychain /></div>
 
-              {/* Connecteur NFC — caché sur mobile */}
-              <div className="hidden sm:relative sm:flex items-center justify-center flex-shrink-0" style={{ width: 56, height: 56 }}>
+              {/* Connecteur NFC : ligne de signal + impulsion + hub */}
+              <div className="relative flex h-24 w-14 flex-shrink-0 items-center justify-center sm:h-14 sm:w-36 lg:w-44">
+                <span aria-hidden className="nfc-beam hidden sm:block" />
+                <span aria-hidden className="nfc-beam-v sm:hidden" />
+                <span aria-hidden className="nfc-pulse-dot hidden sm:block" />
+                <span aria-hidden className="nfc-pulse-dot-v sm:hidden" />
                 {[0, 0.8, 1.6].map((delay) => (
                   <span
                     key={delay}
@@ -228,13 +243,33 @@ export default function NFCSection() {
                 </div>
               </div>
 
-              {/* Téléphone — centré sur mobile, aligné à gauche sur desktop */}
-              <div className="sm:flex-1 flex sm:justify-start sm:pl-12"><PhoneMockup /></div>
+              {/* Téléphone + badge « ouvert en 1 tap » */}
+              <div className="flex justify-center sm:flex-1 sm:justify-start">
+                <div className="relative">
+                  <PhoneMockup />
+                  <div
+                    className="absolute -left-6 bottom-20 z-10 flex items-center gap-1.5 rounded-pill border border-[var(--line-amber)] px-2.5 py-1.5 sm:-left-9"
+                    style={{
+                      background: 'var(--glass-amber-85)',
+                      backdropFilter: 'blur(8px)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.14)',
+                      animation: 'float 5s ease-in-out infinite',
+                      animationDelay: '0.7s',
+                    }}
+                  >
+                    <CheckIcon />
+                    <span className="whitespace-nowrap font-sans font-semibold text-ink-0" style={{ fontSize: 10.5 }}>{t('tapBadge')}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* URL caption */}
-            <div className="absolute bottom-5 left-0 right-0 flex justify-center">
-              <span className="font-mono text-ink-3" style={{ fontSize: 9, letterSpacing: '0.08em' }}>{t('urlCaption')}</span>
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+              <span className="rounded-pill border border-[var(--line-amber)] px-3 py-1 font-mono text-ink-3"
+                style={{ fontSize: 9, letterSpacing: '0.08em', background: 'var(--glass-amber-50)', backdropFilter: 'blur(6px)' }}>
+                {t('urlCaption')}
+              </span>
             </div>
 
             <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} src={VIDEO_SRC} />
