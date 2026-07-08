@@ -7,13 +7,7 @@ import { OrbitControls, Center, Environment, Bounds } from '@react-three/drei'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { Mesh, MeshStandardMaterial, Group } from 'three'
-
-// Couleurs du porte-clé par thème — le duo s'inverse pour contraster avec la carte :
-// sombre = corps ambre / logo noir · clair = corps anthracite / logo ambre
-const COLORS = {
-  dark:  { body: '#F59E0B', logo: '#111111' },
-  light: { body: '#18181C', logo: '#F59E0B' },
-}
+import { KEYCHAIN_COLORS } from './keychainColors'
 
 function ThreeMFMesh({ url, bodyColor, logoColor }: { url: string; bodyColor: string; logoColor: string }) {
   const group = useLoader(ThreeMFLoader, url)
@@ -85,7 +79,7 @@ function Scene({ url, bodyColor, logoColor }: { url: string; bodyColor: string; 
 
 export default function NFCKeychain3DCanvas({ url }: { url: string }) {
   const { resolvedTheme } = useTheme()
-  const { body, logo } = COLORS[resolvedTheme === 'dark' ? 'dark' : 'light']
+  const { body, logo } = KEYCHAIN_COLORS[resolvedTheme === 'dark' ? 'dark' : 'light']
   return (
     <Canvas
       camera={{ fov: 45 }}
