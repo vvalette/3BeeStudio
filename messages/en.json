@@ -63,6 +63,7 @@
     "keychainAlt": "Custom 3D keychain with your logo",
     "keychainTag": "KEYCHAIN WITH YOUR LOGO",
     "urlCaption": "EXAMPLE: your instagram page",
+    "tapBadge": "Opens in 1 tap",
     "mock": {
       "bio": "3D Studio · Lyon 🇫🇷",
       "posts": "posts",

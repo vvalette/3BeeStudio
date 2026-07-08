@@ -8,17 +8,20 @@ import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { Mesh, MeshStandardMaterial, Group } from 'three'
 
-// Couleur du porte-clé : ambre en sombre, blanc cassé/crème neutre en mode clair
-const AMBER_DARK  = '#F59E0B'
-const AMBER_LIGHT = '#ECE8E0'
+// Couleurs du porte-clé par thème — le duo s'inverse pour contraster avec la carte :
+// sombre = corps ambre / logo noir · clair = corps anthracite / logo ambre
+const COLORS = {
+  dark:  { body: '#F59E0B', logo: '#111111' },
+  light: { body: '#18181C', logo: '#F59E0B' },
+}
 
-function ThreeMFMesh({ url, bodyColor }: { url: string; bodyColor: string }) {
+function ThreeMFMesh({ url, bodyColor, logoColor }: { url: string; bodyColor: string; logoColor: string }) {
   const group = useLoader(ThreeMFLoader, url)
 
   const styled = useMemo(() => {
     const materials = [
-      new MeshStandardMaterial({ color: bodyColor, roughness: 0.4, metalness: 0.1 }), // badge body
-      new MeshStandardMaterial({ color: '#111111', roughness: 0.8, metalness: 0.0 }), // logo — noir
+      new MeshStandardMaterial({ color: bodyColor, roughness: 1, metalness: 0.0, envMapIntensity: 0 }), // badge body — mat, sans reflet
+      new MeshStandardMaterial({ color: logoColor, roughness: 1, metalness: 0.0, envMapIntensity: 0 }), // logo — mat, sans reflet
     ]
     let i = 0
     group.traverse((child) => {
@@ -28,7 +31,7 @@ function ThreeMFMesh({ url, bodyColor }: { url: string; bodyColor: string }) {
       }
     })
     return group
-  }, [group, bodyColor])
+  }, [group, bodyColor, logoColor])
 
   return (
     <Center>
@@ -60,7 +63,7 @@ function SwingGroup({ children }: { children: React.ReactNode }) {
   return <group ref={ref}>{children}</group>
 }
 
-function Scene({ url, bodyColor }: { url: string; bodyColor: string }) {
+function Scene({ url, bodyColor, logoColor }: { url: string; bodyColor: string; logoColor: string }) {
   const is3mf = url.toLowerCase().endsWith('.3mf')
   return (
     <>
@@ -70,7 +73,7 @@ function Scene({ url, bodyColor }: { url: string; bodyColor: string }) {
       <Suspense fallback={null}>
         <Bounds fit clip observe margin={1.3}>
           <SwingGroup>
-            {is3mf ? <ThreeMFMesh url={url} bodyColor={bodyColor} /> : <STLMesh url={url} bodyColor={bodyColor} />}
+            {is3mf ? <ThreeMFMesh url={url} bodyColor={bodyColor} logoColor={logoColor} /> : <STLMesh url={url} bodyColor={bodyColor} />}
           </SwingGroup>
         </Bounds>
         <Environment preset="studio" />
@@ -82,7 +85,7 @@ function Scene({ url, bodyColor }: { url: string; bodyColor: string }) {
 
 export default function NFCKeychain3DCanvas({ url }: { url: string }) {
   const { resolvedTheme } = useTheme()
-  const bodyColor = resolvedTheme === 'dark' ? AMBER_DARK : AMBER_LIGHT
+  const { body, logo } = COLORS[resolvedTheme === 'dark' ? 'dark' : 'light']
   return (
     <Canvas
       camera={{ fov: 45 }}
@@ -90,7 +93,7 @@ export default function NFCKeychain3DCanvas({ url }: { url: string }) {
       onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
       style={{ width: '100%', height: '100%', background: 'transparent' }}
     >
-      <Scene url={url} bodyColor={bodyColor} />
+      <Scene url={url} bodyColor={body} logoColor={logo} />
     </Canvas>
   )
 }
