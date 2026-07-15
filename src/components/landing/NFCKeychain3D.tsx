@@ -1,6 +1,6 @@
 'use client'
 
-import { Component, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import { useTheme } from 'next-themes'
 import KeychainBadge2D from './KeychainBadge2D'
@@ -36,9 +36,26 @@ class Canvas3DErrorBoundary extends Component<{ fallback: ReactNode; children: R
 export default function NFCKeychain3D({ url, className }: { url: string; className?: string }) {
   const { resolvedTheme } = useTheme()
   const [webglOK, setWebglOK] = useState<boolean | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
+  // On ne déclenche le chargement du bundle 3D (three.js + fiber + drei, ~600 Ko)
+  // que lorsque la section approche du viewport — sinon il télécharge et
+  // s'exécute pendant l'hydratation initiale de la page d'accueil, ce qui
+  // pénalise le score INP (mesuré sur https://vercel.com/3bee-studio/speed-insights).
   useEffect(() => {
-    setWebglOK(canUseWebGL())
+    const el = containerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setWebglOK(canUseWebGL())
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [])
 
   // Halo ambré en sombre ; ombre portée douce en clair pour ancrer l'objet
@@ -48,10 +65,10 @@ export default function NFCKeychain3D({ url, className }: { url: string; classNa
 
   const fallback = <KeychainBadge2D className={className} />
 
-  // Avant la vérification (premier rendu client) ou si WebGL indisponible :
+  // Avant que la section soit proche du viewport, ou si WebGL indisponible :
   // badge 2D — garantit qu'on ne montre jamais un espace vide sur mobile.
   if (webglOK === false || webglOK === null) {
-    return <div style={{ filter: glow }}>{fallback}</div>
+    return <div ref={containerRef} style={{ filter: glow }}>{fallback}</div>
   }
 
   return (
