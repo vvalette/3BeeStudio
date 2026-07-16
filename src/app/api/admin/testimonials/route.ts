@@ -10,6 +10,11 @@ const schema = z.object({
   avatar_gradient: z.string().default('linear-gradient(135deg, #F59E0B, #7C2D12)'),
   display_order: z.number().int().default(0),
   visible: z.boolean().default(true),
+  source: z.enum(['manual', 'google']).default('manual'),
+  rating: z.number().int().min(1).max(5).default(5),
+  avatar_url: z.string().url().nullable().optional(),
+  source_url: z.string().url().nullable().optional(),
+  country: z.string().min(1).default('France'),
 })
 
 export async function POST(req: Request) {

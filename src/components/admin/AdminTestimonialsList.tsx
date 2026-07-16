@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Tooltip from '@/components/ui/Tooltip'
+import Select from '@/components/ui/Select'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 
 interface Testimonial {
@@ -14,6 +15,11 @@ interface Testimonial {
   display_order: number
   visible: boolean
   created_at: string
+  source: 'manual' | 'google'
+  rating: number
+  avatar_url: string | null
+  source_url: string | null
+  country: string
 }
 
 const GRADIENT_PRESETS = [
@@ -24,15 +30,37 @@ const GRADIENT_PRESETS = [
   { label: 'Cyan',    value: 'linear-gradient(135deg, #06B6D4, #164E63)' },
 ]
 
-const EMPTY_FORM = { name: '', role: '', body: '', avatar_gradient: GRADIENT_PRESETS[0].value, display_order: 0 }
+const EMPTY_FORM = {
+  name: '', role: '', body: '',
+  avatar_gradient: GRADIENT_PRESETS[0].value,
+  display_order: 0,
+  source: 'manual' as const,
+  rating: 5,
+  avatar_url: '',
+  source_url: '',
+  country: 'France',
+}
 
-type EditForm = { name: string; role: string; body: string; avatar_gradient: string; display_order: number }
+type EditForm = {
+  name: string; role: string; body: string
+  avatar_gradient: string
+  display_order: number
+  source: 'manual' | 'google'
+  rating: number
+  avatar_url: string
+  source_url: string
+  country: string
+}
+
+// Le champ role n'est pas encore rempli quand on bascule sur "Avis Google" :
+// pré-remplit juste un rôle par défaut cohérent, l'admin garde la main dessus.
+const GOOGLE_DEFAULT_ROLE = 'Avis Google'
 
 export default function AdminTestimonialsList({ initialItems }: { initialItems: Testimonial[] }) {
   const router = useRouter()
   const { confirm, modal } = useConfirm()
   const [items, setItems] = useState<Testimonial[]>(initialItems)
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState<EditForm>(EMPTY_FORM)
   const [adding, setAdding] = useState(false)
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -40,7 +68,16 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
 
   function openEdit(item: Testimonial) {
     setEditingId(item.id)
-    setEditForm({ name: item.name, role: item.role, body: item.body, avatar_gradient: item.avatar_gradient, display_order: item.display_order })
+    setEditForm({
+      name: item.name, role: item.role, body: item.body,
+      avatar_gradient: item.avatar_gradient,
+      display_order: item.display_order,
+      source: item.source,
+      rating: item.rating,
+      avatar_url: item.avatar_url ?? '',
+      source_url: item.source_url ?? '',
+      country: item.country,
+    })
   }
 
   function cancelEdit() {
@@ -64,13 +101,18 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
     setItems((prev) => prev.filter((t) => t.id !== id))
   }
 
+  // avatar_url / source_url : chaîne vide → null (le schéma attend une URL ou null)
+  function toPayload(f: EditForm) {
+    return { ...f, avatar_url: f.avatar_url || null, source_url: f.source_url || null }
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     const res = await fetch('/api/admin/testimonials', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(toPayload(form)),
     })
     if (res.ok) {
       const created = await res.json()
@@ -89,7 +131,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
     const res = await fetch(`/api/admin/testimonials/${editingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editForm),
+      body: JSON.stringify(toPayload(editForm)),
     })
     if (res.ok) {
       const updated = await res.json()
@@ -106,12 +148,14 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
           <h1 className="text-2xl font-bold text-ink-0">Témoignages</h1>
           <p className="text-ink-2 text-sm mt-1">{items.length} témoignage{items.length !== 1 ? 's' : ''}</p>
         </div>
-        <button
-          onClick={() => { setAdding((v) => !v); setEditingId(null) }}
-          className="px-4 py-2 rounded-md bg-amber text-bg-0 text-sm font-semibold hover:bg-amber-soft transition-colors cursor-pointer"
-        >
-          {adding ? 'Annuler' : '+ Ajouter'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setAdding((v) => !v); setEditingId(null) }}
+            className="px-4 py-2 rounded-md bg-amber text-bg-0 text-sm font-semibold hover:bg-amber-soft transition-colors cursor-pointer"
+          >
+            {adding ? 'Annuler' : '+ Ajouter'}
+          </button>
+        </div>
       </div>
 
       {/* Add form */}
@@ -146,11 +190,14 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="font-semibold text-sm text-ink-0">{item.name}</span>
                   <span className="font-mono text-ink-3 text-[10px] tracking-wide">#{item.display_order}</span>
+                  {item.source === 'google' && (
+                    <span className="font-mono text-[9px] tracking-widest uppercase bg-bg-3 text-ink-2 px-1.5 py-0.5 rounded">Google</span>
+                  )}
                   {!item.visible && (
                     <span className="font-mono text-[9px] tracking-widest uppercase bg-bg-3 text-ink-2 px-1.5 py-0.5 rounded">masqué</span>
                   )}
                 </div>
-                <div className="font-mono text-ink-3 text-[10px] mb-2">{item.role}</div>
+                <div className="font-mono text-ink-3 text-[10px] mb-2">{item.role} · {item.country}</div>
                 <p className="text-ink-1 text-sm leading-relaxed">&ldquo;{item.body}&rdquo;</p>
               </div>
               <div className="flex gap-2 flex-shrink-0">
@@ -273,6 +320,67 @@ function FormFields({
           placeholder="La finition est dingue…"
         />
       </div>
+      <div className="grid sm:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Origine</label>
+          <Select
+            value={form.source}
+            onChange={(v) => setForm((f) => ({
+              ...f,
+              source: v as 'manual' | 'google',
+              role: v === 'google' && !f.role ? GOOGLE_DEFAULT_ROLE : f.role,
+            }))}
+            options={[
+              { value: 'manual', label: 'Saisie manuelle' },
+              { value: 'google', label: 'Avis Google (recopié)' },
+            ]}
+            compact
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Note</label>
+          <Select
+            value={String(form.rating)}
+            onChange={(v) => setForm((f) => ({ ...f, rating: Number(v) }))}
+            options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n} étoile${n > 1 ? 's' : ''}` }))}
+            compact
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Pays</label>
+          <input
+            value={form.country}
+            onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+            className="bg-bg-3 border border-[var(--line)] rounded-md px-3 py-2 text-sm text-ink-0 focus:outline-none focus:border-[var(--line-amber)]"
+            placeholder="France"
+            autoComplete="off"
+          />
+        </div>
+      </div>
+      {form.source === 'google' && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Lien vers l&apos;avis</label>
+            <input
+              value={form.source_url}
+              onChange={(e) => setForm((f) => ({ ...f, source_url: e.target.value }))}
+              className="bg-bg-3 border border-[var(--line)] rounded-md px-3 py-2 text-sm text-ink-0 focus:outline-none focus:border-[var(--line-amber)]"
+              placeholder="https://share.google/..."
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Photo de profil (URL)</label>
+            <input
+              value={form.avatar_url}
+              onChange={(e) => setForm((f) => ({ ...f, avatar_url: e.target.value }))}
+              className="bg-bg-3 border border-[var(--line)] rounded-md px-3 py-2 text-sm text-ink-0 focus:outline-none focus:border-[var(--line-amber)]"
+              placeholder="https://lh3.googleusercontent.com/..."
+              autoComplete="off"
+            />
+          </div>
+        </div>
+      )}
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <label className="font-mono text-ink-3 text-[10px] tracking-widest uppercase">Couleur avatar</label>

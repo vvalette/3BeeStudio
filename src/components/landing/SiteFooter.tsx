@@ -22,19 +22,23 @@ function InstagramIcon() {
   )
 }
 
-function EtsyIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M9.194 4.116c0-.775.155-1.008.93-1.008h5.425c1.628 0 2.403.853 2.868 2.713l.31 1.24h1.24L19.58 2h-15.2C3 2 2.612 2.388 2.612 3.77v16.46c0 1.38.388 1.77 1.77 1.77h15.2l.542-5.14h-1.24l-.465 1.628c-.542 1.86-1.24 2.713-3.178 2.713H9.658c-.775 0-.93-.233-.93-1.008l-.155-6.2h3.876c1.55 0 1.86.542 2.093 2.093h1.24V11.01h-1.24c-.233 1.55-.542 2.093-2.093 2.093H8.574l.155-5.425h.465z" />
-    </svg>
-  )
-}
-
 const socials = [
   { label: 'TikTok',    href: 'https://www.tiktok.com/@3bee.studio',                              Icon: TikTokIcon },
   { label: 'Instagram', href: 'https://www.instagram.com/3bee_studio_',                           Icon: InstagramIcon },
-  { label: 'Etsy',      href: 'https://www.etsy.com/shop/3BeeStudioFR?ref=dashboard-header',      Icon: EtsyIcon },
 ] as const
+
+const GOOGLE_REVIEWS_URL = 'https://share.google/n7zdz5ooxTw8sCwvE'
+
+function GoogleIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden>
+      <path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.09A12 12 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28V6.63H1.26A12 12 0 0 0 0 12c0 1.94.46 3.77 1.26 5.37l4.01-3.09z" />
+      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.26 6.63l4.01 3.09C6.22 6.86 8.87 4.75 12 4.75z" />
+    </svg>
+  )
+}
 
 const columns = [
   {
@@ -152,6 +156,16 @@ export default function SiteFooter() {
                 <path d="M12 0L14.6 8H23.4L16.4 12.9L19 21L12 16.1L5 21L7.6 12.9L0.6 8H9.4L12 0Z" />
               </svg>
               Trustpilot
+            </a>
+            <a
+              href={GOOGLE_REVIEWS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 font-mono text-ink-3 hover:text-ink-0 transition-colors cursor-pointer"
+              style={{ fontSize: 10, letterSpacing: '0.04em' }}
+            >
+              <GoogleIcon />
+              Avis Google
             </a>
           </div>
           <div className="flex flex-wrap gap-5">
