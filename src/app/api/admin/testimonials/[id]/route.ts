@@ -10,6 +10,11 @@ const schema = z.object({
   avatar_gradient: z.string().optional(),
   display_order: z.number().int().optional(),
   visible: z.boolean().optional(),
+  source: z.enum(['manual', 'google']).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  avatar_url: z.string().url().nullable().optional(),
+  source_url: z.string().url().nullable().optional(),
+  country: z.string().min(1).optional(),
 })
 
 export async function PATCH(
