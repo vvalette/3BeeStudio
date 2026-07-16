@@ -7,6 +7,7 @@ const TIKTOK_VIDEOS = [
   { id: '7652319556232285473', label: 'BeeLid — Ikea Hack',           views: '9K' },
   { id: '7652624940654431510', label: '3BeeStudio — Impression 3D',   views: undefined },
   { id: '7656800991987191073', label: '3BeeStudio — Impression 3D',   views: undefined },
+  { id: '7660270667916463392', label: '3BeeStudio — Impression 3D',   views: undefined },
 ]
 
 const INSTAGRAM_URL = 'https://www.instagram.com/3bee_studio_/'
