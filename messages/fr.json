@@ -1004,5 +1004,39 @@
     "headingLine1": "Des pièces à commander",
     "headingLine2": "directement en ligne.",
     "description": "Vases, luminaires, accessoires imprimés en 3D — notre catalogue arrive prochainement. En attendant, contactez-nous pour toute commande."
+  },
+  "errorPages": {
+    "notFoundTitle": "Page introuvable",
+    "notFoundDesc": "Cette page n'existe pas ou a été déplacée. Vérifiez l'adresse, ou revenez à l'accueil.",
+    "errorTitle": "Une erreur est survenue",
+    "errorDesc": "Un problème inattendu s'est produit de notre côté. Réessayez, ou revenez à l'accueil.",
+    "backHome": "Retour à l'accueil",
+    "retry": "Réessayer"
+  },
+  "contactPage": {
+    "metaTitle": "Contact — 3BeeStudio",
+    "metaDescription": "Une question sur un porte-clé NFC, une commande ou un projet sur-mesure ? Écrivez-nous, nous répondons sous 24 h ouvrées.",
+    "eyebrow": "Contact",
+    "title": "Parlons de votre projet",
+    "subtitle": "Une question sur un produit, une commande en cours ou une idée à imprimer ? Envoyez-nous un message — réponse sous 24 h ouvrées.",
+    "nameLabel": "Votre nom",
+    "namePlaceholder": "Jean Dupont",
+    "emailLabel": "Votre email",
+    "emailPlaceholder": "vous@exemple.fr",
+    "subjectLabel": "Sujet",
+    "subjectPlaceholder": "Question sur les porte-clés NFC",
+    "messageLabel": "Votre message",
+    "messagePlaceholder": "Bonjour, je souhaiterais…",
+    "submit": "Envoyer le message",
+    "submitting": "Envoi en cours…",
+    "successTitle": "Message envoyé !",
+    "successDesc": "Merci pour votre message. Nous revenons vers vous sous 24 h ouvrées à l’adresse indiquée.",
+    "sendAnother": "Envoyer un autre message",
+    "errorGeneric": "L'envoi a échoué. Réessayez dans quelques instants ou écrivez-nous à contact@3beestudio.fr.",
+    "errorRateLimit": "Trop de messages envoyés. Réessayez dans quelques minutes.",
+    "errName": "Votre nom est requis (2 caractères min.)",
+    "errEmail": "Adresse email invalide",
+    "errMessage": "Votre message est trop court (10 caractères min.)",
+    "directLine": "Vous pouvez aussi nous écrire directement à"
   }
 }
