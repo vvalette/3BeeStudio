@@ -69,7 +69,7 @@ export async function POST(req: Request) {
   //    pour backfill l'URL même sur une commande déjà passée en "shipped".
   // On applique sur les deux tables (orders + shop_orders) : un boxtal_order_id
   // n'existe que dans l'une, la mise à jour de l'autre touche simplement 0 ligne.
-  const trackingUpdates: Record<string, unknown> = {}
+  const trackingUpdates: { tracking_number?: string; tracking_url?: string } = {}
   if (trackingNumber) trackingUpdates.tracking_number = trackingNumber
   if (packageTrackingUrl) trackingUpdates.tracking_url = packageTrackingUrl
   if (Object.keys(trackingUpdates).length > 0) {

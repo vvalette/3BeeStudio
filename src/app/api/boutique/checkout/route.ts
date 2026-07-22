@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { calcShopShipping, mergeCartQuantities, computeNewsletterDiscount } from '@/types/shop-product'
 import type { ShopProduct } from '@/types/shop-product'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { sendCriticalAlert } from '@/lib/alert'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -33,7 +34,7 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   const ip = getClientIp(req)
-  const { ok, retryAfter } = rateLimit(`shop-checkout:${ip}`, 10, 10 * 60 * 1000)
+  const { ok, retryAfter } = await rateLimit(`shop-checkout:${ip}`, 10, 10 * 60 * 1000)
   if (!ok) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Réessayez plus tard.' },
@@ -287,6 +288,10 @@ export async function POST(req: Request) {
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
     console.error('[checkout] Erreur non gérée:', detail)
+    await sendCriticalAlert('Checkout boutique — erreur non gérée', {
+      erreur: detail,
+      consequence: 'Un client n\'a pas pu payer — vérifier Stripe/Supabase',
+    })
     return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 })
   }
 }

@@ -9,7 +9,7 @@ const ALLOWED: Record<string, string> = {
 export async function POST(req: Request) {
   // Limite : 10 uploads / 10 min / IP (endpoint public)
   const ip = getClientIp(req)
-  const { ok, retryAfter } = rateLimit(`upload-logo:${ip}`, 10, 10 * 60 * 1000)
+  const { ok, retryAfter } = await rateLimit(`upload-logo:${ip}`, 10, 10 * 60 * 1000)
   if (!ok) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Réessayez plus tard.' },

@@ -27,7 +27,7 @@ const schema = z.object({
 export async function POST(req: Request) {
   // Limite : 10 commandes / 10 min / IP (anti-spam DB + sessions Stripe)
   const ip = getClientIp(req)
-  const { ok, retryAfter } = rateLimit(`nfc-order:${ip}`, 10, 10 * 60 * 1000)
+  const { ok, retryAfter } = await rateLimit(`nfc-order:${ip}`, 10, 10 * 60 * 1000)
   if (!ok) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Réessayez plus tard.' },

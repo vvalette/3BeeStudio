@@ -8,7 +8,7 @@ const schema = z.object({ email: z.string().email() })
 export async function GET(req: Request) {
   // Anti énumération d'abonnés : 20 requêtes / 10 min / IP
   const ip = getClientIp(req)
-  const { ok, retryAfter } = rateLimit(`newsletter-check:${ip}`, 20, 10 * 60 * 1000)
+  const { ok, retryAfter } = await rateLimit(`newsletter-check:${ip}`, 20, 10 * 60 * 1000)
   if (!ok) {
     return NextResponse.json(
       { hasDiscount: false },

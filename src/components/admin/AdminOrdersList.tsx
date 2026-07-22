@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useConfirm } from '@/components/ui/ConfirmModal'
@@ -9,108 +9,18 @@ import { CUSTOM_STATUS_LABELS, type CustomOrder, type CustomOrderStatus } from '
 import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import {
-  STATUS_PILL, STATUS_ACCENT, STATUS_SHORT_LABELS, ALL_STATUSES,
-  CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT, CUSTOM_STATUS_SHORT_LABELS,
-  SHOP_STATUS_PILL, SHOP_STATUS_ACCENT, SHOP_STATUS_SHORT_LABELS, ALL_SHOP_STATUSES,
+  STATUS_PILL, STATUS_ACCENT,
+  CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT,
+  SHOP_STATUS_PILL, SHOP_STATUS_ACCENT,
 } from '@/lib/status-ui'
 import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 import Select from '@/components/ui/Select'
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type Section         = 'nfc' | 'custom' | 'boutique'
-type Period          = 'week' | 'month' | 'year' | 'all'
-type SortKey         = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'amount_desc'
-type NfcFilterKey    = 'all' | 'active' | 'no_label' | OrderStatus
-type CustomFilterKey = 'all' | 'active' | CustomOrderStatus
-type ShopFilterKey   = 'all' | 'active' | ShopOrderStatus
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'date_desc',   label: 'Plus récente' },
-  { key: 'date_asc',    label: 'Plus ancienne' },
-  { key: 'name_asc',    label: 'Nom A→Z' },
-  { key: 'name_desc',   label: 'Nom Z→A' },
-  { key: 'amount_desc', label: 'Montant ↓' },
-]
-
-// ── Filtres NFC ───────────────────────────────────────────────────────────────
-
-const NFC_FILTERS: { key: NfcFilterKey; label: string; dot?: string; match: (o: Order) => boolean }[] = [
-  { key: 'active',   label: 'À traiter',      match: (o) => o.status !== 'delivered' && o.status !== 'cancelled' },
-  { key: 'all',      label: 'Toutes',         match: () => true },
-  ...ALL_STATUSES.map((s) => ({
-    key: s as NfcFilterKey,
-    label: STATUS_SHORT_LABELS[s],
-    dot: STATUS_ACCENT[s],
-    match: (o: Order) => o.status === s,
-  })),
-  { key: 'no_label', label: 'Sans étiquette', dot: '#F59E0B', match: (o: Order) => o.status === 'processing' && !o.boxtal_order_id },
-]
-
-// ── Filtres Custom ────────────────────────────────────────────────────────────
-
-const CUSTOM_STATUSES: CustomOrderStatus[] = [
-  'pending_quote', 'quote_sent', 'deposit_paid', 'in_production', 'shipped', 'delivered', 'cancelled',
-]
-
-const CUSTOM_FILTERS: { key: CustomFilterKey; label: string; dot?: string; match: (o: CustomOrder) => boolean }[] = [
-  { key: 'active', label: 'À traiter', match: (o) => o.status !== 'delivered' && o.status !== 'cancelled' },
-  { key: 'all',    label: 'Toutes',    match: () => true },
-  ...CUSTOM_STATUSES.map((s) => ({
-    key: s as CustomFilterKey,
-    label: CUSTOM_STATUS_SHORT_LABELS[s],
-    dot: CUSTOM_STATUS_ACCENT[s],
-    match: (o: CustomOrder) => o.status === s,
-  })),
-]
-
-// ── Filtres Shop ──────────────────────────────────────────────────────────────
-
-const SHOP_FILTERS: { key: ShopFilterKey; label: string; dot?: string; match: (o: ShopOrder) => boolean }[] = [
-  { key: 'active', label: 'À traiter', match: (o) => o.status !== 'delivered' && o.status !== 'cancelled' },
-  { key: 'all',    label: 'Toutes',    match: () => true },
-  ...ALL_SHOP_STATUSES.map((s) => ({
-    key: s as ShopFilterKey,
-    label: SHOP_STATUS_SHORT_LABELS[s],
-    dot: SHOP_STATUS_ACCENT[s],
-    match: (o: ShopOrder) => o.status === s,
-  })),
-]
-
-// ── Périodes ──────────────────────────────────────────────────────────────────
-
-const PERIODS: { key: Period; label: string }[] = [
-  { key: 'week', label: 'Semaine' },
-  { key: 'month', label: 'Mois' },
-  { key: 'year', label: 'Année' },
-  { key: 'all', label: 'Tout' },
-]
-
-function sortList<T>(arr: T[], sort: SortKey, getName: (o: T) => string, getDate: (o: T) => string, getAmount: (o: T) => number): T[] {
-  return [...arr].sort((a, b) => {
-    switch (sort) {
-      case 'date_desc':   return new Date(getDate(b)).getTime() - new Date(getDate(a)).getTime()
-      case 'date_asc':    return new Date(getDate(a)).getTime() - new Date(getDate(b)).getTime()
-      case 'name_asc':    return getName(a).localeCompare(getName(b), 'fr', { sensitivity: 'base' })
-      case 'name_desc':   return getName(b).localeCompare(getName(a), 'fr', { sensitivity: 'base' })
-      case 'amount_desc': return getAmount(b) - getAmount(a)
-    }
-  })
-}
-
-function periodStart(p: Period): Date | null {
-  const now = new Date()
-  switch (p) {
-    case 'week': {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      d.setDate(d.getDate() - (d.getDay() + 6) % 7)
-      return d
-    }
-    case 'month': return new Date(now.getFullYear(), now.getMonth(), 1)
-    case 'year':  return new Date(now.getFullYear(), 0, 1)
-    case 'all':   return null
-  }
-}
+import {
+  NFC_FILTERS, CUSTOM_FILTERS, SHOP_FILTERS, PERIODS, SORT_OPTIONS,
+  NFC_SECTION, CUSTOM_SECTION, SHOP_SECTION,
+  periodStart, useOrderSection,
+  type Section, type Period, type SortKey,
+} from './orders-filtering'
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
@@ -127,21 +37,9 @@ export default function AdminOrdersList({
 }) {
   const router = useRouter()
   const { confirm, modal } = useConfirm()
-  const [section, setSection]             = useState<Section>(initialSection ?? 'nfc')
-  const [period, setPeriod]               = useState<Period>('all')
-  const [nfcFilter, setNfcFilter]         = useState<NfcFilterKey>('active')
-  const [customFilter, setCustomFilter]   = useState<CustomFilterKey>('active')
-  const [shopFilter, setShopFilter]       = useState<ShopFilterKey>('active')
-  const [nfcQuery, setNfcQuery]           = useState('')
-  const [customQuery, setCustomQuery]     = useState('')
-  const [shopQuery, setShopQuery]         = useState('')
-  const [selectedNfc, setSelectedNfc]     = useState<Set<string>>(new Set())
-  const [selectedCustom, setSelectedCustom] = useState<Set<string>>(new Set())
-  const [selectedShop, setSelectedShop]   = useState<Set<string>>(new Set())
-  const [nfcSort, setNfcSort]             = useState<SortKey>('date_desc')
-  const [customSort, setCustomSort]       = useState<SortKey>('date_desc')
-  const [shopSort, setShopSort]           = useState<SortKey>('date_desc')
-  const [deleting, setDeleting]           = useState(false)
+  const [section, setSection] = useState<Section>(initialSection ?? 'nfc')
+  const [period, setPeriod]   = useState<Period>('all')
+  const [deleting, setDeleting] = useState(false)
 
   async function handleLogout() {
     await fetch('/api/admin/login', { method: 'DELETE' })
@@ -164,6 +62,11 @@ export default function AdminOrdersList({
     const start = periodStart(period)
     return start ? shopOrders.filter((o) => new Date(o.created_at) >= start) : shopOrders
   }, [shopOrders, period])
+
+  // ── Filtre + recherche + tri + sélection par section (hook partagé) ──
+  const nfc    = useOrderSection(periodNfc, NFC_SECTION)
+  const custom = useOrderSection(periodCustom, CUSTOM_SECTION)
+  const shop   = useOrderSection(periodShop, SHOP_SECTION)
 
   // ── Stats ──
   const stats = useMemo(() => {
@@ -194,89 +97,12 @@ export default function AdminOrdersList({
     }
   }, [periodNfc, periodCustom, periodShop])
 
-  // ── Compteurs filtres ──
-  const nfcCounts = useMemo(() => {
-    const c = Object.fromEntries(NFC_FILTERS.map((f) => [f.key, 0])) as Record<NfcFilterKey, number>
-    for (const o of periodNfc) for (const f of NFC_FILTERS) if (f.match(o)) c[f.key]++
-    return c
-  }, [periodNfc])
-
-  const customCounts = useMemo(() => {
-    const c = Object.fromEntries(CUSTOM_FILTERS.map((f) => [f.key, 0])) as Record<CustomFilterKey, number>
-    for (const o of periodCustom) for (const f of CUSTOM_FILTERS) if (f.match(o)) c[f.key]++
-    return c
-  }, [periodCustom])
-
-  const shopCounts = useMemo(() => {
-    const c = Object.fromEntries(SHOP_FILTERS.map((f) => [f.key, 0])) as Record<ShopFilterKey, number>
-    for (const o of periodShop) for (const f of SHOP_FILTERS) if (f.match(o)) c[f.key]++
-    return c
-  }, [periodShop])
-
-  // ── Listes filtrées + triées ──
-  const filteredNfc = useMemo(() => {
-    const active = NFC_FILTERS.find((f) => f.key === nfcFilter)!
-    const q = nfcQuery.trim().toLowerCase()
-    const list = periodNfc.filter((o) => {
-      if (!active.match(o)) return false
-      if (!q) return true
-      return o.company.toLowerCase().includes(q) || o.email.toLowerCase().includes(q) || o.id.toLowerCase().includes(q)
-    })
-    return sortList(list, nfcSort, (o) => o.company, (o) => o.created_at, (o) => o.total_amount)
-  }, [periodNfc, nfcFilter, nfcQuery, nfcSort])
-
-  const filteredCustom = useMemo(() => {
-    const active = CUSTOM_FILTERS.find((f) => f.key === customFilter)!
-    const q = customQuery.trim().toLowerCase()
-    const list = periodCustom.filter((o) => {
-      if (!active.match(o)) return false
-      if (!q) return true
-      return o.name.toLowerCase().includes(q) || (o.company ?? '').toLowerCase().includes(q) || o.email.toLowerCase().includes(q) || o.id.toLowerCase().includes(q)
-    })
-    return sortList(list, customSort, (o) => o.company ?? o.name, (o) => o.created_at, (o) => o.deposit_amount ?? 0)
-  }, [periodCustom, customFilter, customQuery, customSort])
-
-  const filteredShop = useMemo(() => {
-    const active = SHOP_FILTERS.find((f) => f.key === shopFilter)!
-    const q = shopQuery.trim().toLowerCase()
-    const list = periodShop.filter((o) => {
-      if (!active.match(o)) return false
-      if (!q) return true
-      return o.name.toLowerCase().includes(q) || o.email.toLowerCase().includes(q) || o.id.toLowerCase().includes(q)
-    })
-    return sortList(list, shopSort, (o) => o.name, (o) => o.created_at, (o) => o.total_amount)
-  }, [periodShop, shopFilter, shopQuery, shopSort])
-
-  // ── Sélection NFC ──
-  const toggleNfc = useCallback((id: string) => {
-    setSelectedNfc((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
-  }, [])
-  const toggleAllNfc = useCallback(() => {
-    setSelectedNfc((prev) => prev.size === filteredNfc.length ? new Set() : new Set(filteredNfc.map((o) => o.id)))
-  }, [filteredNfc])
-
-  // ── Sélection Custom ──
-  const toggleCustom = useCallback((id: string) => {
-    setSelectedCustom((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
-  }, [])
-  const toggleAllCustom = useCallback(() => {
-    setSelectedCustom((prev) => prev.size === filteredCustom.length ? new Set() : new Set(filteredCustom.map((o) => o.id)))
-  }, [filteredCustom])
-
-  // ── Sélection Shop ──
-  const toggleShop = useCallback((id: string) => {
-    setSelectedShop((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
-  }, [])
-  const toggleAllShop = useCallback(() => {
-    setSelectedShop((prev) => prev.size === filteredShop.length ? new Set() : new Set(filteredShop.map((o) => o.id)))
-  }, [filteredShop])
-
   // ── Suppression ──
   async function deleteNfc(ids: string[]) {
     if (!await confirm({ title: `Supprimer ${ids.length} commande${ids.length > 1 ? 's' : ''} NFC ?`, message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     await Promise.all(ids.map((id) => fetch(`/api/admin/orders/${id}`, { method: 'DELETE' })))
-    setSelectedNfc(new Set())
+    nfc.clearSelection()
     setDeleting(false)
     router.refresh()
   }
@@ -285,7 +111,7 @@ export default function AdminOrdersList({
     if (!await confirm({ title: `Supprimer ${ids.length} demande${ids.length > 1 ? 's' : ''} sur-mesure ?`, message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     await Promise.all(ids.map((id) => fetch(`/api/admin/custom/${id}`, { method: 'DELETE' })))
-    setSelectedCustom(new Set())
+    custom.clearSelection()
     setDeleting(false)
     router.refresh()
   }
@@ -294,7 +120,7 @@ export default function AdminOrdersList({
     if (!await confirm({ title: `Supprimer ${ids.length} commande${ids.length > 1 ? 's' : ''} boutique ?`, message: 'Cette action est irréversible.', confirmLabel: 'Supprimer', variant: 'danger' })) return
     setDeleting(true)
     await Promise.all(ids.map((id) => fetch(`/api/admin/boutique/orders/${id}`, { method: 'DELETE' })))
-    setSelectedShop(new Set())
+    shop.clearSelection()
     setDeleting(false)
     router.refresh()
   }
@@ -421,25 +247,25 @@ export default function AdminOrdersList({
           <>
             <FilterBar
               filters={NFC_FILTERS}
-              active={nfcFilter}
-              counts={nfcCounts}
-              onFilter={setNfcFilter}
-              query={nfcQuery}
-              onQuery={setNfcQuery}
-              sort={nfcSort}
-              onSort={setNfcSort}
-              selected={selectedNfc}
-              total={filteredNfc.length}
-              onToggleAll={toggleAllNfc}
-              onDelete={() => deleteNfc([...selectedNfc])}
+              active={nfc.filter}
+              counts={nfc.counts}
+              onFilter={nfc.setFilter}
+              query={nfc.query}
+              onQuery={nfc.setQuery}
+              sort={nfc.sort}
+              onSort={nfc.setSort}
+              selected={nfc.selected}
+              total={nfc.filtered.length}
+              onToggleAll={nfc.toggleAll}
+              onDelete={() => deleteNfc([...nfc.selected])}
               deleting={deleting}
             />
             <NfcList
-              orders={filteredNfc}
+              orders={nfc.filtered}
               allEmpty={orders.length === 0}
               currentYear={currentYear}
-              selected={selectedNfc}
-              onToggle={toggleNfc}
+              selected={nfc.selected}
+              onToggle={nfc.toggle}
               onDelete={(id) => deleteNfc([id])}
               deleting={deleting}
             />
@@ -451,26 +277,26 @@ export default function AdminOrdersList({
           <>
             <FilterBar
               filters={CUSTOM_FILTERS}
-              active={customFilter}
-              counts={customCounts}
-              onFilter={setCustomFilter}
-              query={customQuery}
-              onQuery={setCustomQuery}
-              sort={customSort}
-              onSort={setCustomSort}
-              selected={selectedCustom}
-              total={filteredCustom.length}
-              onToggleAll={toggleAllCustom}
-              onDelete={() => deleteCustom([...selectedCustom])}
+              active={custom.filter}
+              counts={custom.counts}
+              onFilter={custom.setFilter}
+              query={custom.query}
+              onQuery={custom.setQuery}
+              sort={custom.sort}
+              onSort={custom.setSort}
+              selected={custom.selected}
+              total={custom.filtered.length}
+              onToggleAll={custom.toggleAll}
+              onDelete={() => deleteCustom([...custom.selected])}
               deleting={deleting}
               searchPlaceholder="Nom, email, référence…"
             />
             <CustomList
-              orders={filteredCustom}
+              orders={custom.filtered}
               allEmpty={customOrders.length === 0}
               currentYear={currentYear}
-              selected={selectedCustom}
-              onToggle={toggleCustom}
+              selected={custom.selected}
+              onToggle={custom.toggle}
               onDelete={(id) => deleteCustom([id])}
               deleting={deleting}
             />
@@ -492,26 +318,26 @@ export default function AdminOrdersList({
             </div>
             <FilterBar
               filters={SHOP_FILTERS}
-              active={shopFilter}
-              counts={shopCounts}
-              onFilter={setShopFilter}
-              query={shopQuery}
-              onQuery={setShopQuery}
-              sort={shopSort}
-              onSort={setShopSort}
-              selected={selectedShop}
-              total={filteredShop.length}
-              onToggleAll={toggleAllShop}
-              onDelete={() => deleteShop([...selectedShop])}
+              active={shop.filter}
+              counts={shop.counts}
+              onFilter={shop.setFilter}
+              query={shop.query}
+              onQuery={shop.setQuery}
+              sort={shop.sort}
+              onSort={shop.setSort}
+              selected={shop.selected}
+              total={shop.filtered.length}
+              onToggleAll={shop.toggleAll}
+              onDelete={() => deleteShop([...shop.selected])}
               deleting={deleting}
               searchPlaceholder="Nom, email, référence…"
             />
             <ShopList
-              orders={filteredShop}
+              orders={shop.filtered}
               allEmpty={shopOrders.length === 0}
               currentYear={currentYear}
-              selected={selectedShop}
-              onToggle={toggleShop}
+              selected={shop.selected}
+              onToggle={shop.toggle}
               onDelete={(id) => deleteShop([id])}
               deleting={deleting}
             />

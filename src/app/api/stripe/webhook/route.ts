@@ -1,58 +1,11 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendOrderConfirmation, sendShopOrderConfirmation } from '@/lib/resend'
-import { revalidateShop } from '@/lib/revalidate'
+import { sendOrderConfirmation } from '@/lib/resend'
+import { sendCriticalAlert } from '@/lib/alert'
+import { confirmShopOrder } from '@/lib/confirm-shop-order'
 import type { Order } from '@/types/order'
-import type { ShopOrder } from '@/types/shop-order'
 import Stripe from 'stripe'
-
-// Confirme une commande boutique payée. Idempotent : le `.eq('status','pending_payment')`
-// garantit un seul décrément de stock même si le webhook est rejoué (session.completed + payment_intent.succeeded).
-// Retourne { error: true } uniquement sur un échec d'update DB (le caller doit alors renvoyer 500 pour que Stripe retente).
-async function confirmShopOrder(shopOrderId: string): Promise<{ error?: true }> {
-  const { data: updatedShop, error } = await supabaseAdmin
-    .from('shop_orders')
-    .update({ status: 'confirmed' })
-    .eq('id', shopOrderId)
-    .eq('status', 'pending_payment')
-    .select()
-    .single()
-
-  if (error) {
-    console.error('[webhook] Erreur shop_orders update:', error)
-    return { error: true }
-  }
-  if (!updatedShop) return {} // déjà confirmée (rejeu idempotent)
-
-  console.info('[webhook]', JSON.stringify({ event: 'shop_order_confirmed', shopOrderId }))
-
-  const shopOrder = updatedShop as ShopOrder
-  for (const item of shopOrder.items ?? []) {
-    await supabaseAdmin
-      .rpc('decrement_shop_stock', { p_product_id: item.product_id, p_qty: item.quantity })
-      .then(({ error: rpcErr }) => {
-        if (rpcErr) console.error('[webhook] Erreur décrément stock:', item.product_id, rpcErr)
-      })
-  }
-
-  // Revalide les pages publiques pour refléter le nouveau stock
-  // (ISR long = pas de régénération auto avant 1h sans ça).
-  const productIds = (shopOrder.items ?? []).map((i) => i.product_id)
-  if (productIds.length > 0) {
-    const { data: rows } = await supabaseAdmin
-      .from('shop_products')
-      .select('slug')
-      .in('id', productIds)
-    revalidateShop(...(rows ?? []).map((r) => (r as { slug: string }).slug))
-  }
-
-  await sendShopOrderConfirmation(shopOrder).catch((err) =>
-    console.error('[webhook] Email boutique non bloquant:', err),
-  )
-
-  return {}
-}
 
 // Session Stripe abandonnée / expirée sans paiement : on nettoie la commande fantôme
 // et on libère la promo newsletter éventuellement consommée à la création de la session.
@@ -126,8 +79,14 @@ export async function POST(req: Request) {
             .update({ status: 'deposit_paid' })
             .eq('id', customOrderId)
             .eq('status', 'quote_sent')
-          if (error) console.error('[webhook] Erreur custom_orders update:', error)
-          else console.info('[webhook]', JSON.stringify({ event: 'custom_deposit_paid', customOrderId }))
+          if (error) {
+            console.error('[webhook] Erreur custom_orders update:', error)
+            await sendCriticalAlert('Webhook Stripe — échec confirmation acompte sur-mesure', {
+              customOrderId,
+              erreur: error.message,
+              consequence: 'Acompte payé mais statut non mis à jour',
+            })
+          } else console.info('[webhook]', JSON.stringify({ event: 'custom_deposit_paid', customOrderId }))
         }
         return NextResponse.json({ received: true })
       }
@@ -144,10 +103,15 @@ export async function POST(req: Request) {
           .eq('id', orderId)
           .eq('status', 'pending_payment')
           .select()
-          .single()
+          .maybeSingle() // rejeu → 0 ligne sans erreur (single() aurait renvoyé PGRST116)
 
         if (error) {
           console.error('[webhook] Erreur Supabase update:', error)
+          await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
+            orderId,
+            erreur: error.message,
+            consequence: 'Commande payée potentiellement bloquée en pending_payment',
+          })
           return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
         }
 
@@ -182,6 +146,11 @@ export async function POST(req: Request) {
 
         if (error) {
           console.error('[webhook] Erreur Supabase payment_intent update:', error)
+          await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
+            orderId,
+            via: 'payment_intent.succeeded',
+            erreur: error.message,
+          })
           return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
         }
         console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed_via_pi', orderId }))
@@ -202,10 +171,15 @@ export async function POST(req: Request) {
             .eq('id', sessionOrderId)
             .eq('status', 'pending_payment')
             .select()
-            .single()
+            .maybeSingle() // rejeu → 0 ligne sans erreur (single() aurait renvoyé PGRST116)
 
           if (error) {
             console.error('[webhook] Erreur Supabase (via session lookup):', error)
+            await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
+              orderId: sessionOrderId,
+              via: 'session lookup',
+              erreur: error.message,
+            })
             return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
           }
           console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed_via_session_lookup', orderId: sessionOrderId }))
@@ -219,6 +193,11 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error('[webhook] Erreur inattendue:', err)
+    await sendCriticalAlert('Webhook Stripe — erreur inattendue', {
+      eventType: event.type,
+      erreur: err instanceof Error ? err.message : String(err),
+      consequence: 'Stripe va retenter — vérifier les logs si les échecs persistent',
+    })
     return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   }
 

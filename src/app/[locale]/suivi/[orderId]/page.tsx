@@ -35,7 +35,7 @@ async function syncStripePayment(order: Order): Promise<Order> {
         .eq('id', order.id)
         .eq('status', 'pending_payment') // n'écraser que si pas déjà confirmé
         .select()
-        .single()
+        .maybeSingle() // rejeu/course avec le webhook → 0 ligne sans erreur
 
       if (updated) {
         // Envoi email en parallèle, non bloquant

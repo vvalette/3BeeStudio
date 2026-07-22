@@ -1,39 +1,41 @@
 import { describe, it, expect, vi } from 'vitest'
 import { rateLimit, getClientIp } from './rate-limit'
 
-describe('rateLimit', () => {
-  it('allows requests under the limit', () => {
+// Sans UPSTASH_REDIS_REST_URL/TOKEN dans l'env de test, rateLimit utilise
+// le fallback mémoire — c'est lui qui est testé ici.
+describe('rateLimit (fallback mémoire)', () => {
+  it('allows requests under the limit', async () => {
     const key = `test-${Math.random()}`
-    expect(rateLimit(key, 3, 1000).ok).toBe(true)
-    expect(rateLimit(key, 3, 1000).ok).toBe(true)
-    expect(rateLimit(key, 3, 1000).ok).toBe(true)
+    expect((await rateLimit(key, 3, 1000)).ok).toBe(true)
+    expect((await rateLimit(key, 3, 1000)).ok).toBe(true)
+    expect((await rateLimit(key, 3, 1000)).ok).toBe(true)
   })
 
-  it('blocks once the limit is exceeded and reports retryAfter', () => {
+  it('blocks once the limit is exceeded and reports retryAfter', async () => {
     const key = `test-${Math.random()}`
-    rateLimit(key, 2, 1000)
-    rateLimit(key, 2, 1000)
-    const result = rateLimit(key, 2, 1000)
+    await rateLimit(key, 2, 1000)
+    await rateLimit(key, 2, 1000)
+    const result = await rateLimit(key, 2, 1000)
     expect(result.ok).toBe(false)
     expect(result.retryAfter).toBeGreaterThan(0)
   })
 
-  it('resets the window after it expires', () => {
+  it('resets the window after it expires', async () => {
     vi.useFakeTimers()
     const key = `test-${Math.random()}`
-    rateLimit(key, 1, 1000)
-    expect(rateLimit(key, 1, 1000).ok).toBe(false)
+    await rateLimit(key, 1, 1000)
+    expect((await rateLimit(key, 1, 1000)).ok).toBe(false)
     vi.advanceTimersByTime(1001)
-    expect(rateLimit(key, 1, 1000).ok).toBe(true)
+    expect((await rateLimit(key, 1, 1000)).ok).toBe(true)
     vi.useRealTimers()
   })
 
-  it('tracks separate keys independently', () => {
+  it('tracks separate keys independently', async () => {
     const a = `test-a-${Math.random()}`
     const b = `test-b-${Math.random()}`
-    rateLimit(a, 1, 1000)
-    expect(rateLimit(a, 1, 1000).ok).toBe(false)
-    expect(rateLimit(b, 1, 1000).ok).toBe(true)
+    await rateLimit(a, 1, 1000)
+    expect((await rateLimit(a, 1, 1000)).ok).toBe(false)
+    expect((await rateLimit(b, 1, 1000)).ok).toBe(true)
   })
 })
 

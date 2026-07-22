@@ -43,7 +43,7 @@ function concat(chunks: Uint8Array[]): Uint8Array {
 export async function POST(req: Request) {
   // Limite : 20 vérifications / min / IP (l'endpoint fait des requêtes sortantes)
   const ip = getClientIp(req)
-  const { ok } = rateLimit(`verify-link:${ip}`, 20, 60 * 1000)
+  const { ok } = await rateLimit(`verify-link:${ip}`, 20, 60 * 1000)
   if (!ok) return NextResponse.json({ status: 'unknown' as Status })
 
   const { url, type } = await req.json().catch(() => ({}))

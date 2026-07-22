@@ -23,6 +23,7 @@ const STATIC_PAGES: Entry[] = [
   { href: '/nfc', changeFrequency: 'weekly', priority: 0.9 },
   { href: '/boutique', changeFrequency: 'weekly', priority: 0.9 },
   { href: '/custom', changeFrequency: 'monthly', priority: 0.8 },
+  { href: '/contact', changeFrequency: 'monthly', priority: 0.5 },
   { href: '/cgv', changeFrequency: 'yearly', priority: 0.3 },
   { href: '/mentions-legales', changeFrequency: 'yearly', priority: 0.3 },
   { href: '/politique-de-confidentialite', changeFrequency: 'yearly', priority: 0.3 },

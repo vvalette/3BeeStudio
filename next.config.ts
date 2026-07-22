@@ -27,8 +27,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // typedRoutes désactivé le temps de migrer tous les Link vers @/i18n/navigation
-  // typedRoutes: true,
+  // Routes typées : les Link/router next (admin, 404) sont vérifiés à la compilation.
+  // Les liens publics passent par @/i18n/navigation (non concernés par ce typage).
+  typedRoutes: true,
   async headers() {
     return [
       {

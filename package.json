@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
@@ -16,6 +17,8 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.48.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "clsx": "^2.1.1",
@@ -42,6 +45,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.20.0",

@@ -91,6 +91,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   // en RSC et n'a jamais besoin du provider client — ~55% de payload i18n en moins.
   const CLIENT_NAMESPACES = [
     'nav', 'footer', 'boutique', 'common', 'newsletter', 'nfcSection', 'nfcForm', 'nfcLink', 'surMesureForm',
+    'errorPages', 'contactPage',
   ] as const
   const messages = Object.fromEntries(
     CLIENT_NAMESPACES.filter((ns) => ns in allMessages).map((ns) => [ns, allMessages[ns]])

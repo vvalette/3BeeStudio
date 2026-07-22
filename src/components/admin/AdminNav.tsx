@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import type { Route } from 'next'
 import { usePathname } from 'next/navigation'
 
-const LINKS = [
+const LINKS: { href: Route; label: string; icon: React.ReactNode }[] = [
   {
     href: '/admin/commandes',
     label: 'Commandes',

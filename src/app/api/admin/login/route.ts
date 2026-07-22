@@ -6,7 +6,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 export async function POST(req: Request) {
   // Anti brute-force : 5 tentatives / 15 min / IP
   const ip = getClientIp(req)
-  const { ok, retryAfter } = rateLimit(`admin-login:${ip}`, 5, 15 * 60 * 1000)
+  const { ok, retryAfter } = await rateLimit(`admin-login:${ip}`, 5, 15 * 60 * 1000)
   if (!ok) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Réessayez plus tard.' },

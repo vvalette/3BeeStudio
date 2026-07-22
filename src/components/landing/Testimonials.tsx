@@ -10,7 +10,7 @@ interface Testimonial {
   body: string
   avatar_gradient: string
   display_order: number
-  source: 'manual' | 'google'
+  source: string // 'manual' | 'google' — colonne text en DB
   rating: number
   avatar_url: string | null
   source_url: string | null
