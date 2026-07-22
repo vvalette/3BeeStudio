@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import ImageCropModal from '../ImageCropModal'
+import Tooltip from '@/components/ui/Tooltip'
 
 // Upload des images produit (max 6) avec crop systématique avant envoi.
 // Extrait d'AdminBoutiqueProductForm.tsx — aucun changement de comportement.
@@ -79,6 +80,19 @@ export default function ImageDropzone({ images, onChange }: { images: string[]; 
             <div key={i} className="group relative h-20 w-20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt="" loading="lazy" className="h-full w-full rounded-xl object-cover border border-[var(--line)]" />
+              <div className="absolute -left-1.5 -top-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <Tooltip content="Télécharger">
+                  <a
+                    href={`/api/admin/download?url=${encodeURIComponent(url)}`}
+                    download
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-bg-3 text-ink-1 hover:bg-amber hover:text-bg-0"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+                    </svg>
+                  </a>
+                </Tooltip>
+              </div>
               <button
                 type="button"
                 onClick={() => removeImage(url)}

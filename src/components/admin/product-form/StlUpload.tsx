@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
+import Tooltip from '@/components/ui/Tooltip'
 
 // Upload du modèle 3D (.stl / .3mf) du produit.
 // Extrait d'AdminBoutiqueProductForm.tsx — aucun changement de comportement.
@@ -52,6 +53,17 @@ export default function StlUpload({ stlUrl, onChange }: { stlUrl: string | null;
           <p className="truncate text-sm font-medium text-ink-0">{filename}</p>
           <p className="text-[11px] text-ink-3">Modèle {fileExt} chargé</p>
         </div>
+        <Tooltip content="Télécharger">
+          <a
+            href={`/api/admin/download?url=${encodeURIComponent(stlUrl)}`}
+            download
+            className="cursor-pointer rounded-lg p-1.5 text-ink-3 hover:bg-amber/10 hover:text-amber transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+            </svg>
+          </a>
+        </Tooltip>
         <button
           type="button"
           onClick={() => onChange(null)}
