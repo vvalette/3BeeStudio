@@ -6,35 +6,37 @@ on:
   pull_request:
     branches: [main, dev]
 
+# Vars factices — aucun appel réseau réel n'est nécessaire pour type-check/lint/build,
+# et les tests E2E sont hermétiques (rendu + navigation, pas de paiement réel).
+# Les requêtes Supabase échouent silencieusement (data: null) sur les pages SSG,
+# les routes API ne s'exécutent pas au build.
+env:
+  NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+  STRIPE_SECRET_KEY: sk_test_placeholder
+  STRIPE_WEBHOOK_SECRET: whsec_placeholder
+  RESEND_API_KEY: re_placeholder
+  RESEND_FROM_EMAIL: test@example.com
+  NEXT_PUBLIC_APP_URL: http://localhost:3001
+  ADMIN_PASSWORD: placeholder
+  BOXTAL_API_URL: https://api.boxtal.build
+  BOXTAL_ACCESS_KEY: placeholder
+  BOXTAL_SECRET_KEY: placeholder
+  BOXTAL_SENDER_FIRSTNAME: Test
+  BOXTAL_SENDER_LASTNAME: Test
+  BOXTAL_SENDER_EMAIL: test@example.com
+  BOXTAL_SENDER_PHONE: '0600000000'
+  BOXTAL_SENDER_COMPANY: Test
+  BOXTAL_SENDER_STREET: 1 rue Test
+  BOXTAL_SENDER_CITY: Test
+  BOXTAL_SENDER_POSTAL_CODE: '75001'
+  BOXTAL_SENDER_COUNTRY: FR
+  BOXTAL_WEBHOOK_SECRET: placeholder
+
 jobs:
   ci:
     runs-on: ubuntu-latest
-    env:
-      # Vars factices — aucun appel réseau réel n'est nécessaire pour type-check/lint/build.
-      # Les requêtes Supabase échouent silencieusement (data: null) sur les pages SSG,
-      # les routes API ne s'exécutent pas au build.
-      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
-      STRIPE_SECRET_KEY: sk_test_placeholder
-      STRIPE_WEBHOOK_SECRET: whsec_placeholder
-      RESEND_API_KEY: re_placeholder
-      RESEND_FROM_EMAIL: test@example.com
-      NEXT_PUBLIC_APP_URL: http://localhost:3001
-      ADMIN_PASSWORD: placeholder
-      BOXTAL_API_URL: https://api.boxtal.build
-      BOXTAL_ACCESS_KEY: placeholder
-      BOXTAL_SECRET_KEY: placeholder
-      BOXTAL_SENDER_FIRSTNAME: Test
-      BOXTAL_SENDER_LASTNAME: Test
-      BOXTAL_SENDER_EMAIL: test@example.com
-      BOXTAL_SENDER_PHONE: '0600000000'
-      BOXTAL_SENDER_COMPANY: Test
-      BOXTAL_SENDER_STREET: 1 rue Test
-      BOXTAL_SENDER_CITY: Test
-      BOXTAL_SENDER_POSTAL_CODE: '75001'
-      BOXTAL_SENDER_COUNTRY: FR
-      BOXTAL_WEBHOOK_SECRET: placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -52,3 +54,28 @@ jobs:
       - run: npm test --if-present
 
       - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run build
+
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
