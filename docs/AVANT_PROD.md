@@ -31,6 +31,7 @@
 
 - [ ] `NEXT_PUBLIC_APP_URL` → `https://3beestudio.fr` (⚠️ tout le SEO — canonical, hreflang, sitemap, robots — en dépend)
 - [ ] `ADMIN_PASSWORD` → mot de passe fort, différent du dev
+- [ ] (Optionnel) `ALERT_EMAIL` → destinataire des alertes critiques (défaut : contact@3beestudio.fr)
 - [ ] Bloc `BOXTAL_*` → ⚠️ test end-to-end Boxtal pas encore réalisé (voir mémoire projet)
 
 > ℹ️ **Note Resend — audience newsletter** : il n'existe **qu'une seule audience générique** côté Resend. Aucune variable d'env à renseigner : le code **auto-découvre cette audience unique** (`audiences.list()` → premier id) et y ajoute l'inscrit. Si le compte n'a aucune audience, l'inscription newsletter réussit quand même (ajout au contact simplement ignoré, non bloquant).
@@ -44,7 +45,7 @@
 
 ### 3. Supabase — prod
 
-- [ ] Lancer **toutes** les migrations `supabase/migrations/*` dans l'ordre, jusqu'à `013_add_en_fields_to_products.sql` et `014_decrement_shop_stock.sql` (décrément stock — **nouveau, requis**)
+- [ ] Lancer **toutes** les migrations `supabase/migrations/*` dans l'ordre, jusqu'à `028_decrement_shop_stock_oversell.sql` (détection de survente — **nouveau, requis** : le webhook alerte par email quand une commande payée dépasse le stock)
 - [ ] Buckets Storage à créer : `logos`, `product-images`, `stl-files`
 - [ ] Vérifier les RLS : le public (`anon`) ne doit lire `shop_products` que sur `active = true`. Les routes serveur utilisent `service_role` (bypass RLS) — OK.
 

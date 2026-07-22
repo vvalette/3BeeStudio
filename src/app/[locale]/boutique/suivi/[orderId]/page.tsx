@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
-import { sendShopOrderConfirmation } from '@/lib/resend'
+import { confirmShopOrder } from '@/lib/confirm-shop-order'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
@@ -27,25 +27,16 @@ export async function generateMetadata({
 
 export const dynamic = 'force-dynamic'
 
+// Fallback si le webhook n'est pas encore passé quand le client atteint la page.
+// Passe par confirmShopOrder (lib partagé avec le webhook) : quel que soit le gagnant
+// de la course, le décrément de stock et l'email partent exactement une fois.
 async function syncStripePayment(order: ShopOrder): Promise<ShopOrder> {
   if (!order.stripe_checkout_session_id) return order
   try {
     const session = await stripe.checkout.sessions.retrieve(order.stripe_checkout_session_id)
     if (session.payment_status === 'paid') {
-      const { data: updated } = await supabaseAdmin
-        .from('shop_orders')
-        .update({ status: 'confirmed' })
-        .eq('id', order.id)
-        .eq('status', 'pending_payment')
-        .select()
-        .single()
-
-      if (updated) {
-        sendShopOrderConfirmation(updated as ShopOrder).catch((err) =>
-          console.error('[suivi-boutique] Email non bloquant:', err),
-        )
-        return updated as ShopOrder
-      }
+      const { order: confirmed } = await confirmShopOrder(order.id)
+      if (confirmed) return confirmed
     }
   } catch (err) {
     console.error('[suivi-boutique] Stripe sync failed:', err)
