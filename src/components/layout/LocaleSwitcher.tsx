@@ -15,8 +15,7 @@ export default function LocaleSwitcher() {
     // Lu au clic (pas via useSearchParams) : évite le bailout CSR/Suspense
     // qui casserait le prerender statique de toutes les pages via la Navbar.
     const qs = window.location.search.replace(/^\?/, '')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router.replace((qs ? `${pathname}?${qs}` : pathname) as any, { locale: targetLocale })
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { locale: targetLocale })
   }
 
   return (
