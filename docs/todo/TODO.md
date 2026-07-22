@@ -26,13 +26,13 @@
 - [x] `src/app/politique-de-confidentialite/page.tsx` ✅
 - [x] `src/app/nfc/page.tsx` — Page dédiée porte-clé connecté avec formulaire multi-step complet
 - [x] `src/app/suivi/[orderId]/page.tsx` — Suivi commande avec timeline + prochaines étapes + sync Stripe
-- [ ] `src/app/boutique/page.tsx` — Grille produits (placeholder)
-- [ ] `src/app/boutique/[slug]/page.tsx` — Fiche produit
+- [x] `src/app/boutique/page.tsx` — Grille produits + catégories + panier ✅
+- [x] `src/app/boutique/[slug]/page.tsx` — Fiche produit (markdown, viewer 3D, FR/EN) ✅
 - [x] `src/app/custom/page.tsx` — Formulaire sur-mesure multi-step ✅ (3 étapes, validation RHF+Zod, budget/délai pills)
 - [x] `src/app/custom/[orderId]/page.tsx` — Suivi sur-mesure ✅ (timeline + CTA acompte)
 - [x] `src/app/sur-mesure/page.tsx` — Redirect → `/custom` ✅
 - [ ] `src/app/portfolio/page.tsx` — Galerie masonry (placeholder)
-- [ ] `src/app/contact/page.tsx` — Formulaire contact (placeholder)
+- [x] `src/app/contact/page.tsx` — Formulaire contact → email Resend (juillet 2026) ✅
 
 ## 💳 Stripe
 
@@ -83,6 +83,23 @@
 - [ ] Créer le template CapCut réutilisable (9:16, logo, musique)
 - [ ] Poster la 1ère vidéo TikTok
 - [ ] Poster sur Instagram Reels le même contenu
+
+
+---
+
+## 🧪 Sprint qualité — juillet 2026 (fait)
+
+- [x] Pages d'erreur : 404 localisée FR/EN (`[locale]/not-found` + catch-all), `error.tsx` public + admin, `global-error`, 404 racine
+- [x] Alertes email critiques (Resend) : échecs webhook Stripe, erreurs checkout, survente de stock — `src/lib/alert.ts`
+- [x] Migration `028` : `decrement_shop_stock` retourne `{ new_stock, oversold }` (survente détectée, plus masquée)
+- [x] Fix : `.single()` → `.maybeSingle()` dans le webhook (un rejeu Stripe provoquait des 500 en boucle)
+- [x] Fix : la page suivi boutique passe par `confirmShopOrder` partagé (le stock est décrémenté même si elle gagne la course contre le webhook)
+- [x] Page `/contact` fonctionnelle (form RHF+Zod, honeypot, rate limit, email Resend)
+- [x] Tests : 61 unitaires (calculs boutique, webhook Stripe mocké, payload produit admin) + 16 E2E Playwright (smoke 3 flux, desktop + mobile) branchés en CI
+- [x] Refactos : NfcOrderForm 1156→130 lignes (steps extraits), AdminOrdersList (hook `useOrderSection`), AdminBoutiqueProductForm 872→253 lignes (sections + état consolidé)
+- [x] Types DB Supabase générés (`src/types/database.generated.ts` + wrapper typé) — clients `supabase`/`supabaseAdmin` typés
+- [x] `typedRoutes: true` réactivé (liens admin vérifiés à la compilation, `as any` du LocaleSwitcher supprimé)
+- [x] Rate limiting : Upstash Redis si `UPSTASH_REDIS_REST_URL/TOKEN` définis, sinon fallback mémoire
 
 ---
 
