@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import type { TablesUpdate } from '@/types/database'
 import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { generateSlug } from '@/types/shop-product'
@@ -70,7 +71,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const product = current as ShopProduct
   const d = parsed.data
-  const updates: Record<string, unknown> = {}
+  const updates: TablesUpdate<'shop_products'> = {}
 
   if (d.name !== undefined)           updates.name           = d.name
   if (d.subtitle !== undefined)       updates.subtitle       = d.subtitle

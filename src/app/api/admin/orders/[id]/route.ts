@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import type { TablesUpdate } from '@/types/database'
 import { isAuthenticated } from '@/lib/auth'
 import { z } from 'zod'
 
@@ -25,7 +26,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Données invalides' }, { status: 400 })
   }
 
-  const updates: Record<string, string> = {}
+  const updates: TablesUpdate<'orders'> = {}
   if (parsed.data.status) updates.status = parsed.data.status
   if (parsed.data.tracking_number !== undefined) updates.tracking_number = parsed.data.tracking_number
   if (parsed.data.admin_notes !== undefined) updates.admin_notes = parsed.data.admin_notes

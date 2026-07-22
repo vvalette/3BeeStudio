@@ -14,8 +14,8 @@ interface Testimonial {
   avatar_gradient: string
   display_order: number
   visible: boolean
-  created_at: string
-  source: 'manual' | 'google'
+  created_at: string | null // nullable en DB (défaut now(), mais non contraint)
+  source: string // 'manual' | 'google' — colonne text en DB
   rating: number
   avatar_url: string | null
   source_url: string | null
@@ -72,7 +72,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
       name: item.name, role: item.role, body: item.body,
       avatar_gradient: item.avatar_gradient,
       display_order: item.display_order,
-      source: item.source,
+      source: item.source === 'google' ? 'google' : 'manual',
       rating: item.rating,
       avatar_url: item.avatar_url ?? '',
       source_url: item.source_url ?? '',
