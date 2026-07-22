@@ -32,6 +32,7 @@
 - [ ] `NEXT_PUBLIC_APP_URL` → `https://3beestudio.fr` (⚠️ tout le SEO — canonical, hreflang, sitemap, robots — en dépend)
 - [ ] `ADMIN_PASSWORD` → mot de passe fort, différent du dev
 - [ ] (Optionnel) `ALERT_EMAIL` → destinataire des alertes critiques (défaut : contact@3beestudio.fr)
+- [ ] (Optionnel) `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` → rate limiting distribué (sinon fallback mémoire par instance). À activer avant toute pub payante.
 - [ ] Bloc `BOXTAL_*` → ⚠️ test end-to-end Boxtal pas encore réalisé (voir mémoire projet)
 
 > ℹ️ **Note Resend — audience newsletter** : il n'existe **qu'une seule audience générique** côté Resend. Aucune variable d'env à renseigner : le code **auto-découvre cette audience unique** (`audiences.list()` → premier id) et y ajoute l'inscrit. Si le compte n'a aucune audience, l'inscription newsletter réussit quand même (ajout au contact simplement ignoré, non bloquant).

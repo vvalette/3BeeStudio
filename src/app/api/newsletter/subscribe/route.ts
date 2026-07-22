@@ -12,7 +12,7 @@ const schema = z.object({
 export async function POST(req: Request) {
   // Anti abus (email-bombing) : 5 inscriptions / h / IP
   const ip = getClientIp(req)
-  const { ok, retryAfter } = rateLimit(`newsletter-subscribe:${ip}`, 5, 60 * 60 * 1000)
+  const { ok, retryAfter } = await rateLimit(`newsletter-subscribe:${ip}`, 5, 60 * 60 * 1000)
   if (!ok) {
     return NextResponse.json(
       { error: 'Trop de tentatives. Réessayez plus tard.' },
