@@ -161,6 +161,9 @@ export default function Hero() {
                       width={420}
                       height={420}
                       priority
+                      // Bloc masqué < lg : sizes minuscule en mobile pour que le preload
+                      // (généré par `priority`) ne télécharge pas les 640/1080px inutiles.
+                      sizes="(max-width: 1023px) 16px, 420px"
                       className="absolute inset-0 object-contain dark:mix-blend-lighten"
                       style={{ clipPath: 'inset(0 0 36.2% 0)' }}
                     />
@@ -182,6 +185,7 @@ export default function Hero() {
                     aria-hidden
                     width={420}
                     height={420}
+                    sizes="(max-width: 1023px) 16px, 420px"
                     className="absolute inset-0 object-contain dark:mix-blend-lighten"
                     style={{ animation: 'print-text-up 1.4s 0.4s steps(6, end) both' }}
                   />

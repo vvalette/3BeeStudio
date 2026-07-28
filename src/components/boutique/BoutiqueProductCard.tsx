@@ -18,11 +18,17 @@ export default function BoutiqueProductCard({
   locale,
   showPopularBadge = false,
   popularLabel = 'Populaire',
+  eagerImage = false,
 }: {
   product: ShopProductCard
   locale?: string
   showPopularBadge?: boolean
   popularLabel?: string
+  /** Charge la 1ʳᵉ photo en eager (+ preload) — réservé aux cartes au-dessus
+      de la ligne de flottaison (/boutique). Sur la home la grille est sous le
+      hero plein écran : eager y précharge des images invisibles qui
+      concurrencent les ressources critiques du LCP. */
+  eagerImage?: boolean
 }) {
   const router  = useRouter()
   const t = useTranslations('boutique.card')
@@ -154,7 +160,7 @@ export default function BoutiqueProductCard({
                 alt={product.name}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                loading={i === 0 ? 'eager' : undefined}
+                loading={i === 0 && eagerImage ? 'eager' : undefined}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
