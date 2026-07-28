@@ -89,13 +89,14 @@ export default function BoutiqueCatalog({ products, categories, locale }: Props)
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((product) => (
+          {filtered.map((product, i) => (
             <BoutiqueProductCard
               key={product.id}
               product={product}
               locale={locale}
               showPopularBadge={activeTab === '__all' && product.featured}
               popularLabel={t('popularBadge')}
+              eagerImage={i < 3}
             />
           ))}
         </div>
