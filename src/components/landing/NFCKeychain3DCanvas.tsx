@@ -3,7 +3,7 @@
 import React, { Suspense, useRef, useMemo } from 'react'
 import { useTheme } from 'next-themes'
 import { Canvas, useLoader, useFrame } from '@react-three/fiber'
-import { OrbitControls, Center, Environment, Bounds } from '@react-three/drei'
+import { OrbitControls, Center, Bounds } from '@react-three/drei'
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { Mesh, MeshStandardMaterial, Group } from 'three'
@@ -70,7 +70,9 @@ function Scene({ url, bodyColor, logoColor }: { url: string; bodyColor: string; 
             {is3mf ? <ThreeMFMesh url={url} bodyColor={bodyColor} logoColor={logoColor} /> : <STLMesh url={url} bodyColor={bodyColor} />}
           </SwingGroup>
         </Bounds>
-        <Environment preset="studio" />
+        {/* Pas d'<Environment> ici : les matériaux du badge 3MF ont envMapIntensity: 0,
+            l'envmap « studio » (HDR externe + PMREM sur le thread principal) était
+            téléchargée et traitée pour rien. */}
       </Suspense>
       <OrbitControls enablePan={false} enableZoom={false} />
     </>

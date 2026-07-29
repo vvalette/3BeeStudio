@@ -6,7 +6,7 @@ import { useRouter } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
 import type { ShopProductCard } from '@/types/shop-product'
 import { discountPercent } from '@/types/shop-product'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, runWhenIdle } from '@/lib/utils'
 import STLViewerWrapper from './STLViewerWrapper'
 
 const SLIDE_DURATION = 5000
@@ -91,6 +91,20 @@ export default function BoutiqueProductCard({
     return () => observer.disconnect()
   }, [has3D])
 
+  // Compile three.js (~600 Ko) pendant un temps mort une fois la carte visible,
+  // et n'autorise le montage du viewer qu'ensuite : sans ce sas, le carrousel
+  // basculait seul sur le slide 3D et la longue tâche (parse JS + init WebGL)
+  // tombait au milieu des clics — cause de l'INP à 3 s mesuré sur / (desktop).
+  const [ready3D, setReady3D] = useState(false)
+  useEffect(() => {
+    if (!has3D || !inView || ready3D) return
+    let cancelled = false
+    const cancelIdle = runWhenIdle(() => {
+      import('./STLViewer').then(() => { if (!cancelled) setReady3D(true) })
+    }, 4000)
+    return () => { cancelled = true; cancelIdle() }
+  }, [has3D, inView, ready3D])
+
   const active = slides[activeIdx]
   const outOfStock = product.stock !== null && product.stock === 0
   const discount = discountPercent(product)
@@ -134,18 +148,19 @@ export default function BoutiqueProductCard({
       {/* Visuel */}
       <div className="relative w-full overflow-hidden bg-bg-2 aspect-[4/3]">
 
-        {/* Le viewer 3D n'est monté (contexte WebGL) que sur son slide actif et carte visible — pas de fondu, cut assumé. */}
-        {has3D && active.type === '3d' && inView && (
+        {/* Le viewer 3D n'est monté (contexte WebGL) que sur son slide actif, carte visible
+            et bundle préchauffé — pas de fondu, cut assumé. */}
+        {has3D && active.type === '3d' && inView && ready3D && (
           <div className="absolute inset-0">
-            <STLViewerWrapper url={product.stl_url!} fill rotation={product.model_rotation ?? undefined} />
+            <STLViewerWrapper url={product.stl_url!} fill lite rotation={product.model_rotation ?? undefined} />
           </div>
         )}
 
         {product.images.map((src, i) => {
           const isActive = active.type === 'photo' && active.index === i
-          // Tant que le viewer 3D n'est pas monté (hors viewport → pas de WebGL),
-          // la photo 0 reste visible pour éviter une carte blanche.
-          const isFallbackFor3D = active.type === '3d' && !inView && i === 0
+          // Tant que le viewer 3D n'est pas monté (hors viewport ou bundle pas
+          // encore préchauffé), la photo 0 reste visible pour éviter une carte blanche.
+          const isFallbackFor3D = active.type === '3d' && (!inView || !ready3D) && i === 0
           return (
             <div
               key={i}

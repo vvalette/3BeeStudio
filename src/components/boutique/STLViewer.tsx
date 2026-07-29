@@ -77,7 +77,7 @@ function ThreeMFMesh({ url, userRot, bodyColor }: { url: string; userRot: [numbe
   )
 }
 
-function Scene({ url, rotation, bodyColor }: { url: string; rotation?: { x: number; y: number; z: number }; bodyColor: string }) {
+function Scene({ url, rotation, bodyColor, lite }: { url: string; rotation?: { x: number; y: number; z: number }; bodyColor: string; lite: boolean }) {
   const [autoRotate, setAutoRotate] = useState(true)
   const is3mf = url.toLowerCase().endsWith('.3mf')
   const toRad = (d: number) => (d * Math.PI) / 180
@@ -88,14 +88,17 @@ function Scene({ url, rotation, bodyColor }: { url: string; rotation?: { x: numb
   ]
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={1.2} castShadow />
-      <directionalLight position={[-10, -10, -5]} intensity={0.3} />
+      {/* En lite, l'envmap HDR est absente : les lumières compensent le fill perdu */}
+      <ambientLight intensity={lite ? 1.0 : 0.6} />
+      <directionalLight position={[10, 20, 10]} intensity={lite ? 1.5 : 1.2} castShadow={!lite} />
+      <directionalLight position={[-10, -10, -5]} intensity={lite ? 0.5 : 0.3} />
       <Suspense fallback={null}>
         <Bounds fit clip observe margin={1.4}>
           {is3mf ? <ThreeMFMesh url={url} userRot={userRot} bodyColor={bodyColor} /> : <STLMesh url={url} userRot={userRot} bodyColor={bodyColor} />}
         </Bounds>
-        <Environment preset="studio" />
+        {/* Envmap « studio » : ~Mo de HDR externe + génération PMREM sur le thread
+            principal — réservée au viewer plein format de la fiche produit. */}
+        {!lite && <Environment preset="studio" />}
       </Suspense>
       <OrbitControls
         enablePan={false}
@@ -119,7 +122,7 @@ function Loader({ label }: { label: string }) {
   )
 }
 
-export default function STLViewer({ url, height = 380, fill = false, rotation }: { url: string; height?: number; fill?: boolean; rotation?: { x: number; y: number; z: number } }) {
+export default function STLViewer({ url, height = 380, fill = false, lite = false, rotation }: { url: string; height?: number; fill?: boolean; lite?: boolean; rotation?: { x: number; y: number; z: number } }) {
   const t = useTranslations('boutique.viewer')
   const { resolvedTheme } = useTheme()
   const bodyColor = resolvedTheme === 'dark' ? MODEL_DARK : MODEL_LIGHT
@@ -141,8 +144,8 @@ export default function STLViewer({ url, height = 380, fill = false, rotation }:
         <span className="text-[10px] text-ink-3">{t('hint')}</span>
       </div>
 
-      <Canvas camera={{ fov: 45 }} shadows gl={{ antialias: true }} dpr={[1, 1.5]}>
-        <Scene url={url} rotation={rotation} bodyColor={bodyColor} />
+      <Canvas camera={{ fov: 45 }} shadows={!lite} gl={{ antialias: !lite }} dpr={lite ? 1 : [1, 1.5]}>
+        <Scene url={url} rotation={rotation} bodyColor={bodyColor} lite={lite} />
       </Canvas>
 
       <Suspense fallback={<Loader label={t('loading')} />}><></></Suspense>
