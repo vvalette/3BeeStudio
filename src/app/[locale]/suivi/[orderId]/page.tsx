@@ -3,6 +3,7 @@ import { stripe } from '@/lib/stripe'
 import { sendNfcOrderEmails } from '@/lib/resend'
 import { ORDER_STATUS_STEPS, formatDestination, calcOrder, type Order, type OrderStatus } from '@/types/order'
 import { formatPrice } from '@/lib/utils'
+import { resolveTracking } from '@/lib/tracking'
 import { STATUS_PILL } from '@/lib/status-ui'
 import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 import { notFound } from 'next/navigation'
@@ -78,6 +79,7 @@ export default async function SuiviPage({
   }
 
   const currentStepIndex = ORDER_STATUS_STEPS.indexOf(o.status as OrderStatus)
+  const tracking = resolveTracking(o.tracking_url, o.tracking_number)
 
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-6 pb-12">
@@ -271,22 +273,28 @@ export default async function SuiviPage({
                         {active && t.has(`hints.${s}`) && (
                           <p className="mt-0.5 max-w-xs text-xs leading-relaxed text-ink-2">{t(`hints.${s}`)}</p>
                         )}
-                        {s === 'shipped' && i <= currentStepIndex && (o.tracking_url || o.tracking_number) && (
-                          o.tracking_url ? (
-                            <a
-                              href={o.tracking_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
-                            >
-                              {t('timeline.track')}
-                              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M5 3h6v6M11 3L3 11" />
-                              </svg>
-                            </a>
-                          ) : (
-                            <p className="mt-1 font-mono text-xs text-ink-2">{t('timeline.tracking', { number: o.tracking_number ?? '' })}</p>
-                          )
+                        {/* Pas de garde `i <= currentStepIndex` : le suivi est souvent saisi
+                            alors que la commande est encore en préparation — le client
+                            ne le voyait jamais. */}
+                        {s === 'shipped' && (tracking.href || tracking.number) && (
+                          <div className="mt-2 space-y-1">
+                            {tracking.href && (
+                              <a
+                                href={tracking.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                              >
+                                {t('timeline.track')}
+                                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 3h6v6M11 3L3 11" />
+                                </svg>
+                              </a>
+                            )}
+                            {tracking.number && (
+                              <p className="break-all font-mono text-xs text-ink-2">{t('timeline.tracking', { number: tracking.number })}</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

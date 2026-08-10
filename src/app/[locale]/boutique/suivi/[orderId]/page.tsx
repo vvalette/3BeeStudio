@@ -9,6 +9,7 @@ import type { ShopOrder, ShopOrderStatus } from '@/types/shop-order'
 import { SHOP_STATUS_STEPS } from '@/types/shop-order'
 import { SHOP_STATUS_PILL } from '@/lib/status-ui'
 import { formatPrice } from '@/lib/utils'
+import { resolveTracking } from '@/lib/tracking'
 import CartClearer from '@/components/boutique/CartClearer'
 import { Link } from '@/i18n/navigation'
 
@@ -72,6 +73,7 @@ export default async function SuiviBoutiquePage({
   const isPaid        = order.status !== 'pending_payment' && order.status !== 'cancelled'
   const isJustPaid    = payment === 'success'
   const currentStep   = SHOP_STATUS_STEPS.indexOf(order.status)
+  const tracking      = resolveTracking(order.tracking_url, order.tracking_number)
   const orderRef      = order.id.slice(0, 8).toUpperCase()
 
   const stepLabel: Record<ShopOrderStatus, string> = {
@@ -192,22 +194,29 @@ export default async function SuiviBoutiquePage({
                         {active && t.has(`hints.${s}`) && (
                           <p className="mt-0.5 max-w-xs text-xs leading-relaxed text-ink-2">{t(`hints.${s}`)}</p>
                         )}
-                        {s === 'shipped' && i <= currentStep && (order.tracking_url || order.tracking_number) && (
-                          order.tracking_url ? (
-                            <a
-                              href={order.tracking_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
-                            >
-                              {t('trackParcel')}
-                              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M5 3h6v6M11 3L3 11" />
-                              </svg>
-                            </a>
-                          ) : (
-                            <p className="mt-1 font-mono text-xs text-ink-2">{t('trackingShort', { number: order.tracking_number ?? '' })}</p>
-                          )
+                        {/* Pas de garde `i <= currentStep` : le suivi est souvent
+                            saisi alors que la commande est encore « en préparation »
+                            (étiquette posée à la main, sans webhook Boxtal pour
+                            passer le statut). Le client ne le voyait jamais. */}
+                        {s === 'shipped' && (tracking.href || tracking.number) && (
+                          <div className="mt-2 space-y-1">
+                            {tracking.href && (
+                              <a
+                                href={tracking.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                              >
+                                {t('trackParcel')}
+                                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 3h6v6M11 3L3 11" />
+                                </svg>
+                              </a>
+                            )}
+                            {tracking.number && (
+                              <p className="break-all font-mono text-xs text-ink-2">{t('trackingShort', { number: tracking.number })}</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -277,7 +286,7 @@ export default async function SuiviBoutiquePage({
         {/* Contact */}
         <p className="text-center text-[12px] text-ink-3">
           {t.rich('contactMsg', {
-            email: () => <a href="mailto:contact@3beestudio.fr" className="text-amber hover:underline">contact@3beestudio.fr</a>,
+            email: (chunks) => <a href="mailto:contact@3beestudio.fr" className="text-amber hover:underline">{chunks}</a>,
             ref: orderRef,
           })}
         </p>

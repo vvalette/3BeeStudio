@@ -957,7 +957,7 @@
       "newsletterDiscount": "Newsletter discount (−10%)",
       "total": "Total",
       "shippingAddress": "Delivery address",
-      "contactMsg": "Any questions? Write to us at <email/> mentioning your reference #{ref}",
+      "contactMsg": "Any questions? Write to us at <email>contact@3beestudio.fr</email> mentioning your reference #{ref}",
       "backToShop": "← Back to shop",
       "pickupMode": "Studio pickup",
       "pickupAddress": "144 rue de la République, 69220 Belleville-en-Beaujolais",
