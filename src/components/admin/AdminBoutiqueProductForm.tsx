@@ -204,11 +204,14 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
           {/* Poids + Actif */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Poids (grammes)</label>
+              <label className={labelClass}>Poids (grammes) *</label>
               <div className="relative">
-                <input className={inputClass + ' pr-8'} value={form.weightGrams} onChange={(e) => set('weightGrams', e.target.value)} type="number" min="1" />
+                <input className={inputClass + ' pr-8'} value={form.weightGrams} onChange={(e) => set('weightGrams', e.target.value)} type="number" min="1" required placeholder="ex. 7" />
                 <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-ink-3">g</span>
               </div>
+              <p className="mt-1 text-[11px] text-ink-3">
+                Poids réel de la pièce. Sert à calculer le colis Boxtal : une valeur trop haute fait payer l&apos;expédition bien plus cher.
+              </p>
             </div>
             <div className="flex flex-col justify-end pb-0.5">
               <label className={labelClass}>Visibilité</label>

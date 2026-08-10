@@ -36,15 +36,31 @@ function estimatePackage(qty: number) {
   return { weight, length: 40, width: 30, height: 15 }
 }
 
-// Boutique : poids réel depuis les items + 50 g emballage.
-// Fallback 100 g/article si weight_grams absent (anciennes commandes).
-function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: number }>) {
+/**
+ * Boutique : poids réel depuis les items + 50 g d'emballage.
+ * Fallback 100 g/article si weight_grams absent (anciennes commandes).
+ *
+ * ⚠ Les transporteurs facturent au max(poids réel, poids volumétrique), ce
+ * dernier valant L×l×h/5000. L'ancien palier sautait à 45×35×30 dès 1 kg, soit
+ * 9,45 kg volumétriques — un carton de 47 litres pour quelques pièces imprimées.
+ * Un colis réel de 0,2 kg / 20×20×5 était ainsi facturé comme ~9 kg.
+ * Les paliers ci-dessous suivent des formats d'emballage plausibles et gardent
+ * le volumétrique proche du poids réel.
+ */
+export function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: number }>) {
   const totalG = items.reduce((sum, i) => sum + i.quantity * (i.weight_grams ?? 100), 0) + 50
   const weight = Math.max(0.1, Math.round(totalG) / 1000)
-  if (weight <= 0.25) return { weight, length: 20, width: 15, height: 8 }
-  if (weight <= 0.5)  return { weight, length: 25, width: 20, height: 12 }
-  if (weight <= 1.0)  return { weight, length: 35, width: 25, height: 20 }
+  if (weight <= 0.25) return { weight, length: 20, width: 15, height: 5 }
+  if (weight <= 0.5)  return { weight, length: 25, width: 20, height: 8 }
+  if (weight <= 1)    return { weight, length: 30, width: 22, height: 12 }
+  if (weight <= 2)    return { weight, length: 35, width: 25, height: 15 }
+  if (weight <= 5)    return { weight, length: 40, width: 30, height: 20 }
   return { weight, length: 45, width: 35, height: 30 }
+}
+
+/** Poids volumétrique facturé par les transporteurs (L×l×h/5000), en kg. */
+export function volumetricWeight(pkg: { length: number; width: number; height: number }): number {
+  return Math.round((pkg.length * pkg.width * pkg.height) / 5000 * 100) / 100
 }
 
 // Codes ISO des départements et territoires d'outre-mer français.

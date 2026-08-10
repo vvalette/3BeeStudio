@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
+import { estimateShopPackage, volumetricWeight } from '@/lib/boxtal'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT } from '@/lib/status-ui'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 
@@ -35,6 +36,13 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const status = order.status
   const isPickup = order.delivery_mode === 'pickup'
   const isRelay  = order.delivery_mode === 'relay'
+
+  // Le colis déclaré à Boxtal. Affiché AVANT génération : les transporteurs
+  // facturent au max(poids réel, volumétrique), donc un weight_grams produit
+  // erroné se paie cash sur l'étiquette.
+  const pkg     = estimateShopPackage(order.items ?? [])
+  const volume  = volumetricWeight(pkg)
+  const billed  = Math.max(pkg.weight, volume)
   const suiviUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'}/boutique/suivi/${order.id}`
 
   function copyLink() {
@@ -267,6 +275,26 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                     {order.shipping_postal_code} {order.shipping_city}
                     <span className="ml-1.5 text-[11px] uppercase text-ink-3">({order.shipping_country})</span>
                   </address>
+
+                  {!order.boxtal_order_id && (
+                    <div className="rounded-xl border border-[var(--line)] bg-bg-2 p-3.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">Colis qui sera déclaré</p>
+                      <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[12px] text-ink-1">
+                        <span>{pkg.weight} kg</span>
+                        <span className="text-ink-3">{pkg.length} × {pkg.width} × {pkg.height} cm</span>
+                        <span className={volume > pkg.weight ? 'text-amber' : 'text-ink-3'}>
+                          vol. {volume} kg
+                        </span>
+                        <span className="font-semibold text-ink-0">facturé ~{billed} kg</span>
+                      </div>
+                      {volume > pkg.weight && (
+                        <p className="mt-1.5 text-[11px] leading-snug text-amber">
+                          Le volume prime sur le poids : c&apos;est {billed} kg qui sera facturé.
+                          Vérifiez le poids des produits si ça vous semble trop.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {shippingError && <p className="text-xs text-red-400">{shippingError}</p>}
 
