@@ -123,8 +123,8 @@ curl http://localhost:3001/api/test-email
 Renseigner l'adresse de l'atelier pour les étiquettes :
 
 ```env
-BOXTAL_SENDER_FIRSTNAME=Valentin
-BOXTAL_SENDER_LASTNAME=Valette
+BOXTAL_SENDER_FIRSTNAME=Prénom
+BOXTAL_SENDER_LASTNAME=Nom
 BOXTAL_SENDER_EMAIL=commandes@3beestudio.fr
 BOXTAL_SENDER_PHONE=+33XXXXXXXXX
 BOXTAL_SENDER_COMPANY=3BeeStudio
