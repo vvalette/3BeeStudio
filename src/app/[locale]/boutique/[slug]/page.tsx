@@ -159,7 +159,7 @@ export default async function ProductPage({
                       <span className="text-amber">{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
                     </p>
                     {shipping > 0 && (
-                      <p className="mt-0.5 text-[11px] text-ink-3">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
+                      <p className="mt-0.5 text-[11px] text-ink-2">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
                     )}
                   </div>
                 </div>

@@ -838,7 +838,7 @@
       "outOfStockMsg": "Ce produit est temporairement en rupture de stock.",
       "shipping": "Livraison",
       "shippingFree": "offerte",
-      "shippingThreshold": "dès {price} d'achat",
+      "shippingThreshold": "Offerte dès {price} d'achat",
       "leadTime": "3 à 7 jours",
       "leadTimeLabel": "délai indicatif",
       "handmade": "Fait main",

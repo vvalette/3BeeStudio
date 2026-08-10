@@ -838,7 +838,7 @@
       "outOfStockMsg": "This product is temporarily out of stock.",
       "shipping": "Shipping",
       "shippingFree": "free",
-      "shippingThreshold": "from {price} purchase",
+      "shippingThreshold": "Free from {price} purchase",
       "leadTime": "3 to 7 days",
       "leadTimeLabel": "estimated",
       "handmade": "Handmade",
