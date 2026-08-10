@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
+import { revalidateShop } from '@/lib/revalidate'
 import { z } from 'zod'
 
 const patchSchema = z.object({
@@ -27,6 +28,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  revalidateShop()
   return NextResponse.json(data)
 }
 
@@ -37,5 +40,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params
   const { error } = await supabaseAdmin.from('shop_categories').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  revalidateShop()
   return NextResponse.json({ success: true })
 }

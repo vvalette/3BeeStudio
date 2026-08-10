@@ -21,9 +21,11 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
   const [newCatSaving, setNewCatSaving]   = useState(false)
   const [newCatError, setNewCatError]     = useState<string | null>(null)
 
-  async function handleCreateCategory(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newCatLabel.trim()) return
+  // ⚠ Pas de <form> ici : ce bloc vit à l'intérieur du <form> produit et le HTML
+  // interdit les formulaires imbriqués (la balise interne est supprimée au parsing,
+  // le bouton "Créer" soumettrait alors le produit).
+  async function handleCreateCategory() {
+    if (!newCatLabel.trim() || newCatSaving) return
     setNewCatError(null)
     setNewCatSaving(true)
     const res = await fetch('/api/admin/boutique/categories', {
@@ -43,6 +45,13 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
     setNewCatLabel('')
     setNewCatLabelEn('')
     setNewCatSaving(false)
+  }
+
+  // Entrée dans les champs catégorie = créer la catégorie, pas soumettre le produit.
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    void handleCreateCategory()
   }
 
   return (
@@ -70,7 +79,7 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
             Nouvelle catégorie
           </button>
         ) : (
-          <form onSubmit={handleCreateCategory} className="rounded-xl border border-[var(--line-amber)] bg-amber/5 p-3 space-y-2.5">
+          <div className="rounded-xl border border-[var(--line-amber)] bg-amber/5 p-3 space-y-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-amber">Nouvelle catégorie</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -79,8 +88,8 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
                   className={inputClass}
                   value={newCatLabel}
                   onChange={(e) => setNewCatLabel(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Ex : Jeux & Loisirs"
-                  required
                   autoFocus
                 />
               </div>
@@ -90,6 +99,7 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
                   className={inputClass}
                   value={newCatLabelEn}
                   onChange={(e) => setNewCatLabelEn(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="E.g. Games & Leisure"
                 />
               </div>
@@ -97,7 +107,8 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
             {newCatError && <p className="text-[11px] text-red-400">{newCatError}</p>}
             <div className="flex items-center gap-2">
               <button
-                type="submit"
+                type="button"
+                onClick={handleCreateCategory}
                 disabled={newCatSaving || !newCatLabel.trim()}
                 className="cursor-pointer rounded-lg bg-amber px-3 py-1.5 text-[12px] font-bold text-bg-0 hover:opacity-90 transition-opacity disabled:opacity-50"
               >
@@ -111,7 +122,7 @@ export default function CategoryFeaturedSection({ initialCategories, category, f
                 Annuler
               </button>
             </div>
-          </form>
+          </div>
         )}
       </div>
       <div className="flex flex-col justify-end pb-0.5">
