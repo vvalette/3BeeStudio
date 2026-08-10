@@ -145,6 +145,7 @@ export type Database = {
           shipping_address: string | null
           shipping_address2: string | null
           shipping_city: string | null
+          shipping_cost: number | null
           shipping_country: string | null
           shipping_name: string | null
           shipping_postal_code: string | null
@@ -172,6 +173,7 @@ export type Database = {
           shipping_address?: string | null
           shipping_address2?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_country?: string | null
           shipping_name?: string | null
           shipping_postal_code?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           shipping_address?: string | null
           shipping_address2?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_country?: string | null
           shipping_name?: string | null
           shipping_postal_code?: string | null
@@ -252,10 +255,16 @@ export type Database = {
           locale: string
           name: string
           phone: string | null
+          pickup_point_city: string | null
+          pickup_point_code: string | null
+          pickup_point_name: string | null
+          pickup_point_postal_code: string | null
+          pickup_point_street: string | null
           shipping: number
           shipping_address: string | null
           shipping_address2: string | null
           shipping_city: string | null
+          shipping_cost: number | null
           shipping_country: string | null
           shipping_name: string | null
           shipping_postal_code: string | null
@@ -279,10 +288,16 @@ export type Database = {
           locale?: string
           name: string
           phone?: string | null
+          pickup_point_city?: string | null
+          pickup_point_code?: string | null
+          pickup_point_name?: string | null
+          pickup_point_postal_code?: string | null
+          pickup_point_street?: string | null
           shipping?: number
           shipping_address?: string | null
           shipping_address2?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_country?: string | null
           shipping_name?: string | null
           shipping_postal_code?: string | null
@@ -306,10 +321,16 @@ export type Database = {
           locale?: string
           name?: string
           phone?: string | null
+          pickup_point_city?: string | null
+          pickup_point_code?: string | null
+          pickup_point_name?: string | null
+          pickup_point_postal_code?: string | null
+          pickup_point_street?: string | null
           shipping?: number
           shipping_address?: string | null
           shipping_address2?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_country?: string | null
           shipping_name?: string | null
           shipping_postal_code?: string | null

@@ -838,6 +838,7 @@
       "outOfStockMsg": "This product is temporarily out of stock.",
       "shipping": "Shipping",
       "shippingFree": "free",
+      "shippingFrom": "from {price}",
       "shippingThreshold": "Free from {price} purchase",
       "leadTime": "3 to 7 days",
       "leadTimeLabel": "estimated",
@@ -902,6 +903,8 @@
       "deliveryTitle": "Delivery method",
       "deliveryOption": "Home delivery",
       "deliveryOptionDesc": "Tracked parcel · 3 to 7 business days",
+      "relayOption": "Pickup point",
+      "relayOptionDesc": "Cheapest · 3 to 7 business days",
       "pickupOption": "Studio pickup",
       "pickupOptionDesc": "Free · By appointment in Belleville-en-Beaujolais",
       "pickupInfo": "We will contact you to arrange a pickup time at our workshop.",
@@ -925,7 +928,31 @@
       "shippingFirstNameLabel": "Recipient first name *",
       "shippingLastNameLabel": "Recipient last name *",
       "shippingFirstNamePlaceholder": "Mary",
-      "shippingLastNamePlaceholder": "Smith"
+      "shippingLastNamePlaceholder": "Smith",
+      "relay": {
+        "title": "Choose your pickup point",
+        "info": "Your parcel will be delivered to the pickup point of your choice. Collect within 10 days with photo ID.",
+        "enterPostal": "Enter your postcode to see pickup points near you.",
+        "searching": "Searching for pickup points…",
+        "noneFound": "No pickup point found near this address. Please choose home delivery.",
+        "errorGeneric": "Pickup point search unavailable.",
+        "retry": "Retry",
+        "count": "{count} points",
+        "distanceMeters": "{value} m away",
+        "distanceKm": "{value} km away",
+        "selectFirst": "Choose a pickup point",
+        "required": "Please choose a pickup point before paying.",
+        "summaryLabel": "Pickup point delivery",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        }
+      }
     },
     "descriptionExpand": {
       "showMore": "Show more ↓",
@@ -962,6 +989,8 @@
       "pickupMode": "Studio pickup",
       "pickupAddress": "144 rue de la République, 69220 Belleville-en-Beaujolais",
       "pickupContact": "We will contact you to arrange a pickup time.",
+      "relayMode": "Pickup point delivery",
+      "relayHint": "Collect within 10 days with photo ID. You will be notified when your parcel arrives.",
       "statusLabels": {
         "pending_payment": "Awaiting payment",
         "confirmed": "Order received",

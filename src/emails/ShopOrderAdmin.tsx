@@ -20,6 +20,7 @@ const line  = 'rgba(255,255,255,0.08)'
 export default function ShopOrderAdmin({ order, appUrl }: Props) {
   const ref      = `#${order.id.slice(0, 8).toUpperCase()}`
   const isPickup = order.delivery_mode === 'pickup'
+  const isRelay  = order.delivery_mode === 'relay'
   const items    = order.items ?? []
   const totalQty = items.reduce((sum, i) => sum + i.quantity, 0)
 
@@ -53,7 +54,11 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
               borderRadius: 999, padding: '6px 16px', margin: 0,
               color: isPickup ? '#38BDF8' : '#34D399', fontSize: 12, fontWeight: 600,
             }}>
-              {isPickup ? '🏠 Retrait au studio — pas d’expédition' : '📦 Livraison à domicile — étiquette à générer'}
+              {isPickup
+                ? '🏠 Retrait au studio — pas d’expédition'
+                : isRelay
+                  ? '📍 Point relais — étiquette à générer'
+                  : '📦 Livraison à domicile — étiquette à générer'}
             </Text>
           </Section>
 
@@ -108,6 +113,19 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
               </tbody>
             </table>
           </Section>
+
+          {/* Point relais — l'info clé pour l'étiquette */}
+          {isRelay && order.pickup_point_name && (
+            <Section style={{ background: card, border: `1px solid ${line}`, borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
+              <Text style={{ color: ink3, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 12px' }}>Point relais choisi</Text>
+              <Text style={{ color: ink2, fontSize: 13, lineHeight: '1.65', margin: 0 }}>
+                <span style={{ color: ink0, fontWeight: 600 }}>{order.pickup_point_name}</span><br />
+                {order.pickup_point_street}<br />
+                {order.pickup_point_postal_code} {order.pickup_point_city}<br />
+                <span style={{ color: ink3, fontSize: 11, fontFamily: 'monospace' }}>Code Boxtal : {order.pickup_point_code}</span>
+              </Text>
+            </Section>
+          )}
 
           {/* Adresse — absente en retrait studio */}
           {!isPickup && order.shipping_address && (

@@ -838,6 +838,7 @@
       "outOfStockMsg": "Ce produit est temporairement en rupture de stock.",
       "shipping": "Livraison",
       "shippingFree": "offerte",
+      "shippingFrom": "dès {price}",
       "shippingThreshold": "Offerte dès {price} d'achat",
       "leadTime": "3 à 7 jours",
       "leadTimeLabel": "délai indicatif",
@@ -902,6 +903,8 @@
       "deliveryTitle": "Mode de livraison",
       "deliveryOption": "Livraison à domicile",
       "deliveryOptionDesc": "Colissimo suivi · 3 à 7 jours ouvrés",
+      "relayOption": "Point relais",
+      "relayOptionDesc": "Le moins cher · 3 à 7 jours ouvrés",
       "pickupOption": "Retrait en studio",
       "pickupOptionDesc": "Gratuit · Sur rendez-vous à Belleville-en-Beaujolais",
       "pickupInfo": "Nous vous contacterons pour convenir d'un créneau de retrait à notre atelier.",
@@ -925,7 +928,31 @@
       "shippingFirstNameLabel": "Prénom destinataire *",
       "shippingLastNameLabel": "Nom destinataire *",
       "shippingFirstNamePlaceholder": "Marie",
-      "shippingLastNamePlaceholder": "Dupont"
+      "shippingLastNamePlaceholder": "Dupont",
+      "relay": {
+        "title": "Choisissez votre point relais",
+        "info": "Votre colis sera livré dans le point relais de votre choix. Retrait sous 10 jours avec une pièce d'identité.",
+        "enterPostal": "Renseignez votre code postal pour voir les points relais autour de vous.",
+        "searching": "Recherche des points relais…",
+        "noneFound": "Aucun point relais trouvé autour de cette adresse. Choisissez la livraison à domicile.",
+        "errorGeneric": "Recherche des points relais indisponible.",
+        "retry": "Réessayer",
+        "count": "{count} points",
+        "distanceMeters": "à {value} m",
+        "distanceKm": "à {value} km",
+        "selectFirst": "Choisissez un point relais",
+        "required": "Merci de choisir un point relais avant de payer.",
+        "summaryLabel": "Livraison en relais",
+        "days": {
+          "mon": "Lun",
+          "tue": "Mar",
+          "wed": "Mer",
+          "thu": "Jeu",
+          "fri": "Ven",
+          "sat": "Sam",
+          "sun": "Dim"
+        }
+      }
     },
     "descriptionExpand": {
       "showMore": "Voir plus ↓",
@@ -962,6 +989,8 @@
       "pickupMode": "Retrait en studio",
       "pickupAddress": "144 rue de la République, 69220 Belleville-en-Beaujolais",
       "pickupContact": "Nous vous contacterons pour convenir d'un créneau de retrait.",
+      "relayMode": "Livraison en point relais",
+      "relayHint": "Retrait sous 10 jours avec une pièce d'identité. Vous serez prévenu dès l'arrivée du colis.",
       "statusLabels": {
         "pending_payment": "En attente de paiement",
         "confirmed": "Commande reçue",

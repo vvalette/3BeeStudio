@@ -16,7 +16,15 @@ const schema = z.object({
   email:         z.string().email(),
   name:          z.string().min(2),
   phone:         z.string().min(8),
-  delivery_mode: z.enum(['delivery', 'pickup']).default('delivery'),
+  delivery_mode: z.enum(['delivery', 'pickup', 'relay']).default('delivery'),
+
+  // Point relais — obligatoire quand delivery_mode === 'relay' :
+  // l'API Boxtal refuse une expédition relais sans pickupPointCode.
+  pickup_point_code:        z.string().min(1).max(40).optional(),
+  pickup_point_name:        z.string().min(1).max(120).optional(),
+  pickup_point_street:      z.string().max(160).optional(),
+  pickup_point_city:        z.string().max(80).optional(),
+  pickup_point_postal_code: z.string().max(10).optional(),
   locale:        z.enum(['fr', 'en']).default('fr'),
   // Adresse — requise uniquement pour la livraison à domicile
   shipping_name:        z.string().min(2).optional(),
@@ -26,10 +34,17 @@ const schema = z.object({
   shipping_postal_code: z.string().min(4).max(6).optional(),
   shipping_country:     z.string().length(2).default('FR'),
 }).refine(
+  // Le relais exige aussi l'adresse : Boxtal veut un toAddress destinataire
+  // en plus du point de retrait.
   (d) => d.delivery_mode === 'pickup' || (
     d.shipping_name && d.shipping_address && d.shipping_city && d.shipping_postal_code
   ),
   { message: 'Adresse de livraison requise pour la livraison à domicile' },
+).refine(
+  // Sans pickupPointCode, l'étiquette Boxtal sera refusée au moment de l'expédition.
+  // On bloque ici plutôt que de laisser une commande payée inexpédiable.
+  (d) => d.delivery_mode !== 'relay' || !!d.pickup_point_code,
+  { message: 'Point relais requis pour la livraison en point relais' },
 )
 
 export async function POST(req: Request) {
@@ -136,7 +151,8 @@ export async function POST(req: Request) {
   }
 
   const isPickup = d.delivery_mode === 'pickup'
-  const shipping = isPickup ? 0 : (globalFreeShipping ? 0 : calcShopShipping(subtotal))
+  const isRelay  = d.delivery_mode === 'relay'
+  const shipping = globalFreeShipping ? 0 : calcShopShipping(subtotal, d.delivery_mode)
 
   // Vérifie la promo newsletter (-10% sur le sous-total, frais de port inchangés)
   const { data: newsletterSub } = await supabaseAdmin
@@ -164,6 +180,11 @@ export async function POST(req: Request) {
       total_amount:         total,
       status:               'pending_payment',
       delivery_mode:        d.delivery_mode,
+      pickup_point_code:        isRelay ? (d.pickup_point_code ?? null) : null,
+      pickup_point_name:        isRelay ? (d.pickup_point_name ?? null) : null,
+      pickup_point_street:      isRelay ? (d.pickup_point_street ?? null) : null,
+      pickup_point_city:        isRelay ? (d.pickup_point_city ?? null) : null,
+      pickup_point_postal_code: isRelay ? (d.pickup_point_postal_code ?? null) : null,
       locale:               d.locale,
       shipping_name:        isPickup ? null : (d.shipping_name ?? null),
       shipping_address:     isPickup ? null : (d.shipping_address ?? null),
@@ -209,6 +230,10 @@ export async function POST(req: Request) {
     pickupRate:   isEn ? 'Studio pickup (free)' : 'Retrait en studio (gratuit)',
     freeShipping: isEn ? 'Free delivery' : 'Livraison offerte',
     trackedShip:  isEn ? 'Tracked delivery' : 'Livraison suivie',
+    relayRate:    isEn ? 'Pickup point delivery' : 'Livraison en point relais',
+    relayMsg:     isEn
+      ? 'Your parcel will be delivered to the pickup point you selected. Estimated time: 3 to 7 business days.'
+      : 'Votre colis sera livré au point relais que vous avez choisi. Délai indicatif : 3 à 7 jours ouvrés.',
     pickupMsg:    isEn
       ? 'Studio pickup in Belleville-en-Beaujolais. We will contact you to arrange a time.'
       : 'Retrait en studio à Belleville-en-Beaujolais. Nous vous contacterons pour convenir d\'un créneau.',
@@ -253,7 +278,9 @@ export async function POST(req: Request) {
             shipping_rate_data: {
               type:           'fixed_amount',
               fixed_amount:   { amount: shipping, currency: 'eur' },
-              display_name:   shipping === 0 ? tx.freeShipping : tx.trackedShip,
+              display_name:   shipping === 0
+                ? tx.freeShipping
+                : isRelay ? tx.relayRate : tx.trackedShip,
               delivery_estimate: {
                 minimum: { unit: 'business_day', value: 3 },
                 maximum: { unit: 'business_day', value: 7 },
@@ -263,7 +290,7 @@ export async function POST(req: Request) {
         ],
     custom_text: {
       submit: {
-        message: isPickup ? tx.pickupMsg : tx.deliveryMsg,
+        message: isPickup ? tx.pickupMsg : isRelay ? tx.relayMsg : tx.deliveryMsg,
       },
     },
     success_url: `${appUrl}${prefix}/boutique/suivi/${order.id}?payment=success`,

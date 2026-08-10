@@ -41,6 +41,10 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: 
       ? "We'll contact you to arrange a pickup time."
       : "Nous vous contacterons pour convenir d'un créneau de retrait.",
     deliveryTitle: isEn ? 'DELIVERY' : 'LIVRAISON',
+    relayTitle:   isEn ? 'PICKUP POINT' : 'POINT RELAIS',
+    relayHint:    isEn
+      ? 'Collect within 10 days with photo ID. You will be notified when your parcel arrives.'
+      : "Retrait sous 10 jours avec une pièce d'identité. Vous serez prévenu dès l'arrivée du colis.",
     ctaText:      isEn ? 'Track your order in real time:' : "Suivez l'avancement de votre commande en temps réel :",
     ctaBtn:       isEn ? 'Track my order →' : 'Suivre ma commande →',
     refLabel:     isEn ? 'Order reference:' : 'Référence commande :',
@@ -115,6 +119,18 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: 
                 </Text>
                 <Text style={{ ...address, marginTop: 8, fontSize: 13, fontStyle: 'italic' }}>
                   {copy.pickupHint}
+                </Text>
+              </>
+            ) : order.delivery_mode === 'relay' ? (
+              <>
+                <Text style={sectionTitle}>{copy.relayTitle}</Text>
+                <Text style={address}>
+                  <strong style={{ color: '#FAFAFA' }}>{order.pickup_point_name}</strong><br />
+                  {order.pickup_point_street}<br />
+                  {order.pickup_point_postal_code} {order.pickup_point_city}
+                </Text>
+                <Text style={{ ...address, marginTop: 8, fontSize: 13, fontStyle: 'italic' }}>
+                  {copy.relayHint}
                 </Text>
               </>
             ) : (

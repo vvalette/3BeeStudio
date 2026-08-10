@@ -34,6 +34,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
 
   const status = order.status
   const isPickup = order.delivery_mode === 'pickup'
+  const isRelay  = order.delivery_mode === 'relay'
   const suiviUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'}/boutique/suivi/${order.id}`
 
   function copyLink() {
@@ -238,7 +239,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
             </Card>
 
             {/* Expédition */}
-            <Card title={isPickup ? 'Retrait en studio' : 'Expédition'}
+            <Card title={isPickup ? 'Retrait en studio' : isRelay ? 'Expédition — point relais' : 'Expédition'}
               right={order.boxtal_order_id ? <span className="font-mono text-[10px] text-ink-3">{order.boxtal_order_id}</span> : undefined}>
               {isPickup ? (
                 <div className="rounded-xl p-4" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
@@ -249,6 +250,17 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                 <p className="text-xs text-amber/70">Adresse de livraison manquante.</p>
               ) : (
                 <div className="space-y-4">
+                  {isRelay && order.pickup_point_name && (
+                    <div className="rounded-xl border border-amber/25 bg-amber/5 p-3.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-amber">Point relais choisi par le client</p>
+                      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-1">
+                        <span className="font-semibold text-ink-0">{order.pickup_point_name}</span><br />
+                        {order.pickup_point_street}<br />
+                        {order.pickup_point_postal_code} {order.pickup_point_city}
+                      </p>
+                      <p className="mt-1.5 font-mono text-[11px] text-ink-3">Code Boxtal : {order.pickup_point_code}</p>
+                    </div>
+                  )}
                   <address className="text-[13px] not-italic leading-relaxed text-ink-1">
                     <span className="font-semibold text-ink-0">{order.shipping_name}</span><br />
                     {order.shipping_address}{order.shipping_address2 ? <>, {order.shipping_address2}</> : null}<br />
@@ -347,6 +359,22 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                   <span className="font-mono text-base font-bold text-amber">{formatPrice(order.total_amount)}</span>
                 </div>
 
+                {/* Coût réel de l'étiquette : l'API Boxtal ne le donne qu'après
+                    création, on l'enregistre pour voir la marge réelle sur le port. */}
+                {order.shipping_cost !== null && order.shipping_cost !== undefined && (
+                  <div className="mt-2 border-t border-[var(--line)] pt-2">
+                    <div className="flex items-baseline justify-between text-[12px]">
+                      <span className="text-ink-3">Coût étiquette Boxtal (HT)</span>
+                      <span className="font-mono text-ink-2">{formatPrice(order.shipping_cost)}</span>
+                    </div>
+                    <div className="mt-0.5 flex items-baseline justify-between text-[12px]">
+                      <span className="text-ink-3">Marge sur le port</span>
+                      <span className={['font-mono font-semibold', order.shipping - order.shipping_cost >= 0 ? 'text-emerald-400' : 'text-red-400'].join(' ')}>
+                        {order.shipping - order.shipping_cost >= 0 ? '+' : ''}{formatPrice(order.shipping - order.shipping_cost)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
 

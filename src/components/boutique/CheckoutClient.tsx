@@ -6,10 +6,12 @@ import { Link } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { CartItem } from '@/types/cart'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
+import type { DeliveryMode } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
 import Select from '@/components/ui/Select'
 import PhoneInput from '@/components/ui/PhoneInput'
+import RelayPicker, { type SelectedRelay } from './RelayPicker'
 
 // Europe + DOM-TOM + principales destinations mondiales (Colissimo)
 const COUNTRY_CODES = [
@@ -31,6 +33,8 @@ const COUNTRY_CODES = [
   // Afrique / Maghreb
   'MA', 'TN', 'DZ', 'SN',
 ] as const
+
+const MODES = ['relay', 'delivery', 'pickup'] as const
 
 interface Props {
   // En mode « Acheter maintenant », les articles sont imposés et le panier est ignoré
@@ -57,12 +61,16 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const [city, setCity]                 = useState('')
   const [postal, setPostal]             = useState('')
   const [country, setCountry]           = useState('FR')
-  const [deliveryMode, setDeliveryMode]           = useState<'delivery' | 'pickup'>('delivery')
+  const [deliveryMode, setDeliveryMode]           = useState<DeliveryMode>('relay')
+  const [relay, setRelay]                         = useState<SelectedRelay | null>(null)
   const [hasNewsletterDiscount, setHasDiscount]   = useState(false)
   const [loading, setLoading]                     = useState(false)
   const [error, setError]                         = useState<string | null>(null)
 
   const isPickup = deliveryMode === 'pickup'
+  const isRelay  = deliveryMode === 'relay'
+  // Le relais n'est desservi qu'en France métropolitaine par l'offre Boxtal
+  const relayAvailable = country === 'FR'
 
   const countryOptions = useMemo(
     () => COUNTRY_CODES.map((c) => ({ value: c, label: tCommon(`countries.${c}`) })),
@@ -72,9 +80,20 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const { subtotal, discountAmount, shipping, total } = useMemo(() => {
     const subtotal      = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
     const discountAmount = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
-    const shipping      = items.length > 0 && !isPickup ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
+    const shipping      = items.length === 0 || freeShippingEnabled
+      ? 0
+      : calcShopShipping(subtotal, deliveryMode)
     return { subtotal, discountAmount, shipping, total: subtotal - discountAmount + shipping }
-  }, [items, freeShippingEnabled, isPickup, hasNewsletterDiscount])
+  }, [items, freeShippingEnabled, deliveryMode, hasNewsletterDiscount])
+
+  // L'offre relais ne dessert que la France : hors FR, on repasse en domicile
+  // (sinon le checkout resterait bloqué sur un sélecteur sans résultat).
+  useEffect(() => {
+    if (!relayAvailable && deliveryMode === 'relay') {
+      setDeliveryMode('delivery')
+      setRelay(null)
+    }
+  }, [relayAvailable, deliveryMode])
 
   // Vérifie la promo newsletter dès que l'email est valide
   useEffect(() => {
@@ -97,6 +116,11 @@ export default function CheckoutClient({ forcedItems }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (isRelay && !relay) {
+      setError(t('relay.required'))
+      return
+    }
+
     setLoading(true)
 
     const res = await fetch('/api/boutique/checkout', {
@@ -113,6 +137,13 @@ export default function CheckoutClient({ forcedItems }: Props) {
         phone: phone || undefined,
         locale,
         delivery_mode: deliveryMode,
+        ...(isRelay && relay ? {
+          pickup_point_code:        relay.code,
+          pickup_point_name:        relay.name,
+          pickup_point_street:      relay.street,
+          pickup_point_city:        relay.city,
+          pickup_point_postal_code: relay.postalCode,
+        } : {}),
         ...(isPickup ? {} : {
           shipping_name: `${shippingFirstName || firstName} ${shippingLastName || lastName}`.trim(),
           shipping_address:     address,
@@ -157,8 +188,8 @@ export default function CheckoutClient({ forcedItems }: Props) {
         {/* Sélecteur mode de livraison */}
         <fieldset className="space-y-2">
           <legend className="mb-3 font-semibold text-ink-0">{t('deliveryTitle')}</legend>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {(['delivery', 'pickup'] as const).map((mode) => {
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {MODES.filter((m) => m !== 'relay' || relayAvailable).map((mode) => {
               const isSelected = deliveryMode === mode
               return (
                 <button
@@ -180,6 +211,11 @@ export default function CheckoutClient({ forcedItems }: Props) {
                         <path d="M14 10h4l3 4.5V18h-7V10z"/>
                         <circle cx="5.5" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>
                       </svg>
+                    ) : mode === 'relay' ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
                     ) : (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -189,10 +225,10 @@ export default function CheckoutClient({ forcedItems }: Props) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className={['text-[13px] font-semibold leading-tight', isSelected ? 'text-ink-0' : 'text-ink-1'].join(' ')}>
-                      {t(mode === 'delivery' ? 'deliveryOption' : 'pickupOption')}
+                      {t(`${mode}Option`)}
                     </p>
                     <p className="mt-0.5 font-mono text-[11px] text-ink-3">
-                      {t(mode === 'delivery' ? 'deliveryOptionDesc' : 'pickupOptionDesc')}
+                      {t(`${mode}OptionDesc`)}
                     </p>
                   </div>
                   {isSelected && (
@@ -207,6 +243,11 @@ export default function CheckoutClient({ forcedItems }: Props) {
           {isPickup && (
             <p className="rounded-lg border border-amber/20 bg-amber/5 px-3.5 py-3 text-[13px] text-ink-2 leading-relaxed">
               {t('pickupInfo')}
+            </p>
+          )}
+          {isRelay && (
+            <p className="rounded-lg border border-amber/20 bg-amber/5 px-3.5 py-3 text-[13px] text-ink-2 leading-relaxed">
+              {t('relay.info')}
             </p>
           )}
         </fieldset>
@@ -270,6 +311,18 @@ export default function CheckoutClient({ forcedItems }: Props) {
               <label className={labelClass}>{t('countryLabel')}</label>
               <Select value={country} onChange={setCountry} options={countryOptions} />
             </div>
+
+            {isRelay && (
+              <div className="border-t border-[var(--line)] pt-4">
+                <RelayPicker
+                  postalCode={postal}
+                  city={city}
+                  street={address}
+                  selected={relay}
+                  onSelect={setRelay}
+                />
+              </div>
+            )}
           </fieldset>
         )}
 
@@ -279,14 +332,16 @@ export default function CheckoutClient({ forcedItems }: Props) {
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full cursor-pointer rounded-pill bg-amber py-3.5 font-bold text-bg-0 transition-opacity hover:opacity-90 disabled:opacity-50"
+          disabled={loading || (isRelay && !relay)}
+          className="w-full cursor-pointer rounded-pill bg-amber py-3.5 font-bold text-bg-0 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round" /></svg>
               {t('loading')}
             </span>
+          ) : isRelay && !relay ? (
+            <>{t('relay.selectFirst')}</>
           ) : (
             <>{t('pay', { price: formatPrice(total) })}</>
           )}
@@ -345,10 +400,17 @@ export default function CheckoutClient({ forcedItems }: Props) {
             </div>
           )}
           <div className="flex justify-between text-ink-2">
-            <span>{t('shipping')}</span><span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
+            <span>{isRelay ? t('relay.summaryLabel') : t('shipping')}</span>
+            <span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
           </div>
           {shipping > 0 && (
             <p className="text-[11px] text-ink-3">{t('freeShippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
+          )}
+          {isRelay && relay && (
+            <p className="rounded-lg border border-amber/20 bg-amber/5 px-2.5 py-2 text-[11px] leading-snug text-ink-2">
+              <span className="font-semibold text-ink-1">{relay.name}</span><br />
+              {relay.street}, {relay.postalCode} {relay.city}
+            </p>
           )}
           <div className="flex justify-between border-t border-[var(--line)] pt-1.5 font-bold text-ink-0">
             <span>{t('total')}</span><span className="text-amber">{formatPrice(total)}</span>

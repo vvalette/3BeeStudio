@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
-import { createBoxtalShipment, getBoxtalLabel } from '@/lib/boxtal'
+import { createBoxtalShipment, getBoxtalLabel, getBoxtalShippingCost } from '@/lib/boxtal'
 import type { Order } from '@/types/order'
 
 export async function POST(
@@ -38,13 +38,16 @@ export async function POST(
     // Créer la commande Boxtal
     const { boxtalOrderId, labelUrl } = await createBoxtalShipment(order as Order)
 
+    // Coût réel connu seulement après création (pas de devis dans l'API v3)
+    const shippingCost = await getBoxtalShippingCost(boxtalOrderId)
+
     // Sauvegarder l'ID Boxtal — le statut passe à "expédié" via webhook Boxtal quand le transporteur prend en charge
     await supabaseAdmin
       .from('orders')
-      .update({ boxtal_order_id: boxtalOrderId })
+      .update({ boxtal_order_id: boxtalOrderId, ...(shippingCost !== null ? { shipping_cost: shippingCost } : {}) })
       .eq('id', id)
 
-    return NextResponse.json({ label_url: labelUrl, boxtal_order_id: boxtalOrderId })
+    return NextResponse.json({ label_url: labelUrl, boxtal_order_id: boxtalOrderId, shipping_cost: shippingCost })
   } catch (e) {
     console.error('[boxtal] erreur expédition:', e)
     return NextResponse.json(

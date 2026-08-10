@@ -271,6 +271,16 @@ export default async function SuiviBoutiquePage({
             <p className="text-sm text-ink-2 leading-relaxed">{t('pickupAddress')}</p>
             <p className="mt-2 text-[12px] text-ink-3">{t('pickupContact')}</p>
           </div>
+        ) : order.delivery_mode === 'relay' && order.pickup_point_name ? (
+          <div className="rounded-2xl border border-amber/20 bg-amber/5 p-5">
+            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-amber">{t('relayMode')}</h2>
+            <p className="text-sm leading-relaxed text-ink-2">
+              <span className="font-semibold text-ink-0">{order.pickup_point_name}</span><br />
+              {order.pickup_point_street}<br />
+              {order.pickup_point_postal_code} {order.pickup_point_city}
+            </p>
+            <p className="mt-2 text-[12px] text-ink-3">{t('relayHint')}</p>
+          </div>
         ) : order.shipping_name ? (
           <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-5">
             <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-ink-3">{t('shippingAddress')}</h2>

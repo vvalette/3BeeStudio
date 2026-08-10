@@ -678,6 +678,7 @@ function ShopList({
                   <span className="shrink-0 font-mono text-[10px] text-ink-3">#{order.id.slice(0, 8).toUpperCase()}</span>
                   {needsLabel && <span className="shrink-0 rounded-pill border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber">Étiquette à générer</span>}
                   {order.delivery_mode === 'pickup' && <span className="shrink-0 rounded-pill border border-sky-400/30 bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-400">Retrait studio</span>}
+                  {order.delivery_mode === 'relay' && <span className="shrink-0 rounded-pill border border-violet-400/30 bg-violet-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-violet-400">Point relais</span>}
                 </div>
                 <p className="mt-0.5 truncate text-xs text-ink-3">{order.email}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
