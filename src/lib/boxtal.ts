@@ -402,6 +402,17 @@ export async function cancelBoxtalShipment(boxtalOrderId: string): Promise<void>
 }
 
 /**
+ * Récupère une expédition existante. Lève si l'identifiant est inconnu de
+ * Boxtal — c'est ce qui permet de valider un id saisi à la main avant de le
+ * rattacher à une commande.
+ */
+export async function getBoxtalShipment(boxtalOrderId: string): Promise<{ shippingCost: number | null }> {
+  const res = await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}`)
+  const value = res?.content?.deliveryPriceExclTax?.value
+  return { shippingCost: typeof value === 'number' ? Math.round(value * 100) : null }
+}
+
+/**
  * Coût réel HT de l'expédition, en centimes — ou null si Boxtal ne l'a pas
  * encore calculé. L'API v3 n'ayant aucun endpoint de devis, c'est la seule
  * façon de savoir ce qu'une étiquette a coûté : après création.
@@ -409,11 +420,42 @@ export async function cancelBoxtalShipment(boxtalOrderId: string): Promise<void>
  */
 export async function getBoxtalShippingCost(boxtalOrderId: string): Promise<number | null> {
   try {
-    const res = await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}`)
-    const value = res?.content?.deliveryPriceExclTax?.value
-    return typeof value === 'number' ? Math.round(value * 100) : null
+    const { shippingCost } = await getBoxtalShipment(boxtalOrderId)
+    return shippingCost
   } catch (err) {
     console.warn('[boxtal] Coût d\'expédition non récupéré:', err)
+    return null
+  }
+}
+
+export interface BoxtalTracking {
+  status: string
+  trackingNumber: string | null
+  trackingUrl: string | null
+}
+
+/**
+ * Suivi actuel d'une expédition. Le webhook ne rejoue pas les événements
+ * passés : sans ce rattrapage, une expédition rattachée après coup resterait
+ * sans numéro de suivi jusqu'au prochain changement de statut.
+ * Retourne null si le suivi n'existe pas encore (422 NoPackageTrackingFound).
+ */
+export async function getBoxtalTracking(boxtalOrderId: string): Promise<BoxtalTracking | null> {
+  try {
+    const res = await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}/tracking`)
+    const first = (res?.content as Array<{
+      status?: string
+      trackingNumber?: string
+      packageTrackingUrl?: string
+    }> | undefined)?.[0]
+    if (!first?.status) return null
+    return {
+      status: first.status,
+      trackingNumber: first.trackingNumber ?? null,
+      trackingUrl: first.packageTrackingUrl ?? null,
+    }
+  } catch (err) {
+    console.warn('[boxtal] Suivi non disponible:', err)
     return null
   }
 }
