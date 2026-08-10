@@ -132,21 +132,22 @@ export default function AdminOrdersList({
       <div className="mx-auto max-w-5xl space-y-5">
 
         {/* Header */}
-        <div className="flex items-end justify-between">
-          <div>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">3BeeStudio · Admin</p>
-            <h1 className="mt-1.5 text-2xl font-extrabold text-ink-0" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="mt-1.5 truncate text-xl font-extrabold text-ink-0 sm:text-2xl" style={{ letterSpacing: '-0.02em' }}>
               {initialSection === 'nfc' ? 'Porte-clé NFC' : initialSection === 'custom' ? 'Sur-mesure' : 'Commandes'}
             </h1>
           </div>
           <button
             onClick={handleLogout}
-            className="flex cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-4 py-2 text-xs font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-1"
+            aria-label="Déconnexion"
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-3 py-2 text-xs font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-1 sm:px-4"
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 14H3.5A1.5 1.5 0 012 12.5v-9A1.5 1.5 0 013.5 2H6M11 11l3-3-3-3M14 8H6" />
             </svg>
-            Déconnexion
+            <span className="hidden sm:inline">Déconnexion</span>
           </button>
         </div>
 
@@ -158,7 +159,7 @@ export default function AdminOrdersList({
               <button
                 key={p.key}
                 onClick={() => setPeriod(p.key)}
-                className={['cursor-pointer rounded-pill px-4 py-1.5 text-xs font-medium transition-all', period === p.key ? 'bg-amber font-semibold text-bg-0' : 'text-ink-2 hover:text-ink-0'].join(' ')}
+                className={['cursor-pointer rounded-pill px-2 py-1.5 text-xs font-medium transition-all sm:px-4', period === p.key ? 'bg-amber font-semibold text-bg-0' : 'text-ink-2 hover:text-ink-0'].join(' ')}
               >
                 {p.label}
               </button>
@@ -168,13 +169,13 @@ export default function AdminOrdersList({
 
         {/* CA Global — visible uniquement sur la page Commandes, toujours affiché */}
         {!initialSection && (
-          <div className="flex items-center gap-4 rounded-xl border border-[var(--line-amber)] px-5 py-4" style={{ background: 'rgba(245,158,11,0.05)' }}>
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--line-amber)] px-4 py-4 sm:gap-4 sm:px-5" style={{ background: 'rgba(245,158,11,0.05)' }}>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(245,158,11,0.12)' }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg>
             </span>
-            <div>
-              <p className="font-mono text-2xl font-bold text-amber leading-tight">{formatPrice(stats.revenueAll)}</p>
-              <p className="text-[11px] text-ink-3">CA Global · {stats.totalAll} commandes toutes sources</p>
+            <div className="min-w-0">
+              <p className="font-mono text-xl font-bold text-amber leading-tight sm:text-2xl">{formatPrice(stats.revenueAll)}</p>
+              <p className="truncate text-[11px] text-ink-3">CA Global · {stats.totalAll} commandes toutes sources</p>
             </div>
             <div className="ml-auto hidden sm:flex items-center divide-x divide-[var(--line)]">
               {[
@@ -225,18 +226,19 @@ export default function AdminOrdersList({
         {!initialSection && (
           <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--line)' }}>
             {([
-              { key: 'nfc' as Section, label: 'Porte-clé NFC', count: periodNfc.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /><path d="M8 8v2M8 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg> },
-              { key: 'custom' as Section, label: 'Sur-mesure', count: periodCustom.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /><path d="M8.5 4.5l3 3" /></svg> },
-              { key: 'boutique' as Section, label: 'Boutique', count: periodShop.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
-            ] as const).map(({ key, label, count, icon }) => (
+              { key: 'nfc' as Section, label: 'Porte-clé NFC', short: 'NFC', count: periodNfc.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /><path d="M8 8v2M8 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg> },
+              { key: 'custom' as Section, label: 'Sur-mesure', short: 'Sur-mesure', count: periodCustom.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /><path d="M8.5 4.5l3 3" /></svg> },
+              { key: 'boutique' as Section, label: 'Boutique', short: 'Boutique', count: periodShop.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
+            ] as const).map(({ key, label, short, count, icon }) => (
               <button
                 key={key}
                 onClick={() => setSection(key)}
-                className={['flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all', section === key ? 'bg-bg-0 text-ink-0 shadow-sm' : 'text-ink-3 hover:text-ink-1'].join(' ')}
+                className={['flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-0.5 py-2.5 text-[11px] font-semibold transition-all sm:gap-2 sm:px-1 sm:text-sm', section === key ? 'bg-bg-0 text-ink-0 shadow-sm' : 'text-ink-3 hover:text-ink-1'].join(' ')}
               >
-                <span style={{ color: section === key ? 'var(--amber)' : 'currentColor' }}>{icon}</span>
-                {label}
-                <span className={['rounded-pill px-2 py-0.5 font-mono text-[11px]', section === key ? 'bg-amber/10 text-amber' : 'bg-bg-3 text-ink-3'].join(' ')}>{count}</span>
+                <span className="shrink-0" style={{ color: section === key ? 'var(--amber)' : 'currentColor' }}>{icon}</span>
+                <span className="truncate sm:hidden">{short}</span>
+                <span className="hidden truncate sm:inline">{label}</span>
+                <span className={['shrink-0 rounded-pill px-1 py-0.5 font-mono text-[10px] sm:px-2 sm:text-[11px]', section === key ? 'bg-amber/10 text-amber' : 'bg-bg-3 text-ink-3'].join(' ')}>{count}</span>
               </button>
             ))}
           </div>
@@ -392,9 +394,23 @@ function FilterBar<K extends string>({
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Recherche — pleine largeur en premier sur mobile : sur une seule ligne
+          avec le tri, le champ tombait à ~60 px et n'affichait plus rien. */}
+      <div className="relative sm:hidden">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="7" cy="7" r="5" /><path d="M11 11l3 3" strokeLinecap="round" />
+        </svg>
+        <input
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder={searchPlaceholder}
+          className="w-full rounded-pill border border-[var(--line-2)] bg-bg-1 py-2 pl-9 pr-3 text-xs text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2.5">
         {/* Checkbox sélectionner tout */}
-        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-ink-3 hover:text-ink-1">
+        <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] text-ink-3 hover:text-ink-1">
           <span
             className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded"
             style={{
@@ -429,7 +445,7 @@ function FilterBar<K extends string>({
         {/* Tri */}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-[11px] text-ink-3">Trier</span>
-          <div className="w-36">
+          <div className="w-32 sm:w-36">
             <Select
               compact
               value={sort}
@@ -439,8 +455,8 @@ function FilterBar<K extends string>({
           </div>
         </div>
 
-        {/* Recherche */}
-        <div className="relative sm:w-56">
+        {/* Recherche — desktop (la variante mobile est au-dessus) */}
+        <div className="relative hidden sm:block sm:w-56">
           <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="7" cy="7" r="5" /><path d="M11 11l3 3" strokeLinecap="round" />
           </svg>
@@ -488,7 +504,7 @@ function NfcList({
             </label>
 
             {/* Contenu cliquable */}
-            <Link href={`/admin/commandes/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
+            <Link href={`/admin/commandes/${order.id}`} className="flex min-w-0 flex-1 flex-col gap-2 py-3 pr-2 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5 sm:pr-3">
               <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 {order.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -513,7 +529,7 @@ function NfcList({
                 </span>
               </div>
 
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-col sm:items-end sm:gap-1.5">
                 <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-semibold', STATUS_PILL[status]].join(' ')}>{ORDER_STATUS_LABELS[status]}</span>
                 <span className="font-mono text-sm font-semibold text-ink-0">{formatPrice(order.total_amount)}</span>
                 <span className="text-[10px] text-ink-3">{created.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', ...(created.getFullYear() !== currentYear ? { year: 'numeric' } : {}) })}</span>
@@ -525,7 +541,7 @@ function NfcList({
               onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
               disabled={deleting}
               aria-label="Supprimer"
-              className="flex cursor-pointer items-center px-3 text-ink-3 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400 disabled:opacity-30"
+              className="flex cursor-pointer items-center px-2.5 text-ink-3 transition-all hover:text-red-400 disabled:opacity-30 sm:px-3 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 5h10M5 5V3.5h6V5M6 8v5M10 8v5M4 5l1 8h6l1-8" />
@@ -572,7 +588,7 @@ function CustomList({
               />
             </label>
 
-            <Link href={`/admin/custom/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
+            <Link href={`/admin/custom/${order.id}`} className="flex min-w-0 flex-1 flex-col gap-2 py-3 pr-2 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5 sm:pr-3">
               <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 <span className="font-mono text-sm font-bold text-ink-2">{order.name.slice(0, 2).toUpperCase()}</span>
               </div>
@@ -594,7 +610,7 @@ function CustomList({
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-col sm:items-end sm:gap-1.5">
                 <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-semibold', CUSTOM_STATUS_PILL[status]].join(' ')}>{CUSTOM_STATUS_LABELS[status]}</span>
                 {order.deposit_amount
                   ? <span className="font-mono text-sm font-semibold text-ink-0">{formatPrice(order.deposit_amount)}</span>
@@ -607,7 +623,7 @@ function CustomList({
               onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
               disabled={deleting}
               aria-label="Supprimer"
-              className="flex cursor-pointer items-center px-3 text-ink-3 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400 disabled:opacity-30"
+              className="flex cursor-pointer items-center px-2.5 text-ink-3 transition-all hover:text-red-400 disabled:opacity-30 sm:px-3 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 5h10M5 5V3.5h6V5M6 8v5M10 8v5M4 5l1 8h6l1-8" />
@@ -651,7 +667,7 @@ function ShopList({
               </span>
             </label>
 
-            <Link href={`/admin/boutique/commande/${order.id}`} className="flex flex-1 items-center gap-4 py-3.5 pr-3">
+            <Link href={`/admin/boutique/commande/${order.id}`} className="flex min-w-0 flex-1 flex-col gap-2 py-3 pr-2 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5 sm:pr-3">
               <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)' }}>
                 <span className="font-mono text-sm font-bold text-ink-2">{order.name.slice(0, 2).toUpperCase()}</span>
               </div>
@@ -674,7 +690,7 @@ function ShopList({
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-col sm:items-end sm:gap-1.5">
                 <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-semibold', SHOP_STATUS_PILL[status]].join(' ')}>{SHOP_STATUS_LABELS[status]}</span>
                 <span className="font-mono text-sm font-semibold text-ink-0">{formatPrice(order.total_amount)}</span>
                 <span className="text-[10px] text-ink-3">{created.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', ...(created.getFullYear() !== currentYear ? { year: 'numeric' } : {}) })}</span>
@@ -685,7 +701,7 @@ function ShopList({
               onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
               disabled={deleting}
               aria-label="Supprimer"
-              className="flex cursor-pointer items-center px-3 text-ink-3 opacity-0 transition-all group-hover:opacity-100 hover:text-red-400 disabled:opacity-30"
+              className="flex cursor-pointer items-center px-2.5 text-ink-3 transition-all hover:text-red-400 disabled:opacity-30 sm:px-3 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 5h10M5 5V3.5h6V5M6 8v5M10 8v5M4 5l1 8h6l1-8" />

@@ -92,7 +92,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
       <div className="mx-auto max-w-2xl space-y-6">
 
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => router.back()}
             className="flex cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line)] px-3 py-1.5 text-xs text-ink-2 hover:text-ink-0 transition-colors"
@@ -102,7 +102,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
           </button>
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">Boutique · Admin</p>
-            <h1 className="mt-0.5 text-2xl font-extrabold text-ink-0" style={{ letterSpacing: '-0.02em' }}>
+            <h1 className="mt-0.5 text-xl font-extrabold text-ink-0 sm:text-2xl" style={{ letterSpacing: '-0.02em' }}>
               {isEdit ? 'Modifier le produit' : 'Nouveau produit'}
             </h1>
           </div>
@@ -225,7 +225,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
 
           {/* Stripe info */}
           {isEdit && product?.stripe_product_id && (
-            <div className="rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3 text-[12px] text-ink-3 space-y-1">
+            <div className="rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3 text-[12px] text-ink-3 space-y-1 [&_span]:break-all">
               <p className="font-mono">Stripe Product : <span className="text-ink-2">{product.stripe_product_id}</span></p>
               <p className="font-mono">Stripe Price&nbsp;&nbsp;: <span className="text-ink-2">{product.stripe_price_id}</span></p>
               <p className="text-[11px] mt-1">⚠ Modifier le prix crée un nouveau Stripe Price et archive l&apos;ancien.</p>
@@ -233,7 +233,7 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             {isEdit ? (
               <button type="button" onClick={handleDelete} disabled={deleting}
                 className="cursor-pointer rounded-pill border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50">
