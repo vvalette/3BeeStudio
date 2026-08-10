@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { CUSTOM_STATUS_STEPS, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS, PROJECT_TYPES, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import { formatPrice } from '@/lib/utils'
+import { resolveTracking } from '@/lib/tracking'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
@@ -39,6 +40,7 @@ export default async function SuiviMesurePage({
 
   const o = orderRaw as CustomOrder
   const currentStepIndex = CUSTOM_STATUS_STEPS.indexOf(o.status)
+  const tracking = resolveTracking(o.tracking_url, o.tracking_number)
 
   const isJustSubmitted = submitted === 'true'
   const isJustPaid      = payment === 'success'
@@ -181,19 +183,29 @@ export default async function SuiviMesurePage({
                       {active && t.has(`hints.${s}`) && (
                         <p className="mt-0.5 max-w-xs text-xs leading-relaxed text-ink-2">{t(`hints.${s}`)}</p>
                       )}
-                      {s === 'shipped' && i <= currentStepIndex && (o.tracking_url || o.tracking_number) && (
-                        o.tracking_url ? (
-                          <a href={o.tracking_url} target="_blank" rel="noopener noreferrer"
-                            className="mt-2 inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20">
-                            {t('timeline.track')}
-                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M5 3h6v6M11 3L3 11" />
-                            </svg>
-                          </a>
-                        ) : (
-                          <p className="mt-1 font-mono text-xs text-ink-2">{t('timeline.tracking', { number: o.tracking_number ?? '' })}</p>
-                        )
-                      )}
+                      {/* Pas de garde `i <= currentStepIndex` : le suivi est souvent saisi
+                            alors que la commande est encore en préparation — le client
+                            ne le voyait jamais. */}
+                        {s === 'shipped' && (tracking.href || tracking.number) && (
+                          <div className="mt-2 space-y-1">
+                            {tracking.href && (
+                              <a
+                                href={tracking.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                              >
+                                {t('timeline.track')}
+                                <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 3h6v6M11 3L3 11" />
+                                </svg>
+                              </a>
+                            )}
+                            {tracking.number && (
+                              <p className="break-all font-mono text-xs text-ink-2">{t('timeline.tracking', { number: tracking.number })}</p>
+                            )}
+                          </div>
+                        )}
                     </div>
                   </div>
                 )

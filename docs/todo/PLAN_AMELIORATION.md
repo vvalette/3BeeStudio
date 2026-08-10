@@ -170,7 +170,7 @@ Le code est de bonne qualité : webhooks Stripe/Boxtal signés et idempotents, R
 5. Thème : clair par défaut, couleurs via tokens CSS, jamais de sombre codé en dur.
 6. `cursor-pointer` sur tout élément interactif ; dropdowns via `src/components/ui/Select.tsx` ; tooltips maison (jamais `title=""`).
 7. Navbar fixe 72 px gérée par le layout — ne pas doubler le padding dans les pages.
-8. Avant tout travail Boxtal : lire la spec `boxtal_api-v3.json` (racine).
+8. Avant tout travail Boxtal : lire `boxtal/README.md` (spec v3.1 + catalogue des codes d'offres).
 9. Après chaque item : `npm run type-check` (et `npm run lint` une fois P3.1 fait). Build de vérification : `NEXT_BUILD_DIR=.next-build npm run build` (ne pas casser le `next dev` en cours).
 
 ## Ordre d'exécution suggéré

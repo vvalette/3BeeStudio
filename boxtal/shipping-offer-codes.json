@@ -1,0 +1,526 @@
+{
+  "source": "Documentation Boxtal — « Récupérer la liste des codes d'offres de transport pour l'API v3 »",
+  "retrievedAt": "2026-08-10",
+  "note": "Liste complète du catalogue Boxtal. Toutes ces offres ne sont pas forcément activées sur le compte : l'API ne permet pas de lister les offres du contrat (NoShippingOfferException sans détail).",
+  "count": 74,
+  "offers": [
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 13",
+      "code": "CHRP-Chrono13",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 13 collecte",
+      "code": "CHRP-Chrono13Pickup",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 18",
+      "code": "CHRP-Chrono18",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 18 collecte",
+      "code": "CHRP-Chrono18Pickup",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 2Shop Direct",
+      "code": "CHRP-Chrono2ShopDirect",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 2Shop Direct collecte",
+      "code": "CHRP-Chrono2ShopDirectPickup",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 2Shop Europe",
+      "code": "CHRP-Chrono2ShopEurope",
+      "kind": "relay",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 2Shop Europe collecte",
+      "code": "CHRP-Chrono2ShopEuropePickup",
+      "kind": "relay",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 2Shop Europe Retour",
+      "code": "CHRP-Chrono2ShopEuropeRetour",
+      "kind": "return",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono 2ShopDirect Retour",
+      "code": "CHRP-Chrono2ShopDirectRetour",
+      "kind": "return",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Classic",
+      "code": "CHRP-ChronoInternationalClassic",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Classic collecte",
+      "code": "CHRP-ChronoInternationalClassicPickup",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Express",
+      "code": "CHRP-ChronoInternationalColis",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Express collecte",
+      "code": "CHRP-ChronoInternationalColisPickup",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Relais 13",
+      "code": "CHRP-ChronoRelais",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Relais 13 collecte",
+      "code": "CHRP-ChronoRelaisPickup",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Relais Europe",
+      "code": "CHRP-ChronoRelaisEurope",
+      "kind": "relay",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Relais Europe collecte",
+      "code": "CHRP-ChronoRelaisEuropePickup",
+      "kind": "relay",
+      "scope": "international"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono Shop2Shop",
+      "code": "CHRP-ChronoShoptoShop",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Chronopost",
+      "service": "Chrono18 boîte aux lettres",
+      "code": "CHRP-Chrono18BAL",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Colis Privé",
+      "service": "Colis Privé Domicile",
+      "code": "COPR-CoprRelaisDomicileNat",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Colis Privé",
+      "service": "Colis Privé Domicile avec signature",
+      "code": "COPR-CoprRelaisSignatureNat",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Colis Privé",
+      "service": "Colis Privé Relais",
+      "code": "COPR-CoprRelaisRelaisNat",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo Domicile - avec signature",
+      "code": "POFR-ColissimoExpert",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo Domicile - sans signature",
+      "code": "POFR-ColissimoAccess",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo Domicile Outre-Mer - avec signature",
+      "code": "POFR-ColissimoExpertOutreMer",
+      "kind": "home",
+      "scope": "domtom"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo Domicile Outre-Mer - sans signature",
+      "code": "POFR-ColissimoAccessOutreMer",
+      "kind": "home",
+      "scope": "domtom"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo International Domicile - avec signature",
+      "code": "POFR-ColissimoExpertInternational",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo International Domicile - sans signature",
+      "code": "POFR-ColissimoAccessInternational",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo International Point Retrait",
+      "code": "POFR-ColissimoPickupStationInternational",
+      "kind": "relay",
+      "scope": "international"
+    },
+    {
+      "carrier": "Colissimo",
+      "service": "Colissimo Point Retrait",
+      "code": "POFR-ColissimoPickupStation",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Delivengo",
+      "service": "Delivengo easy",
+      "code": "DLVG-DelivengoEasy",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "DHL Express",
+      "service": "DHL Domestic Express",
+      "code": "DHLE-DomesticExpress",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "DHL Express",
+      "service": "DHL Express Economy Select",
+      "code": "DHLE-EconomySelect",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "DHL Express",
+      "service": "DHL Express Import",
+      "code": "DHLE-ExpressImport",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "DHL Express",
+      "service": "DHL Express Worldwide",
+      "code": "DHLE-ExpressWorldwide",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "DHL Freight",
+      "service": "DHL Freight EuroConnect Domestic",
+      "code": "DHLF-EuroConnectDomestic",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx First",
+      "code": "FEDX-FedexFirst",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx International Connect Plus",
+      "code": "FEDX-FedexInternationalConnectPlus",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx International Economy",
+      "code": "FEDX-InternationalEconomy",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx International Priority",
+      "code": "FEDX-InternationalPriority",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx International Priority Express",
+      "code": "FEDX-FedexInternationalPriorityExpress",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx Priority",
+      "code": "FEDX-DomesticExpress",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx Priority Express",
+      "code": "FEDX-FedexPriorityExpress",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx Regional Economy",
+      "code": "FEDX-FedexRegionalEconomy",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "FedEx",
+      "service": "FedEx Regional Economy Freight",
+      "code": "FEDX-FedexRegionalEconomyFreight",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Happy Post",
+      "service": "Happy Post avec Suivi sans Signature",
+      "code": "IMXE-PackSuiviEurope",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "La Poste",
+      "service": "Lettre Verte Suivie",
+      "code": "LPFR-LettreSuivieSU",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "La Poste",
+      "service": "Lettre Verte Suivie",
+      "code": "LPFR-LettreSuivieNational",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Mondial Relay",
+      "service": "Mondial Domicile Europe",
+      "code": "MONR-DomicileEurope",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "Mondial Relay",
+      "service": "Mondial Domicile France",
+      "code": "MONR-DomicileFrance",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Mondial Relay",
+      "service": "Mondial Points Relais",
+      "code": "MONR-CpourToi",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Mondial Relay",
+      "service": "Mondial Points Relais - Europe",
+      "code": "MONR-CpourToiEurope",
+      "kind": "relay",
+      "scope": "international"
+    },
+    {
+      "carrier": "Relais Colis",
+      "service": "Relais Colis",
+      "code": "SOGP-RelaisColis",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "Sodexi",
+      "service": "Sodexi Express",
+      "code": "SODX-ExpressStandard",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "Sodexi",
+      "service": "Sodexi Express International",
+      "code": "SODX-ExpressStandardInterColisMarch",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT 10:00 Express",
+      "code": "TNTE-ExpressNationalPremium10H",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT 12:00 Express",
+      "code": "TNTE-ExpressNationalPremium12H",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT 13:00 Express",
+      "code": "TNTE-ExpressNational",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT 13:00 Express Bulk",
+      "code": "TNTE-ExpressNationalBulk",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT 18:00 Express",
+      "code": "TNTE-ExpressNational18H",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT 18:00 Express Bulk",
+      "code": "TNTE-ExpressNational18HBulk",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT Economy Express",
+      "code": "TNTE-EconomyExpressInternational",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT Economy Express Import",
+      "code": "TNTE-EconomyExpressInternationalImport",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT Express International",
+      "code": "TNTE-ExpressInternationalColis",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT Express International Doc",
+      "code": "TNTE-ExpressInternationalPlis",
+      "kind": "home",
+      "scope": "international"
+    },
+    {
+      "carrier": "TNT",
+      "service": "TNT Express National Palette",
+      "code": "TNTE-ExpressNationalPalette",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Economy Access Point",
+      "code": "UPSE-EconomyAccessPoint",
+      "kind": "relay",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Expedited",
+      "code": "UPSE-Expedited",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Express",
+      "code": "UPSE-Express",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Express Plus",
+      "code": "UPSE-ExpressPlus",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Express Saver",
+      "code": "UPSE-ExpressSaver",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Standard",
+      "code": "UPSE-Standard",
+      "kind": "home",
+      "scope": "france"
+    },
+    {
+      "carrier": "UPS",
+      "service": "UPS Standard Access Point",
+      "code": "UPSE-StandardAP",
+      "kind": "relay",
+      "scope": "france"
+    }
+  ]
+}

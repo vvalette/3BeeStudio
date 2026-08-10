@@ -39,7 +39,7 @@ export function buildInitialState(product?: ShopProduct): ProductFormState {
     images:         product?.images ?? [],
     stlUrl:         product?.stl_url ?? null,
     stock:          product?.stock !== null && product?.stock !== undefined ? String(product.stock) : '',
-    weightGrams:    product ? String(product.weight_grams) : '100',
+    weightGrams:    product ? String(product.weight_grams) : '',
     customFields:   product?.custom_fields ?? [],
     category:       product?.category ?? '',
     featured:       product?.featured ?? false,

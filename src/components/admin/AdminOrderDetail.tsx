@@ -84,7 +84,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
       <div className="mx-auto max-w-5xl space-y-5">
 
         {/* Header */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <Link
             href="/admin/commandes"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--line-2)] bg-bg-1 text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
@@ -111,7 +111,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h1 className="truncate text-lg font-bold text-ink-0" style={{ letterSpacing: '-0.01em' }}>
                 {order.company}
               </h1>
@@ -129,7 +129,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
             href={suiviUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex shrink-0 items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-4 py-2 text-xs font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-1"
+            className="flex w-full shrink-0 items-center justify-center gap-1.5 rounded-pill border border-[var(--line-2)] px-4 py-2 text-xs font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-1 sm:w-auto"
           >
             Suivi client
             <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -358,7 +358,7 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
                         value={trackingInput}
                         onChange={(e) => setTrackingInput(e.target.value)}
                         placeholder="Numéro de suivi transporteur"
-                        className="flex-1 rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
+                        className="min-w-0 flex-1 rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
                       />
                       <button
                         onClick={() => updateField({ tracking_number: trackingInput })}
@@ -474,11 +474,11 @@ function Card({ title, right, children }: {
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1">
-      <header className="flex items-center justify-between border-b border-[var(--line)] px-5 py-3">
+      <header className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 sm:px-5">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">{title}</h2>
         {right}
       </header>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   )
 }

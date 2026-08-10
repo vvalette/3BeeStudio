@@ -107,14 +107,14 @@ export default function AdminBoutiqueProducts({
       <div className="mx-auto max-w-4xl space-y-6">
 
         {/* Header */}
-        <div className="flex items-end justify-between">
-          <div>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">3BeeStudio · Admin</p>
-            <h1 className="mt-1.5 text-2xl font-extrabold text-ink-0" style={{ letterSpacing: '-0.02em' }}>Boutique</h1>
+            <h1 className="mt-1.5 text-xl font-extrabold text-ink-0 sm:text-2xl" style={{ letterSpacing: '-0.02em' }}>Boutique</h1>
           </div>
           <Link
             href="/admin/boutique/nouveau"
-            className="flex cursor-pointer items-center gap-1.5 rounded-pill bg-amber px-4 py-2 text-xs font-bold text-bg-0 hover:opacity-90 transition-opacity"
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-pill bg-amber px-3 py-2 text-xs font-bold text-bg-0 hover:opacity-90 transition-opacity sm:px-4"
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M8 2v12M2 8h12" /></svg>
             Nouveau produit
@@ -165,8 +165,8 @@ export default function AdminBoutiqueProducts({
           <div className="space-y-4">
 
           {/* Livraison offerte globale */}
-          <div className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3">
-            <div>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3">
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-ink-0">Livraison offerte</p>
               <p className="text-[11px] text-ink-3 mt-0.5">
                 {freeShipping ? 'Active — livraison gratuite sur toutes les commandes' : 'Inactive — livraison payante selon le seuil habituel'}
@@ -177,7 +177,7 @@ export default function AdminBoutiqueProducts({
               onClick={toggleFreeShipping}
               disabled={savingShipping}
               className={[
-                'relative flex h-6 w-11 cursor-pointer items-center rounded-full border transition-all duration-200 disabled:opacity-50',
+                'relative flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-all duration-200 disabled:opacity-50',
                 freeShipping ? 'border-amber bg-amber' : 'border-[var(--line)] bg-bg-3',
               ].join(' ')}
               aria-label={freeShipping ? 'Désactiver la livraison offerte' : 'Activer la livraison offerte'}
@@ -201,7 +201,7 @@ export default function AdminBoutiqueProducts({
             {products.map((product) => (
               <div
                 key={product.id}
-                className="flex items-center gap-4 rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3 transition-colors hover:border-[var(--line-2)]"
+                className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3 transition-colors hover:border-[var(--line-2)] sm:flex-nowrap sm:gap-4"
               >
                 {/* Miniature */}
                 <div className="h-12 w-12 shrink-0 rounded-lg overflow-hidden border border-[var(--line)] bg-bg-2 flex items-center justify-center">
@@ -230,12 +230,12 @@ export default function AdminBoutiqueProducts({
                   </p>
                 </div>
 
-                {/* Statut */}
-                <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-medium', product.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'].join(' ')}>
+                {/* Statut + actions — passent sous les infos sur mobile */}
+                <div className="flex w-full items-center justify-end gap-1 sm:w-auto sm:contents">
+                <span className={['shrink-0 rounded-pill px-2.5 py-0.5 text-[11px] font-medium', product.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'].join(' ')}>
                   {product.active ? 'Actif' : 'Inactif'}
                 </span>
 
-                {/* Actions */}
                 <div className="flex items-center gap-1 shrink-0">
                   <Tooltip content={product.active ? 'Désactiver' : 'Activer'}>
                     <button
@@ -271,6 +271,7 @@ export default function AdminBoutiqueProducts({
                       </svg>
                     </button>
                   </Tooltip>
+                </div>
                 </div>
               </div>
             ))}
@@ -317,9 +318,9 @@ export default function AdminBoutiqueProducts({
             {filteredOrders.map((order) => (
               <div key={order.id} className="rounded-xl border border-[var(--line)] bg-bg-1 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-ink-0">{order.name}</p>
-                    <p className="text-[12px] text-ink-3">{order.email} · #{order.id.slice(0, 8).toUpperCase()}</p>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-ink-0">{order.name}</p>
+                    <p className="break-words text-[12px] text-ink-3">{order.email} · #{order.id.slice(0, 8).toUpperCase()}</p>
                     <p className="text-[12px] text-ink-3 mt-0.5">
                       {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       {' · '}{formatPrice(order.total_amount)}
@@ -341,7 +342,7 @@ export default function AdminBoutiqueProducts({
 
                 {/* Livraison */}
                 {order.shipping_city && (
-                  <p className="text-[12px] text-ink-3">
+                  <p className="break-words text-[12px] text-ink-3">
                     📦 {order.shipping_name} · {order.shipping_city} {order.shipping_postal_code}
                     {order.tracking_number && (
                       <> · <a href={order.tracking_url ?? '#'} target="_blank" rel="noopener noreferrer" className="text-amber hover:underline">{order.tracking_number}</a></>

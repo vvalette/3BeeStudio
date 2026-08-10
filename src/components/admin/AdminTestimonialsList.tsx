@@ -142,16 +142,16 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
   }
 
   return (
-    <div className="min-h-[calc(100dvh-72px)] py-8 px-5 sm:px-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-ink-0">Témoignages</h1>
+    <div className="min-h-[calc(100dvh-72px)] py-8 px-4 sm:px-8 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between gap-3 mb-8">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-ink-0">Témoignages</h1>
           <p className="text-ink-2 text-sm mt-1">{items.length} témoignage{items.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setAdding((v) => !v); setEditingId(null) }}
-            className="px-4 py-2 rounded-md bg-amber text-bg-0 text-sm font-semibold hover:bg-amber-soft transition-colors cursor-pointer"
+            className="shrink-0 whitespace-nowrap px-4 py-2 rounded-md bg-amber text-bg-0 text-sm font-semibold hover:bg-amber-soft transition-colors cursor-pointer"
           >
             {adding ? 'Annuler' : '+ Ajouter'}
           </button>
@@ -181,13 +181,15 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
         {items.map((item) => (
           <div key={item.id} className="border border-[var(--line)] bg-bg-2 rounded-xl overflow-hidden" style={{ opacity: item.visible ? 1 : 0.45 }}>
             {/* Row */}
-            <div className="p-5 flex gap-4 items-start">
+            {/* flex-wrap : sur mobile les 3 boutons d'action (~110 px) passent sous
+                le texte au lieu de le comprimer à ~3 mots par ligne. */}
+            <div className="p-4 sm:p-5 flex flex-wrap gap-3 sm:gap-4 items-start">
               <div
                 className="w-10 h-10 rounded-full flex-shrink-0 border border-[var(--line)] mt-0.5"
                 style={{ background: item.avatar_gradient }}
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-0.5">
                   <span className="font-semibold text-sm text-ink-0">{item.name}</span>
                   <span className="font-mono text-ink-3 text-[10px] tracking-wide">#{item.display_order}</span>
                   {item.source === 'google' && (
@@ -200,7 +202,7 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
                 <div className="font-mono text-ink-3 text-[10px] mb-2">{item.role} · {item.country}</div>
                 <p className="text-ink-1 text-sm leading-relaxed">&ldquo;{item.body}&rdquo;</p>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
+              <div className="flex gap-2 flex-shrink-0 w-full justify-end sm:w-auto">
                 <Tooltip content="Modifier">
                   <button
                     onClick={() => editingId === item.id ? cancelEdit() : openEdit(item)}

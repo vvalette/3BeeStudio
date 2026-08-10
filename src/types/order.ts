@@ -43,6 +43,7 @@ export interface Order {
 
   // Boxtal (expédition)
   boxtal_order_id: string | null
+  shipping_cost: number | null // coût réel HT de l'étiquette, centimes
 
   // Stripe
   stripe_checkout_session_id: string | null

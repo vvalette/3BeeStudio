@@ -1,5 +1,5 @@
 import type { Order } from '@/types/order'
-import type { ShopOrder } from '@/types/shop-order'
+import type { ShopOrder, DeliveryMode } from '@/types/shop-order'
 
 const CONTENT_ID = 'content:v1:50180' // Cadeaux, cadeaux entreprise
 
@@ -36,35 +36,158 @@ function estimatePackage(qty: number) {
   return { weight, length: 40, width: 30, height: 15 }
 }
 
-// Boutique : poids réel depuis les items + 50 g emballage.
-// Fallback 100 g/article si weight_grams absent (anciennes commandes).
-function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: number }>) {
+/**
+ * Boutique : poids réel depuis les items + 50 g d'emballage.
+ * Fallback 100 g/article si weight_grams absent (anciennes commandes).
+ *
+ * ⚠ Les transporteurs facturent au max(poids réel, poids volumétrique), ce
+ * dernier valant L×l×h/5000. L'ancien palier sautait à 45×35×30 dès 1 kg, soit
+ * 9,45 kg volumétriques — un carton de 47 litres pour quelques pièces imprimées.
+ * Un colis réel de 0,2 kg / 20×20×5 était ainsi facturé comme ~9 kg.
+ * Les paliers ci-dessous suivent des formats d'emballage plausibles et gardent
+ * le volumétrique proche du poids réel.
+ */
+export function estimateShopPackage(items: Array<{ quantity: number; weight_grams?: number }>) {
   const totalG = items.reduce((sum, i) => sum + i.quantity * (i.weight_grams ?? 100), 0) + 50
   const weight = Math.max(0.1, Math.round(totalG) / 1000)
-  if (weight <= 0.25) return { weight, length: 20, width: 15, height: 8 }
-  if (weight <= 0.5)  return { weight, length: 25, width: 20, height: 12 }
-  if (weight <= 1.0)  return { weight, length: 35, width: 25, height: 20 }
+  if (weight <= 0.25) return { weight, length: 20, width: 15, height: 5 }
+  if (weight <= 0.5)  return { weight, length: 25, width: 20, height: 8 }
+  if (weight <= 1)    return { weight, length: 30, width: 22, height: 12 }
+  if (weight <= 2)    return { weight, length: 35, width: 25, height: 15 }
+  if (weight <= 5)    return { weight, length: 40, width: 30, height: 20 }
   return { weight, length: 45, width: 35, height: 30 }
+}
+
+/** Poids volumétrique facturé par les transporteurs (L×l×h/5000), en kg. */
+export function volumetricWeight(pkg: { length: number; width: number; height: number }): number {
+  return Math.round((pkg.length * pkg.width * pkg.height) / 5000 * 100) / 100
 }
 
 // Codes ISO des départements et territoires d'outre-mer français.
 const DOM_TOM = new Set(['GP', 'MQ', 'GF', 'RE', 'PM', 'YT', 'NC', 'PF', 'WF', 'BL', 'MF'])
 
-// Sélectionne l'offre Boxtal selon le pays et le poids.
-function selectOfferCode(country: string): string {
+/**
+ * Offre point relais. Mondial Relay est l'offre la moins chère du catalogue
+ * (~5 € contre ~11 € en Colissimo domicile) — c'est tout l'intérêt du mode relais.
+ * Surchargeable sans redéploiement si le contrat Boxtal évolue.
+ *
+ * ⚠ L'API Boxtal v3 n'expose AUCUN endpoint de devis : le prix n'est connu
+ * qu'après création, via `deliveryPriceExclTax`. Impossible donc de comparer
+ * les offres à la volée — le choix est fait par politique, pas par prix constaté.
+ */
+function envList(name: string): string[] | null {
+  const raw = process.env[name]
+  if (!raw) return null
+  const list = raw.split(',').map((c) => c.trim()).filter(Boolean)
+  return list.length > 0 ? list : null
+}
+
+/**
+ * Offre relais utilisée pour CHERCHER les points (le picker cible un réseau donné).
+ * Mondial Relay : le réseau relais le plus dense en France, donc le plus de choix
+ * pour le client. L'expédition, elle, peut partir sur une autre offre relais
+ * (cf. offerCodesFor) — les codes points sont propres au réseau, on garde donc
+ * la même offre en tête de liste des deux côtés.
+ */
+export const RELAY_OFFER_CODE =
+  process.env.BOXTAL_RELAY_OFFER_CODE ?? envList('BOXTAL_RELAY_OFFER_CODES')?.[0] ?? 'MONR-CpourToi'
+
+/**
+ * Offres candidates, de la moins chère à la plus chère.
+ * Faute d'API de devis, on ne peut pas comparer les prix : on tente donc les
+ * offres dans l'ordre et on garde la première que le compte accepte. Une offre
+ * absente du contrat renvoie `NoShippingOfferException` sans rien créer, donc
+ * l'essai suivant est sûr (cf. createShipment).
+ */
+function offerCodesFor(country: string, mode: DeliveryMode): string[] {
   const upper = country.toUpperCase()
+
+  if (mode === 'relay') {
+    // PAS de repli ici : le pickupPointCode enregistré sur la commande vient du
+    // réseau interrogé par le picker (RELAY_OFFER_CODE). Basculer sur l'offre
+    // relais d'un autre transporteur enverrait un code de point inconnu de
+    // celui-ci — colis mal routé ou expédition refusée. Pour changer de réseau
+    // relais, changer BOXTAL_RELAY_OFFER_CODE : picker et expédition suivent
+    // ensemble.
+    return [RELAY_OFFER_CODE]
+  }
 
   if (upper !== 'FR' && !DOM_TOM.has(upper)) {
     // International → Colissimo International (avec signature, plus sécurisé)
-    return 'POFR-ColissimoExpertInternational'
+    return ['POFR-ColissimoExpertInternational']
   }
 
   if (DOM_TOM.has(upper)) {
-    return 'POFR-ColissimoAccessOutreMer'
+    return ['POFR-ColissimoAccessOutreMer']
   }
 
-  // France métropolitaine
-  return 'POFR-ColissimoAccess'
+  // France métropolitaine — domicile. Mondial Relay Domicile est le moins cher,
+  // Colissimo ferme la marche : c'est le plus cher (~11 €), il ne sert que de
+  // filet si aucune offre moins chère n'est au contrat.
+  // Aucun code de point n'entre en jeu ici, le repli est donc sans risque.
+  return envList('BOXTAL_HOME_OFFER_CODES')
+    ?? [process.env.BOXTAL_HOME_OFFER_CODE, 'MONR-DomicileFrance', 'POFR-ColissimoAccess']
+      .filter((c): c is string => !!c)
+}
+
+export interface ParcelPoint {
+  code: string
+  name: string
+  street: string
+  city: string
+  postalCode: string
+  distanceMeters: number | null
+  position: { latitude: number; longitude: number } | null
+  openingDays: Record<string, { openingTime: string; closingTime: string }[]>
+}
+
+/**
+ * Points relais autour d'une adresse, triés par distance croissante.
+ * Utilisé par le checkout : le client doit choisir un point, `pickupPointCode`
+ * est obligatoire côté API pour une offre relais.
+ */
+export async function searchParcelPoints(params: {
+  postalCode: string
+  city?: string
+  street?: string
+  countryIsoCode?: string
+}): Promise<ParcelPoint[]> {
+  const query = new URLSearchParams({
+    postalCode: params.postalCode,
+    countryIsoCode: params.countryIsoCode ?? 'FR',
+    operationType: 'ARRIVAL',
+    shippingOfferCode: RELAY_OFFER_CODE,
+  })
+  if (params.city) query.set('city', params.city)
+  if (params.street) query.set('street', params.street)
+
+  const res = await boxtalFetch(`/shipping/v3.2/parcel-point-by-shipping-offer?${query}`)
+
+  const rows = (res?.content ?? []) as {
+    distanceFromSearchLocation?: number
+    parcelPoint: {
+      code: string
+      name: string
+      location: {
+        street?: string; city?: string; postalCode?: string
+        position?: { latitude: number; longitude: number }
+      }
+      openingDays?: Record<string, { openingTime: string; closingTime: string }[]>
+    }
+  }[]
+
+  return rows
+    .map((r) => ({
+      code: r.parcelPoint.code,
+      name: r.parcelPoint.name,
+      street: r.parcelPoint.location?.street ?? '',
+      city: r.parcelPoint.location?.city ?? '',
+      postalCode: r.parcelPoint.location?.postalCode ?? '',
+      distanceMeters: r.distanceFromSearchLocation ?? null,
+      position: r.parcelPoint.location?.position ?? null,
+      openingDays: r.parcelPoint.openingDays ?? {},
+    }))
+    .sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
 }
 
 // Forme normalisée d'une expédition, indépendante du type de commande.
@@ -81,6 +204,8 @@ interface ShipmentInput {
   totalAmount: number // centimes
   pkg: { weight: number; length: number; width: number; height: number }
   description: string
+  mode: DeliveryMode
+  pickupPointCode?: string | null
 }
 
 async function boxtalFetch(path: string, options: RequestInit = {}) {
@@ -126,6 +251,10 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
 
   if (!input.phone) throw new Error('Numéro de téléphone destinataire manquant')
 
+  if (input.mode === 'relay' && !input.pickupPointCode) {
+    throw new Error('Point relais manquant sur la commande — impossible de générer l\'étiquette')
+  }
+
   const { firstName, lastName } = splitName(input.recipientName)
 
   const body = {
@@ -164,6 +293,10 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
           countryIsoCode: input.shipping_country ?? 'FR',
         },
       },
+      // Obligatoire pour une offre relais — l'API refuse l'expédition sans.
+      ...(input.mode === 'relay' && input.pickupPointCode
+        ? { pickupPointCode: input.pickupPointCode }
+        : {}),
       packages: [{
         type: 'PARCEL',
         ...input.pkg,
@@ -171,14 +304,41 @@ async function createShipment(input: ShipmentInput): Promise<BoxtalResult> {
         content: { id: CONTENT_ID, description: input.description },
       }],
     },
-    shippingOfferCode: selectOfferCode(input.shipping_country ?? 'FR'),
     labelType: 'PDF_A4',
   }
 
-  const createRes = await boxtalFetch('/shipping/v3.1/shipping-order', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  })
+  // Essaie les offres de la moins chère à la plus chère.
+  // On ne réessaie QUE sur NoShippingOfferException : c'est un refus au moment
+  // de la validation, rien n'a été créé côté Boxtal. Sur toute autre erreur
+  // (adresse invalide, poids hors limites…) on s'arrête — réessayer risquerait
+  // de créer une seconde expédition facturée.
+  const offerCodes = offerCodesFor(input.shipping_country ?? 'FR', input.mode)
+  let createRes: { content: { id: string } } | null = null
+  let lastError: unknown = null
+
+  for (const shippingOfferCode of offerCodes) {
+    try {
+      createRes = await boxtalFetch('/shipping/v3.1/shipping-order', {
+        method: 'POST',
+        body: JSON.stringify({ ...body, shippingOfferCode }),
+      })
+      console.info('[boxtal]', JSON.stringify({ event: 'shipment_created', offer: shippingOfferCode, mode: input.mode }))
+      break
+    } catch (err) {
+      lastError = err
+      const offerRefused = err instanceof Error && err.message.includes('NoShippingOfferException')
+      if (!offerRefused) throw err
+      console.warn(`[boxtal] Offre ${shippingOfferCode} indisponible, essai suivant`)
+    }
+  }
+
+  if (!createRes) {
+    throw new Error(
+      `Aucune offre d'expédition disponible (essayées : ${offerCodes.join(', ')}). ` +
+      `Vérifiez les contrats activés sur votre compte Boxtal. ` +
+      `Dernière erreur : ${lastError instanceof Error ? lastError.message : String(lastError)}`,
+    )
+  }
 
   const boxtalOrderId = createRes.content.id as string
 
@@ -213,6 +373,7 @@ export async function createBoxtalShipment(order: Order): Promise<BoxtalResult> 
     totalAmount: order.total_amount,
     pkg: estimatePackage(order.quantity),
     description: 'Porte-clés NFC personnalisés',
+    mode: 'delivery',
   })
 }
 
@@ -230,12 +391,31 @@ export async function createShopBoxtalShipment(order: ShopOrder): Promise<Boxtal
     totalAmount: order.total_amount,
     pkg: estimateShopPackage(order.items),
     description: 'Objets imprimés en 3D — 3BeeStudio',
+    mode: order.delivery_mode,
+    pickupPointCode: order.pickup_point_code,
   })
 }
 
 // Retourne null si l'annulation est impossible (colis déjà pris en charge).
 export async function cancelBoxtalShipment(boxtalOrderId: string): Promise<void> {
   await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}`, { method: 'DELETE' })
+}
+
+/**
+ * Coût réel HT de l'expédition, en centimes — ou null si Boxtal ne l'a pas
+ * encore calculé. L'API v3 n'ayant aucun endpoint de devis, c'est la seule
+ * façon de savoir ce qu'une étiquette a coûté : après création.
+ * Best-effort, ne doit jamais faire échouer la génération d'étiquette.
+ */
+export async function getBoxtalShippingCost(boxtalOrderId: string): Promise<number | null> {
+  try {
+    const res = await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}`)
+    const value = res?.content?.deliveryPriceExclTax?.value
+    return typeof value === 'number' ? Math.round(value * 100) : null
+  } catch (err) {
+    console.warn('[boxtal] Coût d\'expédition non récupéré:', err)
+    return null
+  }
 }
 
 export async function getBoxtalLabel(boxtalOrderId: string): Promise<string> {

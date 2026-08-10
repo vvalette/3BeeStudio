@@ -72,7 +72,9 @@ export default async function ProductPage({
   const outOfStock = product.stock !== null && product.stock === 0
 
   const exampleSubtotal = effectivePrice(product)
-  const shipping        = calcShopShipping(exampleSubtotal)
+  // Affiche le tarif le moins cher proposé au checkout (point relais),
+  // sinon la fiche annonçait 6,90 € alors que le client peut payer 3,90 €.
+  const shipping        = calcShopShipping(exampleSubtotal, 'relay')
   const discount        = discountPercent(product)
 
   return (
@@ -156,10 +158,10 @@ export default async function ProductPage({
                   <div className="min-w-0">
                     <p className="text-[13px] font-semibold text-ink-0 leading-tight">
                       {t('shipping')}{' '}
-                      <span className="text-amber">{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
+                      <span className="text-amber">{shipping === 0 ? t('shippingFree') : t('shippingFrom', { price: formatPrice(shipping) })}</span>
                     </p>
                     {shipping > 0 && (
-                      <p className="mt-0.5 text-[11px] text-ink-3">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
+                      <p className="mt-0.5 text-[11px] text-ink-2">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
                     )}
                   </div>
                 </div>

@@ -9,7 +9,11 @@ import { rateLimit } from '@/lib/rate-limit'
 // Ne lève JAMAIS : une alerte qui échoue ne doit pas casser le flux appelant
 // (un webhook qui retourne 500 à cause de l'alerte serait contre-productif).
 
-const ALERT_TO = process.env.ALERT_EMAIL ?? 'contact@3beestudio.fr'
+// ALERT_EMAIL permet d'isoler les alertes ops ; à défaut elles suivent ADMIN_EMAIL.
+function alertTo(): string[] {
+  const raw = process.env.ALERT_EMAIL ?? process.env.ADMIN_EMAIL ?? 'contact@3beestudio.fr'
+  return raw.split(',').map((e) => e.trim()).filter(Boolean)
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -53,7 +57,7 @@ export async function sendCriticalAlert(subject: string, context: AlertContext =
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { error } = await resend.emails.send({
       from,
-      to: ALERT_TO,
+      to: alertTo(),
       subject: `🚨 [3BeeStudio] ${subject}`,
       html,
     })

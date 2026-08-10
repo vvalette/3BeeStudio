@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendOrderConfirmation } from '@/lib/resend'
+import { sendNfcOrderEmails } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { confirmShopOrder } from '@/lib/confirm-shop-order'
 import type { Order } from '@/types/order'
@@ -118,9 +118,7 @@ export async function POST(req: Request) {
         console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed', orderId }))
 
         if (updatedOrder) {
-          await sendOrderConfirmation(updatedOrder as Order).catch((err) =>
-            console.error('[webhook] Email non bloquant:', err),
-          )
+          await sendNfcOrderEmails(updatedOrder as Order)
         }
       } else {
         // Paiement asynchrone (virement, etc.) — on attend payment_intent.succeeded
@@ -138,11 +136,13 @@ export async function POST(req: Request) {
         const result = await confirmShopOrder(shopOrderId)
         if (result.error) return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
       } else if (orderId) {
-        const { error } = await supabaseAdmin
+        const { data: updatedOrder, error } = await supabaseAdmin
           .from('orders')
           .update({ status: 'confirmed' })
           .eq('id', orderId)
           .eq('status', 'pending_payment') // n'écraser que si encore en attente
+          .select()
+          .maybeSingle() // rejeu → 0 ligne sans erreur
 
         if (error) {
           console.error('[webhook] Erreur Supabase payment_intent update:', error)
@@ -154,6 +154,9 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
         }
         console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed_via_pi', orderId }))
+        if (updatedOrder) {
+          await sendNfcOrderEmails(updatedOrder as Order)
+        }
       } else {
         // Chercher via stripe_checkout_session_id associée au payment intent
         const sessions = await stripe.checkout.sessions.list({ payment_intent: pi.id, limit: 1 })
@@ -184,9 +187,7 @@ export async function POST(req: Request) {
           }
           console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed_via_session_lookup', orderId: sessionOrderId }))
           if (updatedOrder) {
-            await sendOrderConfirmation(updatedOrder as Order).catch((err) =>
-              console.error('[webhook] Email non bloquant:', err),
-            )
+            await sendNfcOrderEmails(updatedOrder as Order)
           }
         }
       }

@@ -5,6 +5,8 @@ import CustomOrderConfirmation from '@/emails/CustomOrderConfirmation'
 import CustomOrderAdmin from '@/emails/CustomOrderAdmin'
 import NewsletterWelcome from '@/emails/NewsletterWelcome'
 import ShopOrderConfirmation from '@/emails/ShopOrderConfirmation'
+import ShopOrderAdmin from '@/emails/ShopOrderAdmin'
+import NfcOrderAdmin from '@/emails/NfcOrderAdmin'
 import ContactMessage from '@/emails/ContactMessage'
 import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
@@ -17,6 +19,16 @@ function getFrom() {
   const from = process.env.RESEND_FROM_EMAIL
   if (!from) throw new Error('RESEND_FROM_EMAIL non défini dans les variables d\'environnement')
   return from
+}
+
+/**
+ * Destinataire(s) des notifications internes (nouvelle commande, message contact).
+ * `ADMIN_EMAIL` accepte plusieurs adresses séparées par des virgules — utile pour
+ * recevoir aussi sur une boîte perso en plus de contact@3beestudio.fr.
+ */
+export function getAdminEmails(): string[] {
+  const raw = process.env.ADMIN_EMAIL ?? 'contact@3beestudio.fr'
+  return raw.split(',').map((e) => e.trim()).filter(Boolean)
 }
 
 export async function sendOrderConfirmation(order: Order): Promise<void> {
@@ -78,13 +90,78 @@ export async function sendCustomOrderAdminNotification(order: CustomOrder): Prom
   const { data, error } = await resend.emails.send({
     from,
     replyTo: order.email,
-    to: 'contact@3beestudio.fr',
+    to: getAdminEmails(),
     subject: `🔔 Nouvelle demande sur-mesure #${order.id.slice(0, 8).toUpperCase()} — ${order.name}`,
     html,
   })
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
   console.info('[resend]', JSON.stringify({ type: 'custom_order_admin_notification', orderId: order.id, resendId: data?.id }))
+}
+
+/**
+ * Notification interne « nouvelle commande NFC payée ».
+ * Envoyée depuis les mêmes points que la confirmation client (webhook Stripe +
+ * fallback sync de la page suivi), donc protégée par la même idempotence :
+ * un seul appel gagne la transition pending_payment → confirmed.
+ */
+export async function sendOrderAdminNotification(order: Order): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from = getFrom()
+
+  const html = await render(NfcOrderAdmin({ order, appUrl }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: order.email, // répondre au mail = répondre directement au client
+    to: getAdminEmails(),
+    subject: `💰 Nouvelle commande NFC #${order.id.slice(0, 8).toUpperCase()} — ${order.company} (${order.quantity} pcs)`,
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'nfc_order_admin_notification', orderId: order.id, resendId: data?.id }))
+}
+
+/**
+ * Emails d'une commande NFC qui vient de passer en `confirmed` : confirmation
+ * client + notification interne. Point d'entrée unique pour les 3 chemins de
+ * confirmation (webhook checkout.session.completed, payment_intent.succeeded,
+ * fallback sync de la page suivi) — sans ça, un chemin oublié = pas de mail.
+ *
+ * Jamais bloquant : un échec Resend ne doit pas faire répondre 500 au webhook
+ * (Stripe retenterait alors que la commande est déjà confirmée en base).
+ */
+export async function sendNfcOrderEmails(order: Order): Promise<void> {
+  await Promise.all([
+    sendOrderConfirmation(order).catch((err) =>
+      console.error('[resend] Email client non bloquant:', err),
+    ),
+    sendOrderAdminNotification(order).catch((err) =>
+      console.error('[resend] Notif admin non bloquante:', err),
+    ),
+  ])
+}
+
+/** Notification interne « nouvelle commande boutique payée ». */
+export async function sendShopOrderAdminNotification(order: ShopOrder): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from = getFrom()
+
+  const html = await render(ShopOrderAdmin({ order, appUrl }))
+
+  const mode = order.delivery_mode === 'pickup' ? 'retrait studio' : 'livraison'
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: order.email,
+    to: getAdminEmails(),
+    subject: `🛒 Nouvelle commande boutique #${order.id.slice(0, 8).toUpperCase()} — ${order.name} (${mode})`,
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'shop_order_admin_notification', orderId: order.id, resendId: data?.id }))
 }
 
 // Cache en mémoire pour éviter un appel API à chaque inscription
@@ -160,7 +237,7 @@ export async function sendContactMessage(input: {
   const { data, error } = await resend.emails.send({
     from,
     replyTo: input.email, // répondre au mail = répondre directement au client
-    to: 'contact@3beestudio.fr',
+    to: getAdminEmails(),
     subject: `✉️ Contact — ${input.subject}`,
     html,
   })

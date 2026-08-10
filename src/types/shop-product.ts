@@ -40,10 +40,22 @@ export type ShopProductCard = Pick<ShopProduct,
 >
 
 export const SHOP_FREE_SHIPPING_THRESHOLD = 5000 // 50 € en centimes
-export const SHOP_SHIPPING_PRICE = 690           // 6,90 €
+export const SHOP_SHIPPING_PRICE = 690           // 6,90 € — domicile (Colissimo)
+export const SHOP_RELAY_SHIPPING_PRICE = 390     // 3,90 € — point relais (Mondial Relay)
 
-export function calcShopShipping(subtotal: number): number {
-  return subtotal >= SHOP_FREE_SHIPPING_THRESHOLD ? 0 : SHOP_SHIPPING_PRICE
+/**
+ * Frais de port selon le mode de livraison.
+ * Le relais est nettement moins cher à l'achat côté Boxtal (~5 € contre ~11 €
+ * en Colissimo domicile), on répercute cet écart au client.
+ * Le seuil de gratuité s'applique aux deux modes ; le retrait studio est gratuit.
+ */
+export function calcShopShipping(
+  subtotal: number,
+  mode: 'delivery' | 'pickup' | 'relay' = 'delivery',
+): number {
+  if (mode === 'pickup') return 0
+  if (subtotal >= SHOP_FREE_SHIPPING_THRESHOLD) return 0
+  return mode === 'relay' ? SHOP_RELAY_SHIPPING_PRICE : SHOP_SHIPPING_PRICE
 }
 
 /** Retourne le prix effectif (promo si disponible, sinon prix de base) */

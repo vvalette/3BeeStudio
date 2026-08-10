@@ -8,6 +8,7 @@ import {
   generateSlug,
   SHOP_FREE_SHIPPING_THRESHOLD,
   SHOP_SHIPPING_PRICE,
+  SHOP_RELAY_SHIPPING_PRICE,
 } from './shop-product'
 
 describe('calcShopShipping', () => {
@@ -19,6 +20,25 @@ describe('calcShopShipping', () => {
   it('is free at and above the threshold', () => {
     expect(calcShopShipping(SHOP_FREE_SHIPPING_THRESHOLD)).toBe(0)
     expect(calcShopShipping(SHOP_FREE_SHIPPING_THRESHOLD + 1000)).toBe(0)
+  })
+
+  it('le point relais est moins cher que le domicile', () => {
+    expect(calcShopShipping(0, 'relay')).toBe(SHOP_RELAY_SHIPPING_PRICE)
+    expect(SHOP_RELAY_SHIPPING_PRICE).toBeLessThan(SHOP_SHIPPING_PRICE)
+  })
+
+  it('le retrait studio est toujours gratuit, même sous le seuil', () => {
+    expect(calcShopShipping(0, 'pickup')).toBe(0)
+    expect(calcShopShipping(100, 'pickup')).toBe(0)
+  })
+
+  it('le seuil de gratuité s’applique aussi au relais', () => {
+    expect(calcShopShipping(SHOP_FREE_SHIPPING_THRESHOLD, 'relay')).toBe(0)
+    expect(calcShopShipping(SHOP_FREE_SHIPPING_THRESHOLD - 1, 'relay')).toBe(SHOP_RELAY_SHIPPING_PRICE)
+  })
+
+  it('défaut = livraison à domicile (compat appels existants)', () => {
+    expect(calcShopShipping(0)).toBe(calcShopShipping(0, 'delivery'))
   })
 })
 

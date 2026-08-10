@@ -61,13 +61,13 @@ const stripeMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: supabaseMock, supabase: supabaseMock }))
 vi.mock('@/lib/stripe', () => ({ stripe: stripeMock }))
-vi.mock('@/lib/resend', () => ({ sendOrderConfirmation: vi.fn(async () => {}) }))
+vi.mock('@/lib/resend', () => ({ sendNfcOrderEmails: vi.fn(async () => {}) }))
 vi.mock('@/lib/alert', () => ({ sendCriticalAlert: vi.fn(async () => {}) }))
 vi.mock('@/lib/confirm-shop-order', () => ({ confirmShopOrder: vi.fn(async () => ({})) }))
 
 import { POST } from './route'
 import { confirmShopOrder } from '@/lib/confirm-shop-order'
-import { sendOrderConfirmation } from '@/lib/resend'
+import { sendNfcOrderEmails } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 
 function webhookRequest(event: object, sig = 'sig_test'): Request {
@@ -141,7 +141,7 @@ describe('POST /api/stripe/webhook', () => {
       values: { status: 'confirmed' },
       filters: [['id', 'ord_1'], ['status', 'pending_payment']],
     })
-    expect(sendOrderConfirmation).toHaveBeenCalledOnce()
+    expect(sendNfcOrderEmails).toHaveBeenCalledOnce()
   })
 
   it('rejeu NFC (déjà confirmée) → 200 sans email ni alerte', async () => {
@@ -149,7 +149,7 @@ describe('POST /api/stripe/webhook', () => {
     const res = await POST(webhookRequest(completedSession({ order_id: 'ord_1' })))
 
     expect(res.status).toBe(200)
-    expect(sendOrderConfirmation).not.toHaveBeenCalled()
+    expect(sendNfcOrderEmails).not.toHaveBeenCalled()
     expect(sendCriticalAlert).not.toHaveBeenCalled()
   })
 
