@@ -9,10 +9,12 @@ import { estimateShopPackage, volumetricWeight } from '@/lib/boxtal'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT } from '@/lib/status-ui'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 
-// Statuts modifiables à la main par l'admin.
+// Statuts du déroulé normal, pilotés par l'admin.
 const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'processing']
 
-// Statuts pilotés automatiquement par le suivi Boxtal (non modifiables à la main).
+// Statuts normalement renseignés par le suivi Boxtal, mais forçables à la main :
+// une étiquette créée hors API (back-office Boxtal, retrait studio) n'émet aucun
+// événement de suivi, la commande resterait sinon bloquée en préparation.
 const AUTO_STATUSES: ShopOrderStatus[] = ['shipped', 'delivered']
 
 export default function AdminShopOrderDetail({ order: initialOrder }: { order: ShopOrder }) {
@@ -236,20 +238,21 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                 {AUTO_STATUSES.map((s) => {
                   const active = order.status === s
                   return (
-                    <span key={s} className="flex items-center gap-1.5 rounded-pill border border-dashed px-3 py-1.5 text-xs font-medium"
+                    <button key={s} disabled={saving || active} onClick={() => updateField({ status: s })}
+                      className="flex cursor-pointer items-center gap-1.5 rounded-pill border border-dashed px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-default"
                       style={active ? {
                         background: `color-mix(in srgb, ${SHOP_STATUS_ACCENT[s]} 12%, transparent)`,
                         borderColor: `color-mix(in srgb, ${SHOP_STATUS_ACCENT[s]} 55%, transparent)`,
                         color: SHOP_STATUS_ACCENT[s],
-                      } : { borderColor: 'var(--line-2)', color: 'var(--ink-3)', opacity: 0.7 }}>
+                      } : { borderColor: 'var(--line-2)', color: 'var(--ink-3)' }}>
                       <span className="h-1.5 w-1.5 rounded-full" style={{ background: SHOP_STATUS_ACCENT[s] }} />
                       {SHOP_STATUS_LABELS[s]}
-                    </span>
+                    </button>
                   )
                 })}
                 <span className="flex items-center gap-1 text-[11px] text-ink-3">
-                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3"><rect x="2.5" y="6" width="9" height="6" rx="1.2" /><path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" strokeLinecap="round" /></svg>
-                  Auto via le suivi Boxtal
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 7h11M9.5 4l3 3-3 3" /></svg>
+                  Renseignés par le suivi Boxtal — cliquez pour forcer
                 </span>
               </div>
             </Card>
@@ -358,8 +361,11 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                     )}
                   </div>
 
-                  {/* Expédition créée à la main sur Boxtal → à rattacher, sinon le
-                      webhook (qui matche sur boxtal_order_id) ne suit rien. */}
+                  {/* Rattrapage : expédition créée par l'API mais id non enregistré
+                      (échec de l'update après création). Vérifié le 10 août 2026 :
+                      l'API v3.1 n'expose PAS les expéditions faites à la main dans le
+                      back-office Boxtal — pour celles-là, seul le champ suivi ci-dessous
+                      est utilisable. */}
                   {order.boxtal_order_id && !editingLink ? (
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-3">
                       <span className="flex items-center gap-1.5 text-emerald-400">
@@ -374,11 +380,13 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                   ) : (
                     <div className="rounded-xl border border-[var(--line)] bg-bg-2 p-3.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
-                        {editingLink ? 'Modifier l’expédition rattachée' : 'Étiquette créée à la main sur Boxtal ?'}
+                        {editingLink ? 'Modifier l’expédition rattachée' : 'Rattacher une expédition Boxtal'}
                       </p>
                       <p className="mt-1.5 text-[11px] leading-snug text-ink-3">
-                        Collez l’identifiant de l’expédition depuis votre compte Boxtal pour la rattacher :
-                        suivi, statuts et re-téléchargement de l’étiquette repassent en automatique.
+                        Pour une expédition créée <strong className="font-semibold text-ink-2">par l’API</strong> dont
+                        l’identifiant n’a pas été enregistré : suivi, statuts et re-téléchargement de l’étiquette
+                        repassent en automatique. Une étiquette faite à la main dans le back-office Boxtal n’est
+                        pas exposée par l’API — utilisez le champ suivi ci-dessous.
                       </p>
                       <div className="mt-2.5 flex gap-2">
                         <input value={linkInput} onChange={(e) => setLinkInput(e.target.value)}
