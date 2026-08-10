@@ -358,8 +358,11 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                     )}
                   </div>
 
-                  {/* Expédition créée à la main sur Boxtal → à rattacher, sinon le
-                      webhook (qui matche sur boxtal_order_id) ne suit rien. */}
+                  {/* Rattrapage : expédition créée par l'API mais id non enregistré
+                      (échec de l'update après création). Vérifié le 10 août 2026 :
+                      l'API v3.1 n'expose PAS les expéditions faites à la main dans le
+                      back-office Boxtal — pour celles-là, seul le champ suivi ci-dessous
+                      est utilisable. */}
                   {order.boxtal_order_id && !editingLink ? (
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-3">
                       <span className="flex items-center gap-1.5 text-emerald-400">
@@ -374,11 +377,13 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                   ) : (
                     <div className="rounded-xl border border-[var(--line)] bg-bg-2 p-3.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
-                        {editingLink ? 'Modifier l’expédition rattachée' : 'Étiquette créée à la main sur Boxtal ?'}
+                        {editingLink ? 'Modifier l’expédition rattachée' : 'Rattacher une expédition Boxtal'}
                       </p>
                       <p className="mt-1.5 text-[11px] leading-snug text-ink-3">
-                        Collez l’identifiant de l’expédition depuis votre compte Boxtal pour la rattacher :
-                        suivi, statuts et re-téléchargement de l’étiquette repassent en automatique.
+                        Pour une expédition créée <strong className="font-semibold text-ink-2">par l’API</strong> dont
+                        l’identifiant n’a pas été enregistré : suivi, statuts et re-téléchargement de l’étiquette
+                        repassent en automatique. Une étiquette faite à la main dans le back-office Boxtal n’est
+                        pas exposée par l’API — utilisez le champ suivi ci-dessous.
                       </p>
                       <div className="mt-2.5 flex gap-2">
                         <input value={linkInput} onChange={(e) => setLinkInput(e.target.value)}
