@@ -24,6 +24,10 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const [shipping, setShipping] = useState(false)
   const [shippingError, setShippingError] = useState<string | null>(null)
   const [labelUrl, setLabelUrl] = useState<string | null>(null)
+  const [linkInput, setLinkInput] = useState(order.boxtal_order_id ?? '')
+  const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState<string | null>(null)
+  const [editingLink, setEditingLink] = useState(false)
   const [copied, setCopied] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [cancelResult, setCancelResult] = useState<{ stripeRefunded: boolean; boxtalCancelled: boolean; boxtalError: string | null } | null>(null)
@@ -66,6 +70,36 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
       setShippingError(e instanceof Error ? e.message : 'Erreur Boxtal')
     } finally {
       setShipping(false)
+    }
+  }
+
+  // Rattache une expédition créée à la main dans le back-office Boxtal :
+  // l'id est validé côté serveur, le suivi et le coût sont rapatriés dans la foulée.
+  async function linkShipment() {
+    const value = linkInput.trim()
+    if (!value) return
+    setLinking(true)
+    setLinkError(null)
+    try {
+      const res = await fetch(`/api/admin/boutique/orders/${order.id}/link-shipment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ boxtal_order_id: value }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      setOrder(json.order)
+      setTrackingInput(json.order.tracking_number ?? '')
+      setEditingLink(false)
+      setSuccessMsg(json.tracking_found
+        ? 'Expédition rattachée — suivi récupéré'
+        : 'Expédition rattachée — suivi pas encore disponible chez Boxtal')
+      setTimeout(() => setSuccessMsg(null), 4000)
+      router.refresh()
+    } catch (e) {
+      setLinkError(e instanceof Error ? e.message : 'Erreur Boxtal')
+    } finally {
+      setLinking(false)
     }
   }
 
@@ -323,6 +357,47 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                       </a>
                     )}
                   </div>
+
+                  {/* Expédition créée à la main sur Boxtal → à rattacher, sinon le
+                      webhook (qui matche sur boxtal_order_id) ne suit rien. */}
+                  {order.boxtal_order_id && !editingLink ? (
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-ink-3">
+                      <span className="flex items-center gap-1.5 text-emerald-400">
+                        <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7l3.5 3.5L12 4" /></svg>
+                        Expédition Boxtal rattachée
+                      </span>
+                      <button onClick={() => { setLinkInput(order.boxtal_order_id ?? ''); setLinkError(null); setEditingLink(true) }}
+                        className="cursor-pointer underline underline-offset-2 transition-colors hover:text-ink-1">
+                        Modifier le lien
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-[var(--line)] bg-bg-2 p-3.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-3">
+                        {editingLink ? 'Modifier l’expédition rattachée' : 'Étiquette créée à la main sur Boxtal ?'}
+                      </p>
+                      <p className="mt-1.5 text-[11px] leading-snug text-ink-3">
+                        Collez l’identifiant de l’expédition depuis votre compte Boxtal pour la rattacher :
+                        suivi, statuts et re-téléchargement de l’étiquette repassent en automatique.
+                      </p>
+                      <div className="mt-2.5 flex gap-2">
+                        <input value={linkInput} onChange={(e) => setLinkInput(e.target.value)}
+                          placeholder="Identifiant d’expédition Boxtal"
+                          className="min-w-0 flex-1 rounded-lg border border-[var(--line-2)] bg-bg-1 px-3 py-2 font-mono text-[12px] text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none" />
+                        <button onClick={linkShipment} disabled={linking || !linkInput.trim()}
+                          className="shrink-0 cursor-pointer rounded-lg border border-[var(--line-2)] bg-bg-3 px-4 py-2 text-sm font-medium text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 disabled:cursor-not-allowed disabled:opacity-40">
+                          {linking ? '…' : 'Lier'}
+                        </button>
+                        {editingLink && (
+                          <button onClick={() => { setEditingLink(false); setLinkError(null) }}
+                            className="shrink-0 cursor-pointer rounded-lg px-2 text-[12px] text-ink-3 transition-colors hover:text-ink-1">
+                            Annuler
+                          </button>
+                        )}
+                      </div>
+                      {linkError && <p className="mt-2 text-xs text-red-400">{linkError}</p>}
+                    </div>
+                  )}
 
                   <div className="border-t border-[var(--line)] pt-4">
                     <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-ink-3">Numéro de suivi</p>
