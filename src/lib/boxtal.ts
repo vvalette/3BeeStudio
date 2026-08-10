@@ -7,6 +7,12 @@ function getApiUrl(): string {
   return (process.env.BOXTAL_API_URL ?? 'https://api.boxtal.build').replace(/\/$/, '')
 }
 
+// Hôte de l'API réellement utilisé — sert à expliquer les erreurs, l'écart
+// test (api.boxtal.build) / production (api.boxtal.com) étant invisible sinon.
+export function getBoxtalApiHost(): string {
+  return new URL(getApiUrl()).host
+}
+
 function getAuth(): string {
   const key = process.env.BOXTAL_ACCESS_KEY
   const secret = process.env.BOXTAL_SECRET_KEY

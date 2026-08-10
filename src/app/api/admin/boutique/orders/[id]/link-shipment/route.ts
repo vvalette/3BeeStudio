@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import type { TablesUpdate } from '@/types/database'
 import { isAuthenticated } from '@/lib/auth'
-import { getBoxtalShipment, getBoxtalTracking } from '@/lib/boxtal'
+import { getBoxtalApiHost, getBoxtalShipment, getBoxtalTracking } from '@/lib/boxtal'
 import type { ShopOrder, ShopOrderStatus } from '@/types/shop-order'
 
 const bodySchema = z.object({
@@ -57,11 +57,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     ({ shippingCost } = await getBoxtalShipment(boxtalOrderId))
   } catch (e) {
-    console.error('[boxtal-link] expédition introuvable:', e)
-    return NextResponse.json(
-      { error: 'Expédition introuvable chez Boxtal — vérifiez l\'identifiant' },
-      { status: 404 },
-    )
+    console.error('[boxtal-link] expédition non récupérée:', e)
+    const detail = e instanceof Error ? e.message : ''
+    const host = getBoxtalApiHost()
+    const isTestEnv = host.endsWith('.build')
+    if (detail.includes('ShippingOrderNotFoundException'))
+      return NextResponse.json(
+        {
+          error: `Expédition introuvable sur ${host}${isTestEnv ? ' (environnement de test Boxtal)' : ''}`
+            + ' — vérifiez l\'identifiant, et que l\'étiquette a bien été créée sur ce compte.',
+        },
+        { status: 404 },
+      )
+    return NextResponse.json({ error: `Boxtal (${host}) : ${detail || 'erreur inconnue'}` }, { status: 502 })
   }
 
   const updates: TablesUpdate<'shop_orders'> = { boxtal_order_id: boxtalOrderId }
