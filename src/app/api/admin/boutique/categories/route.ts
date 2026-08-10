@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
+import { revalidateShop } from '@/lib/revalidate'
 import { z } from 'zod'
 
 function slugify(str: string) {
@@ -55,6 +56,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Une catégorie avec la clé « ${key} » existe déjà` }, { status: 409 })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Les onglets du catalogue viennent de cette table — sans ça, la nouvelle
+  // catégorie n'apparaît qu'au bout d'une heure (ISR).
+  revalidateShop()
 
   return NextResponse.json(data, { status: 201 })
 }
