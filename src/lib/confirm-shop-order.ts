@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendShopOrderConfirmation } from '@/lib/resend'
+import { sendShopOrderConfirmation, sendShopOrderAdminNotification } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { revalidateShop } from '@/lib/revalidate'
 import type { ShopOrder } from '@/types/shop-order'
@@ -87,9 +87,14 @@ export async function confirmShopOrder(
     }
   }
 
-  await sendShopOrderConfirmation(shopOrder).catch((err) =>
-    console.error('[confirm-shop-order] Email non bloquant:', err),
-  )
+  await Promise.all([
+    sendShopOrderConfirmation(shopOrder).catch((err) =>
+      console.error('[confirm-shop-order] Email client non bloquant:', err),
+    ),
+    sendShopOrderAdminNotification(shopOrder).catch((err) =>
+      console.error('[confirm-shop-order] Notif admin non bloquante:', err),
+    ),
+  ])
 
   return { order: shopOrder }
 }

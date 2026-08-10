@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
-import { sendOrderConfirmation } from '@/lib/resend'
+import { sendNfcOrderEmails } from '@/lib/resend'
 import { ORDER_STATUS_STEPS, formatDestination, calcOrder, type Order, type OrderStatus } from '@/types/order'
 import { formatPrice } from '@/lib/utils'
 import { STATUS_PILL } from '@/lib/status-ui'
@@ -38,10 +38,8 @@ async function syncStripePayment(order: Order): Promise<Order> {
         .maybeSingle() // rejeu/course avec le webhook → 0 ligne sans erreur
 
       if (updated) {
-        // Envoi email en parallèle, non bloquant
-        sendOrderConfirmation(updated as Order).catch((err) =>
-          console.error('[suivi-sync] Email non bloquant:', err),
-        )
+        // Envoi emails en parallèle, non bloquant (client + notification interne)
+        void sendNfcOrderEmails(updated as Order)
         return updated as Order
       }
     }

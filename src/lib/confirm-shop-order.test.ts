@@ -57,12 +57,15 @@ const { supabaseMock, state } = vi.hoisted(() => {
 })
 
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: supabaseMock, supabase: supabaseMock }))
-vi.mock('@/lib/resend', () => ({ sendShopOrderConfirmation: vi.fn(async () => {}) }))
+vi.mock('@/lib/resend', () => ({
+  sendShopOrderConfirmation: vi.fn(async () => {}),
+  sendShopOrderAdminNotification: vi.fn(async () => {}),
+}))
 vi.mock('@/lib/alert', () => ({ sendCriticalAlert: vi.fn(async () => {}) }))
 vi.mock('@/lib/revalidate', () => ({ revalidateShop: vi.fn() }))
 
 import { confirmShopOrder } from './confirm-shop-order'
-import { sendShopOrderConfirmation } from '@/lib/resend'
+import { sendShopOrderConfirmation, sendShopOrderAdminNotification } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { revalidateShop } from '@/lib/revalidate'
 
@@ -102,6 +105,7 @@ describe('confirmShopOrder', () => {
     ])
     expect(revalidateShop).toHaveBeenCalledWith('vase-hex')
     expect(sendShopOrderConfirmation).toHaveBeenCalledOnce()
+    expect(sendShopOrderAdminNotification).toHaveBeenCalledOnce()
     expect(sendCriticalAlert).not.toHaveBeenCalled()
   })
 
@@ -113,6 +117,7 @@ describe('confirmShopOrder', () => {
     expect(result).toEqual({})
     expect(state.rpcCalls).toHaveLength(0)
     expect(sendShopOrderConfirmation).not.toHaveBeenCalled()
+    expect(sendShopOrderAdminNotification).not.toHaveBeenCalled()
     expect(sendCriticalAlert).not.toHaveBeenCalled()
   })
 
