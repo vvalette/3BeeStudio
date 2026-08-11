@@ -46,3 +46,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Fichiers de travail locaux (modèles 3D vendus, visuels sources) — ne JAMAIS commiter :
+# le dépôt est public, un fichier vendu y devient téléchargeable par tous.
+TEMP/
