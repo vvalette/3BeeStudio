@@ -111,5 +111,6 @@ min-h des pages : min-h-[calc(100dvh-72px)]
 | [`docs/project/07-marketing-kpis.md`](docs/project/07-marketing-kpis.md) | SEO, fidélisation, budget, KPIs |
 | [`docs/project/08-strategie-seo.md`](docs/project/08-strategie-seo.md) | Stratégie SEO détaillée — phases, actions manuelles (GSC, Google Business), état fait/à faire |
 | [`docs/todo/TODO.md`](docs/todo/TODO.md) | Tâches sprint — état réel (✅ = fait) |
+| [`docs/todo/TODO-produits-numeriques.md`](docs/todo/TODO-produits-numeriques.md) | Vente de fichiers 3D — reste à faire, vigilances, décisions prises |
 | [`docs/todo/ROADMAP.md`](docs/todo/ROADMAP.md) | Feuille de route phases 1→4 |
 | [`docs/AVANT_PROD.md`](docs/AVANT_PROD.md) | Checklist mise en prod : audit, fixes appliqués, actions manuelles (env, Stripe Live, migrations, SEO) |
