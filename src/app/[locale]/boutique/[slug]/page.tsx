@@ -2,6 +2,7 @@ import { supabase, supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import { Link } from '@/i18n/navigation'
 import type { ShopProduct } from '@/types/shop-product'
+import { toPublicProduct } from '@/types/shop-product'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD, effectivePrice, discountPercent } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import { buildAlternates } from '@/lib/seo'
@@ -54,6 +55,7 @@ export default async function ProductPage({
   const { slug, locale } = await params
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'boutique.product' })
+  const tDigital = await getTranslations({ locale, namespace: 'boutique.product.digital' })
 
   const { data, error } = await supabaseAdmin
     .from('shop_products')
@@ -64,12 +66,18 @@ export default async function ProductPage({
 
   if (error || !data) notFound()
 
-  const product = data as ShopProduct
+  // `toPublicProduct` retire `digital_file_path` : sans ça le chemin du fichier
+  // vendu partait dans le payload RSC de la fiche produit (vérifié : il
+  // apparaissait en clair dans le HTML), donnant une piste directe vers le
+  // fichier payant. Les composants clients n'acceptent que PublicShopProduct.
+  const product = toPublicProduct(data as ShopProduct)
   const isEn = locale === 'en'
   const displayName        = (isEn && product.name_en)        ? product.name_en        : product.name
   const displaySubtitle    = (isEn && product.subtitle_en)    ? product.subtitle_en    : product.subtitle
   const displayDescription = (isEn && product.description_en) ? product.description_en : product.description
-  const outOfStock = product.stock !== null && product.stock === 0
+  const isDigitalProduct = product.product_type === 'digital'
+  // Un fichier ne s'épuise pas : pas de mention de rupture sur un produit numérique.
+  const outOfStock = !isDigitalProduct && product.stock !== null && product.stock === 0
 
   const exampleSubtotal = effectivePrice(product)
   // Affiche le tarif le moins cher proposé au checkout (point relais),
@@ -145,23 +153,40 @@ export default async function ProductPage({
             <div className="rounded-xl border border-[var(--line)] bg-bg-1 overflow-hidden">
               <div className="grid grid-cols-1 sm:grid-cols-3">
 
-                {/* Livraison */}
+                {/* Livraison — remplacée par la livraison numérique sur un fichier */}
                 <div className="flex items-center gap-3.5 px-5 py-4 border-b border-[var(--line)] sm:border-b-0 sm:border-r">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(245,158,11,0.1)' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <rect x="1" y="7" width="13" height="11" rx="2"/>
-                      <path d="M14 10h4l3 4.5V18h-7V10z"/>
-                      <circle cx="5.5" cy="18" r="2"/>
-                      <circle cx="18" cy="18" r="2"/>
-                    </svg>
+                    {isDigitalProduct ? (
+                      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <rect x="1" y="7" width="13" height="11" rx="2"/>
+                        <path d="M14 10h4l3 4.5V18h-7V10z"/>
+                        <circle cx="5.5" cy="18" r="2"/>
+                        <circle cx="18" cy="18" r="2"/>
+                      </svg>
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-ink-0 leading-tight">
-                      {t('shipping')}{' '}
-                      <span className="text-amber">{shipping === 0 ? t('shippingFree') : t('shippingFrom', { price: formatPrice(shipping) })}</span>
-                    </p>
-                    {shipping > 0 && (
-                      <p className="mt-0.5 text-[11px] text-ink-2">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
+                    {isDigitalProduct ? (
+                      <>
+                        <p className="text-[13px] font-semibold text-ink-0 leading-tight">
+                          {tDigital('title')} <span className="text-amber">{tDigital('noShipping')}</span>
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-ink-2">{tDigital('description')}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-[13px] font-semibold text-ink-0 leading-tight">
+                          {t('shipping')}{' '}
+                          <span className="text-amber">{shipping === 0 ? t('shippingFree') : t('shippingFrom', { price: formatPrice(shipping) })}</span>
+                        </p>
+                        {shipping > 0 && (
+                          <p className="mt-0.5 text-[11px] text-ink-2">{t('shippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

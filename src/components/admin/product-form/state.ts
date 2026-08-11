@@ -1,4 +1,4 @@
-import type { ShopProduct, ProductCustomField } from '@/types/shop-product'
+import type { ShopProduct, ProductCustomField, ProductType } from '@/types/shop-product'
 import { generateSlug } from '@/types/shop-product'
 
 // État consolidé du formulaire produit admin + conversion vers le payload API.
@@ -23,6 +23,13 @@ export interface ProductFormState {
   featured: boolean
   modelRotation: { x: number; y: number; z: number }
   active: boolean
+
+  // ── Produit numérique ──
+  productType: ProductType
+  /** Chemin dans le bucket privé — jamais une URL. */
+  digitalFilePath: string | null
+  digitalFileName: string | null
+  digitalFileSize: number | null
 }
 
 export function buildInitialState(product?: ShopProduct): ProductFormState {
@@ -45,6 +52,10 @@ export function buildInitialState(product?: ShopProduct): ProductFormState {
     featured:       product?.featured ?? false,
     modelRotation:  product?.model_rotation ?? { x: 0, y: 0, z: 0 },
     active:         product?.active ?? true,
+    productType:      product?.product_type ?? 'physical',
+    digitalFilePath:  product?.digital_file_path ?? null,
+    digitalFileName:  product?.digital_file_name ?? null,
+    digitalFileSize:  product?.digital_file_size ?? null,
   }
 }
 
@@ -66,6 +77,13 @@ export function buildProductPayload(f: ProductFormState):
     if (salePrice >= price) return { ok: false, error: 'Le prix promotionnel doit être inférieur au prix de base' }
   }
 
+  const digital = f.productType === 'digital'
+
+  // Même règle que la contrainte DB, mais avec un message utile : publier un
+  // produit numérique sans fichier ferait payer un téléchargement inexistant.
+  if (digital && f.active && !f.digitalFilePath)
+    return { ok: false, error: 'Un produit numérique actif doit avoir un fichier à télécharger' }
+
   return {
     ok: true,
     payload: {
@@ -80,13 +98,19 @@ export function buildProductPayload(f: ProductFormState):
       sale_price: salePrice,
       images: f.images,
       stl_url: f.stlUrl,
-      stock: f.stock !== '' ? parseInt(f.stock, 10) : null,
-      weight_grams: parseInt(f.weightGrams, 10) || 100,
+      // Un fichier ne s'épuise pas et ne pèse rien : stock illimité et poids
+      // neutre, pour que le calcul de port et le décrément de stock l'ignorent.
+      stock: digital ? null : (f.stock !== '' ? parseInt(f.stock, 10) : null),
+      weight_grams: digital ? 1 : (parseInt(f.weightGrams, 10) || 100),
       active: f.active,
       custom_fields: f.customFields,
       category: f.category || null,
       featured: f.featured,
       model_rotation: f.modelRotation,
+      product_type: f.productType,
+      digital_file_path: digital ? f.digitalFilePath : null,
+      digital_file_name: digital ? f.digitalFileName : null,
+      digital_file_size: digital ? f.digitalFileSize : null,
     },
   }
 }

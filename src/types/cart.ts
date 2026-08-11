@@ -7,5 +7,11 @@ export interface CartItem {
   image: string | null
   quantity: number
   max_stock: number | null    // null = illimité
+  /**
+   * true = fichier à télécharger : exclu du calcul des frais de port et du seuil
+   * de gratuité, et n'exige aucune adresse de livraison.
+   * Optionnel : les paniers déjà en localStorage n'ont pas ce champ (défaut physique).
+   */
+  is_digital?: boolean
   custom_field_values?: Record<string, string>
 }

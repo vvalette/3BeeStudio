@@ -11,6 +11,8 @@ import { SHOP_STATUS_PILL } from '@/lib/status-ui'
 import { formatPrice } from '@/lib/utils'
 import { resolveTracking } from '@/lib/tracking'
 import CartClearer from '@/components/boutique/CartClearer'
+import DownloadList from '@/components/boutique/DownloadList'
+import { listDownloads } from '@/lib/digital-delivery'
 import { Link } from '@/i18n/navigation'
 
 export async function generateMetadata({
@@ -264,8 +266,13 @@ export default async function SuiviBoutiquePage({
           </div>
         </div>
 
-        {/* Adresse / Mode retrait */}
-        {order.delivery_mode === 'pickup' ? (
+        {/* Fichiers achetés — avant l'adresse : c'est l'action attendue par le client */}
+        {order.has_digital && isPaid && (
+          <DownloadList orderId={order.id} downloads={await listDownloads(order.id)} />
+        )}
+
+        {/* Adresse / Mode retrait — rien à afficher sur une commande sans colis */}
+        {order.delivery_mode === 'digital' ? null : order.delivery_mode === 'pickup' ? (
           <div className="rounded-2xl border border-amber/20 bg-amber/5 p-5">
             <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-amber">{t('pickupMode')}</h2>
             <p className="text-sm text-ink-2 leading-relaxed">{t('pickupAddress')}</p>

@@ -20,10 +20,22 @@ import type { ShopOrder } from '@/types/shop-order'
  */
 
 const HEADERS = [
-  'Date', 'Flux', 'Référence', 'Client', 'Email', 'Statut',
+  'Date', 'Flux', 'Catégorie fiscale', 'Référence', 'Client', 'Email', 'Statut',
   'Montant encaissé (€)', 'Dont port (€)', 'Réduction (€)', 'Coût étiquette HT (€)', 'Marge port (€)',
   'Mode livraison', 'Suivi',
 ] as const
+
+/**
+ * Catégorie de chiffre d'affaires en micro-entreprise. Les deux relèvent de
+ * plafonds, d'abattements et de taux de cotisations différents, donc doivent être
+ * déclarés séparément : la vente d'un fichier n'est pas une vente de marchandise
+ * mais une prestation de service / licence.
+ *
+ * ⚠️ Le classement retenu ici est indicatif — à faire confirmer par un comptable,
+ * en particulier pour les acheteurs situés hors de France (services électroniques,
+ * seuil de 10 000 € et guichet OSS).
+ */
+type FiscalCategory = 'Marchandises' | 'Services'
 
 /** Un montant en centimes → « 12,34 » (virgule décimale, format FR). */
 function euros(cents: number | null | undefined): string {
@@ -40,6 +52,7 @@ function cell(value: string | number | null | undefined): string {
 interface Row {
   date: string
   flux: string
+  categorie: FiscalCategory
   ref: string
   client: string
   email: string
@@ -59,6 +72,7 @@ function toCsv(rows: Row[]): string {
     lines.push([
       cell(r.date),
       cell(r.flux),
+      cell(r.categorie),
       cell(r.ref),
       cell(r.client),
       cell(r.email),
@@ -109,6 +123,7 @@ export async function GET(req: Request) {
     ...((nfc.data ?? []) as Order[]).map((o) => ({
       date: o.created_at,
       flux: 'NFC',
+      categorie: 'Marchandises' as FiscalCategory,
       ref: o.id.slice(0, 8).toUpperCase(),
       client: o.company,
       email: o.email,
@@ -125,6 +140,7 @@ export async function GET(req: Request) {
     ...((custom.data ?? []) as CustomOrder[]).map((o) => ({
       date: o.created_at,
       flux: 'Sur-mesure (acompte)',
+      categorie: 'Services' as FiscalCategory,
       ref: o.id.slice(0, 8).toUpperCase(),
       // `||` et non `??` : company vaut '' (pas null) pour une demande de particulier.
       client: o.company || o.name,
@@ -139,7 +155,10 @@ export async function GET(req: Request) {
     })),
     ...((shop.data ?? []) as ShopOrder[]).map((o) => ({
       date: o.created_at,
-      flux: 'Boutique',
+      // Une commande mixte est classée en Marchandises : c'est le colis qui domine.
+      // Les commandes 100 % fichiers basculent en Services.
+      flux: o.has_digital && !o.has_physical ? 'Boutique (fichiers)' : 'Boutique',
+      categorie: (o.has_digital && !o.has_physical ? 'Services' : 'Marchandises') as FiscalCategory,
       ref: o.id.slice(0, 8).toUpperCase(),
       client: o.name,
       email: o.email,

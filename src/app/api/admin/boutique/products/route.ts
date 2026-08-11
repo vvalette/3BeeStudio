@@ -32,6 +32,12 @@ const createSchema = z.object({
   category:        z.string().max(80).nullable().optional(),
   featured:        z.boolean().default(false),
   model_rotation:  z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable().optional(),
+  product_type:      z.enum(['physical', 'digital']).default('physical'),
+  // Chemin de stockage dans le bucket privé — jamais une URL, sinon le fichier
+  // vendu deviendrait joignable sans passer par la route de téléchargement.
+  digital_file_path: z.string().max(300).nullable().optional(),
+  digital_file_name: z.string().max(300).nullable().optional(),
+  digital_file_size: z.number().int().positive().nullable().optional(),
 })
 
 export async function GET() {
@@ -94,6 +100,10 @@ export async function POST(req: Request) {
       category:          d.category ?? null,
       featured:          d.featured,
       model_rotation:    d.model_rotation ?? { x: 0, y: 0, z: 0 },
+      product_type:      d.product_type,
+      digital_file_path: d.digital_file_path ?? null,
+      digital_file_name: d.digital_file_name ?? null,
+      digital_file_size: d.digital_file_size ?? null,
       stripe_product_id: stripeProduct.id,
       stripe_price_id:   stripePrice.id,
     })

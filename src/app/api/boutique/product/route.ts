@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from('shop_products')
-    .select('id, name, slug, price, sale_price, images, stock')
+    .select('id, name, slug, price, sale_price, images, stock, product_type')
     .eq('id', id)
     .eq('active', true)
     .single()
@@ -35,6 +35,11 @@ export async function GET(request: Request) {
     image:          p.images[0] ?? null,
     quantity,
     max_stock:      p.stock,
+    // Sans ce drapeau, « Acheter maintenant » sur un fichier produisait un panier
+    // considéré comme physique : le checkout demandait une adresse, facturait le
+    // port et n'affichait pas la case de renoncement — le serveur rejetait ensuite
+    // la commande en 400.
+    ...(p.product_type === 'digital' ? { is_digital: true } : {}),
   }
 
   return NextResponse.json({ item })

@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { sendShopOrderConfirmation, sendShopOrderAdminNotification } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { revalidateShop } from '@/lib/revalidate'
+import { grantDownloads } from '@/lib/digital-delivery'
 import type { ShopOrder } from '@/types/shop-order'
 
 /**
@@ -45,7 +46,20 @@ export async function confirmShopOrder(
   console.info('[confirm-shop-order]', JSON.stringify({ event: 'shop_order_confirmed', shopOrderId }))
 
   const shopOrder = updatedShop as ShopOrder
+
+  // Ouvre les droits de téléchargement AVANT les emails : la confirmation contient
+  // les liens, ils doivent exister au moment où elle part.
+  // Idempotent (index unique order_id/product_id) — un rejeu ne remet pas les
+  // compteurs à zéro ni ne repousse l'expiration.
+  if (shopOrder.has_digital) {
+    await grantDownloads(shopOrder)
+  }
+
   for (const item of shopOrder.items ?? []) {
+    // Un fichier ne se consomme pas : décrémenter son stock déclencherait une
+    // fausse alerte de survente au deuxième acheteur.
+    if (item.is_digital) continue
+
     const { data: stockRows, error: rpcErr } = await supabaseAdmin
       .rpc('decrement_shop_stock', { p_product_id: item.product_id, p_qty: item.quantity })
     if (rpcErr) {

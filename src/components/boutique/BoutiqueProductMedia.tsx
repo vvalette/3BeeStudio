@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import type { ShopProduct } from '@/types/shop-product'
+import type { PublicShopProduct } from '@/types/shop-product'
 import STLViewerWrapper from './STLViewerWrapper'
 
 type Tab = 'photos' | '3d'
 
-export default function BoutiqueProductMedia({ product }: { product: ShopProduct }) {
+export default function BoutiqueProductMedia({ product }: { product: PublicShopProduct }) {
   const hasImages = product.images.length > 0
   const has3D     = !!product.stl_url
 

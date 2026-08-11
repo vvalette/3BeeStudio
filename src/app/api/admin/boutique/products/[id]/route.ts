@@ -34,6 +34,12 @@ const patchSchema = z.object({
   category:        z.string().max(80).nullable().optional(),
   featured:        z.boolean().optional(),
   model_rotation:  z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable().optional(),
+  product_type:      z.enum(['physical', 'digital']).optional(),
+  // Chemin de stockage dans le bucket privé — jamais une URL, sinon le fichier
+  // vendu deviendrait joignable sans passer par la route de téléchargement.
+  digital_file_path: z.string().max(300).nullable().optional(),
+  digital_file_name: z.string().max(300).nullable().optional(),
+  digital_file_size: z.number().int().positive().nullable().optional(),
 })
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -88,6 +94,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.category !== undefined)       updates.category       = d.category
   if (d.featured !== undefined)       updates.featured       = d.featured
   if (d.model_rotation !== undefined) updates.model_rotation = d.model_rotation
+  if (d.product_type !== undefined)      updates.product_type      = d.product_type
+  if (d.digital_file_path !== undefined) updates.digital_file_path = d.digital_file_path
+  if (d.digital_file_name !== undefined) updates.digital_file_name = d.digital_file_name
+  if (d.digital_file_size !== undefined) updates.digital_file_size = d.digital_file_size
   if (d.slug !== undefined)           updates.slug           = d.slug
   else if (d.name && d.name !== product.name) updates.slug   = generateSlug(d.name)
   if (d.sale_price !== undefined)     updates.sale_price     = d.sale_price
