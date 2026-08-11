@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import Navbar from '@/components/layout/Navbar'
 import ThemeProvider from '@/components/layout/ThemeProvider'
 import AdminNav from '@/components/admin/AdminNav'
+import { isAuthenticated } from '@/lib/auth'
 import frMessages from '../../../messages/fr.json'
 import '@/styles/globals.css'
 
@@ -20,7 +21,11 @@ const jetbrains = JetBrains_Mono({
   variable: '--font-jetbrains',
 })
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // `/admin` sert à la fois d'écran de connexion et de tableau de bord : la nav ne
+  // peut plus se cacher sur la seule base de l'URL, elle a besoin de l'état de session.
+  const authenticated = await isAuthenticated()
+
   return (
     <html lang="fr" suppressHydrationWarning className={`${manrope.variable} ${jetbrains.variable} overflow-x-hidden`}>
       <body className="font-sans antialiased">
@@ -28,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NextIntlClientProvider locale="fr" messages={frMessages}>
             <Navbar showLocaleSwitcher={false} showCart={false} />
             <main className="pt-[72px]">
-              <AdminNav />
+              <AdminNav authenticated={authenticated} />
               {children}
             </main>
           </NextIntlClientProvider>

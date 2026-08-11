@@ -8,6 +8,7 @@ import ShopOrderConfirmation from '@/emails/ShopOrderConfirmation'
 import ShopOrderAdmin from '@/emails/ShopOrderAdmin'
 import NfcOrderAdmin from '@/emails/NfcOrderAdmin'
 import ContactMessage from '@/emails/ContactMessage'
+import ShipmentNotification from '@/emails/ShipmentNotification'
 import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
 import type { CustomOrder } from '@/types/custom-order'
@@ -222,6 +223,91 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
   console.info('[resend]', JSON.stringify({ type: 'shop_order_confirmation', orderId: order.id, resendId: data?.id }))
+}
+
+/**
+ * « Votre commande est expédiée » — boutique.
+ *
+ * L'appelant est responsable de l'idempotence : ces mails partent uniquement sur
+ * la transition `confirmed|processing → shipped`, jamais sur un simple refresh du
+ * suivi Boxtal (le webhook TRACKING_CHANGED peut rejouer plusieurs fois).
+ */
+export async function sendShopShipmentNotification(order: ShopOrder): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from   = getFrom()
+  const locale = order.locale ?? 'fr'
+  const isEn   = locale === 'en'
+  const ref    = order.id.slice(0, 8).toUpperCase()
+
+  const html = await render(ShipmentNotification({
+    recipientName: order.name,
+    orderRef: ref,
+    trackingUrl: `${appUrl}${isEn ? '/en' : ''}/boutique/suivi/${order.id}`,
+    carrierTrackingNumber: order.tracking_number,
+    carrierTrackingUrl: order.tracking_url,
+    deliveryMode: order.delivery_mode,
+    relay: {
+      name:       order.pickup_point_name,
+      street:     order.pickup_point_street,
+      postalCode: order.pickup_point_postal_code,
+      city:       order.pickup_point_city,
+    },
+    address: {
+      name:       order.shipping_name,
+      line1:      order.shipping_address,
+      line2:      order.shipping_address2,
+      postalCode: order.shipping_postal_code,
+      city:       order.shipping_city,
+    },
+    locale,
+  }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: order.email,
+    subject: isEn
+      ? `📦 Order #${ref} shipped — 3BeeStudio`
+      : `📦 Commande #${ref} expédiée — 3BeeStudio`,
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'shop_shipment_notification', orderId: order.id, resendId: data?.id }))
+}
+
+/** « Votre commande est expédiée » — porte-clés NFC (flux B2B, toujours en FR). */
+export async function sendNfcShipmentNotification(order: Order): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from   = getFrom()
+  const ref    = order.id.slice(0, 8).toUpperCase()
+
+  const html = await render(ShipmentNotification({
+    recipientName: order.company,
+    orderRef: ref,
+    trackingUrl: `${appUrl}/suivi/${order.id}`,
+    carrierTrackingNumber: order.tracking_number,
+    carrierTrackingUrl: order.tracking_url,
+    deliveryMode: 'delivery',
+    address: {
+      name:       order.shipping_name,
+      line1:      order.shipping_address,
+      line2:      order.shipping_address2,
+      postalCode: order.shipping_postal_code,
+      city:       order.shipping_city,
+    },
+  }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: order.email,
+    subject: `📦 Commande #${ref} expédiée — 3BeeStudio`,
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'nfc_shipment_notification', orderId: order.id, resendId: data?.id }))
 }
 
 export async function sendContactMessage(input: {

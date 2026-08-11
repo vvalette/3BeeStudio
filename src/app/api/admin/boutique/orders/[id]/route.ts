@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import type { TablesUpdate } from '@/types/database'
 import { isAuthenticated } from '@/lib/auth'
 import { refundAndCancelShipment } from '@/lib/cancel-order'
+import { notifyShipmentIfNewlyShipped } from '@/lib/notify-shipment'
 import { z } from 'zod'
 import type { ShopOrder } from '@/types/shop-order'
 
@@ -30,11 +31,22 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.tracking_url !== undefined)    updates.tracking_url    = d.tracking_url
   if (d.admin_notes !== undefined)     updates.admin_notes     = d.admin_notes
 
+  // Statut d'avant l'update : sert à n'envoyer l'email d'expédition que sur la
+  // vraie transition (voir notifyShipmentIfNewlyShipped).
+  const { data: before } = await supabaseAdmin
+    .from('shop_orders').select('status').eq('id', id).single()
+
   const { data, error } = await supabaseAdmin
     .from('shop_orders').update(updates).eq('id', id).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  const order = data as ShopOrder
+  const notified = before
+    ? await notifyShipmentIfNewlyShipped('shop', before.status as ShopOrder['status'], order)
+    : false
+
+  return NextResponse.json({ ...order, shipment_email_sent: notified })
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
