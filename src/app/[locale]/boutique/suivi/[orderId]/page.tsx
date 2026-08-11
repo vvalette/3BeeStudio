@@ -73,6 +73,10 @@ export default async function SuiviBoutiquePage({
   }
 
   const isPaid        = order.status !== 'pending_payment' && order.status !== 'cancelled'
+  // Commande 100 % fichiers : il n'y a ni préparation, ni colis, ni livraison —
+  // la timeline en 4 étapes n'y décrit rien de réel. Un panier mixte garde la
+  // timeline, puisqu'il reste un colis à suivre.
+  const isDigitalOrder = order.delivery_mode === 'digital'
   const isJustPaid    = payment === 'success'
   const currentStep   = SHOP_STATUS_STEPS.indexOf(order.status)
   const tracking      = resolveTracking(order.tracking_url, order.tracking_number)
@@ -130,14 +134,36 @@ export default async function SuiviBoutiquePage({
         {/* Avancement */}
         <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1 shadow-card">
           <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">{t('timelineHeading')}</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">
+              {isDigitalOrder ? t('digital.heading') : t('timelineHeading')}
+            </h2>
             <span className={['rounded-pill px-3 py-1 text-xs font-semibold', SHOP_STATUS_PILL[order.status]].join(' ')}>
-              {stepLabel[order.status]}
+              {isDigitalOrder && isPaid ? t('digital.pill') : stepLabel[order.status]}
             </span>
           </header>
 
           <div className="p-6">
-            {order.status !== 'pending_payment' ? (
+            {order.status === 'pending_payment' ? (
+              <div className="flex items-center gap-3 py-2">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber/50" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber" />
+                </span>
+                <p className="text-sm text-ink-2">{t('pendingPaymentMsg')}</p>
+              </div>
+            ) : isDigitalOrder ? (
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber text-bg-0">
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2.5 7.5l3 3 6-7" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-sm font-semibold leading-7 text-ink-0">{t('digital.ready')}</p>
+                  <p className="mt-0.5 max-w-sm text-xs leading-relaxed text-ink-2">{t('digital.hint')}</p>
+                </div>
+              </div>
+            ) : (
               <div>
                 {SHOP_STATUS_STEPS.map((s, i) => {
                   const done = i < currentStep
@@ -225,17 +251,17 @@ export default async function SuiviBoutiquePage({
                   )
                 })}
               </div>
-            ) : (
-              <div className="flex items-center gap-3 py-2">
-                <span className="relative flex h-2.5 w-2.5 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber/50" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber" />
-                </span>
-                <p className="text-sm text-ink-2">{t('pendingPaymentMsg')}</p>
-              </div>
             )}
           </div>
         </section>
+
+        {/* Fichiers achetés — juste sous l'avancement : c'est l'action que le client
+            vient chercher, elle passe avant le récapitulatif comptable. Sur un
+            panier mixte, les fichiers sont dispo tout de suite alors que le colis
+            met plusieurs jours. */}
+        {order.has_digital && isPaid && (
+          <DownloadList orderId={order.id} downloads={await listDownloads(order.id)} />
+        )}
 
         {/* Récapitulatif commande */}
         <div className="rounded-2xl border border-[var(--line)] bg-bg-1 p-5 space-y-4">
@@ -265,11 +291,6 @@ export default async function SuiviBoutiquePage({
             </div>
           </div>
         </div>
-
-        {/* Fichiers achetés — avant l'adresse : c'est l'action attendue par le client */}
-        {order.has_digital && isPaid && (
-          <DownloadList orderId={order.id} downloads={await listDownloads(order.id)} />
-        )}
 
         {/* Adresse / Mode retrait — rien à afficher sur une commande sans colis */}
         {order.delivery_mode === 'digital' ? null : order.delivery_mode === 'pickup' ? (

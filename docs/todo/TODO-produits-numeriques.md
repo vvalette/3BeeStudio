@@ -1,6 +1,6 @@
 # 📥 TODO — Produits numériques (vente de fichiers 3D)
 
-> État au 11 août 2026. La fonctionnalité est **livrée et en production**, deux
+> État au 12 août 2026. La fonctionnalité est **livrée et en production**, trois
 > fichiers sont en vente sur `/designs` à 1,50 €. Ce qui suit est ce qui reste.
 
 ---
@@ -16,7 +16,8 @@
 - [x] Export CSV — colonne « Catégorie fiscale » (Marchandises / Services)
 - [x] Page `/designs` séparée de `/boutique` + entrée navbar « Designs 3D »
 - [x] Test de bout en bout validé en clés Stripe **test** (achat → droits → téléchargement → refus des accès non autorisés)
-- [x] Deux produits en vente : BeeBrush™ (Oral-B) et BeeHook™ (casque), 1,50 € chacun
+- [x] Trois produits en vente : BeeBrush™ (Oral-B), BeeHook™ (casque) et BeeCap™
+      (bouchon de cartouche, ajouté le 12/08), 1,50 € chacun
 
 ---
 
@@ -32,7 +33,9 @@
 
 ## 🔴 À faire
 
-*(rien de bloquant pour l'instant)*
+- [ ] **Supprimer le doublon `zz-doublon-beecap-a-supprimer`** dans
+      `/admin/boutique` (un clic). Fiche inactive, sans identifiants Stripe,
+      jamais publiée — reliquat de la création du BeeCap™ numérique.
 
 ## 🟠 À faire — sécurité / administratif
 
@@ -42,7 +45,9 @@
       reste atteignable par son ancien SHA (`3f3d9d7`) jusqu'au GC de GitHub.
       Fenêtre d'exposition constatée : ~15 min.
 - [ ] **Changer le mot de passe admin de production** (transmis en clair dans un
-      échange de chat le 11/08).
+      échange de chat le 11/08, puis de nouveau le 12/08). Le changer invalide
+      aussi toutes les sessions en cours : le cookie est signé avec lui
+      (`src/lib/auth.ts`), donc les jetons émis depuis ces échanges meurent avec.
 - [ ] `CRON_SECRET` à définir dans les variables d'environnement Vercel — sans
       lui, `/api/cron/low-stock` répond 503 (fail-closed voulu) et le digest
       hebdomadaire des stocks bas ne part pas.
@@ -93,6 +98,13 @@
 
 ## 🐞 Points de vigilance
 
+- **Un produit se crée depuis la production, jamais par insertion directe en
+  base.** Seul le serveur de prod porte les clés Stripe Live : lui seul peut
+  créer le produit et le prix que le checkout exigera. Une fiche insérée en base
+  (ou créée depuis le local, en clés test) part sans `stripe_price_id` valide —
+  et si elle est activée, elle s'affiche sur `/designs` puis échoue au checkout
+  sur « n'est pas encore disponible à la vente ». Le chemin sûr :
+  `/admin/boutique` en prod, ou son API (`POST /api/admin/boutique/products`).
 - Le bucket `stl-files` est **public** et alimente le viewer 3D : n'y mettre que
   des maillages d'aperçu, jamais un fichier vendu.
 - Le fichier vendu vit dans `stl-downloads` (**privé**) et ne doit jamais

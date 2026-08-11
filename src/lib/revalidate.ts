@@ -23,6 +23,12 @@ export function revalidateShop(...slugs: (string | null | undefined)[]) {
   revalidatePath('/boutique')
   revalidatePath('/fr/boutique')
   revalidatePath('/en/boutique')
+  // Catalogue des fichiers 3D : page distincte de /boutique, mais alimentée par
+  // la même table — sans ça, publier ou retirer un produit numérique restait
+  // invisible jusqu'à une heure (ISR long).
+  revalidatePath('/designs')
+  revalidatePath('/fr/designs')
+  revalidatePath('/en/designs')
   // Fiches produit concernées (slug courant + ancien slug si renommé)
   for (const slug of slugs) {
     if (!slug) continue

@@ -1029,6 +1029,12 @@
         "exhausted": "Quota atteint",
         "expired": "Lien expiré",
         "help": "Un problème avec un téléchargement ? Écrivez-nous à contact@3beestudio.fr, on réouvre l’accès."
+      },
+      "digital": {
+        "heading": "État de la commande",
+        "pill": "Fichiers disponibles",
+        "ready": "Paiement confirmé",
+        "hint": "Rien ne vous sera expédié : cette commande ne contient que des fichiers à télécharger."
       }
     }
   },
