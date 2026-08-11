@@ -17,12 +17,20 @@ import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 import Select from '@/components/ui/Select'
 import {
   NFC_FILTERS, CUSTOM_FILTERS, SHOP_FILTERS, PERIODS, SORT_OPTIONS,
-  NFC_SECTION, CUSTOM_SECTION, SHOP_SECTION,
+  NFC_SECTION, CUSTOM_SECTION, SHOP_SECTION, DIGITAL_SECTION, DIGITAL_FILTERS,
   periodStart, useOrderSection, usePagedList,
   type Section, type Period, type SortKey,
 } from './orders-filtering'
 import AdminGlobalSearch from './AdminGlobalSearch'
 import AdminExportButton from './AdminExportButton'
+
+/** Compteurs de téléchargement par commande (chargés en une requête par la page). */
+export type OrderDownloads = Record<string, {
+  file_name: string
+  download_count: number
+  max_downloads: number
+  expires_at: string
+}[]>
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
@@ -30,11 +38,13 @@ export default function AdminOrdersList({
   orders,
   customOrders,
   shopOrders,
+  downloadsByOrder = {},
   initialSection,
 }: {
   orders: Order[]
   customOrders: CustomOrder[]
   shopOrders: ShopOrder[]
+  downloadsByOrder?: OrderDownloads
   initialSection?: Section
 }) {
   const router = useRouter()
@@ -60,27 +70,36 @@ export default function AdminOrdersList({
     return start ? customOrders.filter((o) => new Date(o.created_at) >= start) : customOrders
   }, [customOrders, period])
 
-  const periodShop = useMemo(() => {
+  const periodShopAll = useMemo(() => {
     const start = periodStart(period)
     return start ? shopOrders.filter((o) => new Date(o.created_at) >= start) : shopOrders
   }, [shopOrders, period])
 
+  // Une commande mixte reste dans « Boutique » : il y a un colis à sortir. Seules
+  // les commandes 100 % fichiers partent dans l'onglet dédié, elles n'ont ni
+  // étiquette à générer, ni adresse, ni suivi à renseigner.
+  const periodShop    = useMemo(() => periodShopAll.filter((o) => o.has_physical), [periodShopAll])
+  const periodDigital = useMemo(() => periodShopAll.filter((o) => o.has_digital && !o.has_physical), [periodShopAll])
+
   // ── Filtre + recherche + tri + sélection par section (hook partagé) ──
   const nfc    = useOrderSection(periodNfc, NFC_SECTION)
   const custom = useOrderSection(periodCustom, CUSTOM_SECTION)
-  const shop   = useOrderSection(periodShop, SHOP_SECTION)
+  const shop    = useOrderSection(periodShop, SHOP_SECTION)
+  const digital = useOrderSection(periodDigital, DIGITAL_SECTION)
 
   // Fenêtrage d'affichage : les stats et le CA restent calculés sur la liste
   // complète, seul le rendu est limité.
   const nfcPage    = usePagedList(nfc.filtered)
   const customPage = usePagedList(custom.filtered)
-  const shopPage   = usePagedList(shop.filtered)
+  const shopPage    = usePagedList(shop.filtered)
+  const digitalPage = usePagedList(digital.filtered)
 
   // ── Stats ──
   const stats = useMemo(() => {
     const nfcPaid    = periodNfc.filter((o) => o.status !== 'pending_payment')
     const customPaid = periodCustom.filter((o) => ['deposit_paid', 'in_production', 'shipped', 'delivered'].includes(o.status))
-    const shopPaid   = periodShop.filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
+    const shopPaid    = periodShop.filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
+    const digitalPaid = periodDigital.filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
     return {
       // NFC
       nfcRevenue:    nfcPaid.reduce((s, o) => s + o.total_amount, 0),
@@ -92,18 +111,29 @@ export default function AdminOrdersList({
       customTotal:      periodCustom.length,
       customPending:    periodCustom.filter((o) => o.status === 'pending_quote').length,
       customProduction: periodCustom.filter((o) => ['deposit_paid', 'in_production'].includes(o.status)).length,
-      // Boutique
+      // Boutique (colis : physique pur ou mixte)
       shopRevenue:    shopPaid.reduce((s, o) => s + o.total_amount, 0),
       shopTotal:      periodShop.length,
       shopProduction: periodShop.filter((o) => ['confirmed', 'processing'].includes(o.status)).length,
       shopActive:     periodShop.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length,
+      // Fichiers (commandes 100 % numériques)
+      digitalRevenue: digitalPaid.reduce((s, o) => s + o.total_amount, 0),
+      digitalTotal:   periodDigital.length,
+      digitalPending: periodDigital.filter((o) => o.status === 'pending_payment').length,
+      // Téléchargements réellement consommés sur ces commandes — le seul indicateur
+      // d'usage réel d'un fichier vendu.
+      digitalDownloads: periodDigital.reduce(
+        (s, o) => s + (downloadsByOrder[o.id] ?? []).reduce((n, d) => n + d.download_count, 0),
+        0,
+      ),
       // Combiné
-      totalAll:   periodNfc.length + periodCustom.length + periodShop.length,
+      totalAll:   periodNfc.length + periodCustom.length + periodShop.length + periodDigital.length,
       revenueAll: nfcPaid.reduce((s, o) => s + o.total_amount, 0)
                 + customPaid.reduce((s, o) => s + (o.deposit_amount ?? 0), 0)
-                + shopPaid.reduce((s, o) => s + o.total_amount, 0),
+                + shopPaid.reduce((s, o) => s + o.total_amount, 0)
+                + digitalPaid.reduce((s, o) => s + o.total_amount, 0),
     }
-  }, [periodNfc, periodCustom, periodShop])
+  }, [periodNfc, periodCustom, periodShop, periodDigital, downloadsByOrder])
 
   // ── Suppression ──
   async function deleteNfc(ids: string[]) {
@@ -197,6 +227,7 @@ export default function AdminOrdersList({
             <div className="ml-auto hidden sm:flex items-center divide-x divide-[var(--line)]">
               {[
                 { label: 'Boutique', value: formatPrice(stats.shopRevenue), color: '#38bdf8' },
+                { label: 'Fichiers', value: formatPrice(stats.digitalRevenue), color: '#22d3ee' },
                 { label: 'Sur-mesure', value: formatPrice(stats.customRevenue), color: '#c084fc' },
                 { label: 'NFC', value: formatPrice(stats.nfcRevenue), color: '#a3e635' },
               ].map((x) => (
@@ -221,6 +252,11 @@ export default function AdminOrdersList({
             { label: 'Demandes totales',   value: String(stats.customTotal),        accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /></svg> },
             { label: 'Devis à envoyer',    value: String(stats.customPending),      accent: '#fbbf24', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H3a1 1 0 00-1 1v10l3-2h8a1 1 0 001-1V3a1 1 0 00-1-1z" /></svg> },
             { label: 'En production',      value: String(stats.customProduction),   accent: '#fb923c', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" /></svg> },
+          ] : section === 'digital' ? [
+            { label: 'CA fichiers',        value: formatPrice(stats.digitalRevenue), accent: '#22d3ee', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
+            { label: 'Commandes',          value: String(stats.digitalTotal),        accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg> },
+            { label: 'Paiements en attente', value: String(stats.digitalPending),    accent: '#fbbf24', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 2" /></svg> },
+            { label: 'Téléchargements',    value: String(stats.digitalDownloads),    accent: '#a3e635', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2.5v7M8 9.5L5.5 7M8 9.5L10.5 7M3 13h10" /></svg> },
           ] : [
             { label: 'CA boutique',    value: formatPrice(stats.shopRevenue),  accent: '#38bdf8', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
             { label: 'Commandes',      value: String(stats.shopTotal),         accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
@@ -244,6 +280,7 @@ export default function AdminOrdersList({
           <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--line)' }}>
             {([
               { key: 'boutique' as Section, label: 'Boutique', short: 'Boutique', count: periodShop.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
+              { key: 'digital' as Section, label: 'Fichiers', short: 'Fichiers', count: periodDigital.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg> },
               { key: 'custom' as Section, label: 'Sur-mesure', short: 'Sur-mesure', count: periodCustom.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /><path d="M8.5 4.5l3 3" /></svg> },
               { key: 'nfc' as Section, label: 'Porte-clé NFC', short: 'NFC', count: periodNfc.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /><path d="M8 8v2M8 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg> },
             ] as const).map(({ key, label, short, count, icon }) => (
@@ -363,6 +400,49 @@ export default function AdminOrdersList({
               deleting={deleting}
             />
             <LoadMore page={shopPage} />
+          </>
+        )}
+
+        {/* ── Section Fichiers ── */}
+        {section === 'digital' && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-ink-3">{periodDigital.length} commande{periodDigital.length !== 1 ? 's' : ''} de fichiers sur la période</span>
+              <Link
+                href="/admin/boutique?tab=digital"
+                className="flex items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-3 py-1.5 text-[11px] font-medium text-ink-2 hover:border-[var(--line-amber)] hover:text-amber transition-colors"
+              >
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg>
+                Gérer les fichiers →
+              </Link>
+            </div>
+            <FilterBar
+              filters={DIGITAL_FILTERS}
+              active={digital.filter}
+              counts={digital.counts}
+              onFilter={digital.setFilter}
+              query={digital.query}
+              onQuery={digital.setQuery}
+              sort={digital.sort}
+              onSort={digital.setSort}
+              selected={digital.selected}
+              total={digital.filtered.length}
+              onToggleAll={digital.toggleAll}
+              onDelete={() => deleteShop([...digital.selected])}
+              deleting={deleting}
+              searchPlaceholder="Nom, email, référence…"
+            />
+            <DigitalList
+              orders={digitalPage.shown}
+              downloadsByOrder={downloadsByOrder}
+              allEmpty={periodDigital.length === 0}
+              currentYear={currentYear}
+              selected={digital.selected}
+              onToggle={digital.toggle}
+              onDelete={(id) => deleteShop([id])}
+              deleting={deleting}
+            />
+            <LoadMore page={digitalPage} />
           </>
         )}
       </div>
@@ -713,6 +793,9 @@ function ShopList({
                   {needsLabel && <span className="shrink-0 rounded-pill border border-amber/40 bg-amber/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber">Étiquette à générer</span>}
                   {order.delivery_mode === 'pickup' && <span className="shrink-0 rounded-pill border border-sky-400/30 bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-400">Retrait studio</span>}
                   {order.delivery_mode === 'relay' && <span className="shrink-0 rounded-pill border border-violet-400/30 bg-violet-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-violet-400">Point relais</span>}
+                  {/* Panier mixte : un colis ET des fichiers. Le rappeler ici évite
+                      de croire que la commande est réglée quand le colis est parti. */}
+                  {order.has_digital && <span className="shrink-0 rounded-pill border border-cyan-400/30 bg-cyan-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">+ fichiers</span>}
                 </div>
                 <p className="mt-0.5 truncate text-xs text-ink-3">{order.email}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -722,6 +805,101 @@ function ShopList({
                     </span>
                   ))}
                   {order.items.length > 2 && <span className="text-[10px] text-ink-3">+{order.items.length - 2}</span>}
+                </div>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-col sm:items-end sm:gap-1.5">
+                <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-semibold', SHOP_STATUS_PILL[status]].join(' ')}>{SHOP_STATUS_LABELS[status]}</span>
+                <span className="font-mono text-sm font-semibold text-ink-0">{formatPrice(order.total_amount)}</span>
+                <span className="text-[10px] text-ink-3">{created.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', ...(created.getFullYear() !== currentYear ? { year: 'numeric' } : {}) })}</span>
+              </div>
+            </Link>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
+              disabled={deleting}
+              aria-label="Supprimer"
+              className="flex cursor-pointer items-center px-2.5 text-ink-3 transition-all hover:text-red-400 disabled:opacity-30 sm:px-3 sm:opacity-0 sm:group-hover:opacity-100"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 5h10M5 5V3.5h6V5M6 8v5M10 8v5M4 5l1 8h6l1-8" />
+              </svg>
+            </button>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Liste des commandes de fichiers.
+ *
+ * Volontairement différente de ShopList : pas d'étiquette, pas de ville, pas de
+ * numéro de suivi — mais les compteurs de téléchargement, seul indicateur d'usage
+ * réel, et un repère visuel quand un quota est épuisé ou un lien expiré (c'est le
+ * motif de réclamation le plus probable sur un fichier vendu).
+ */
+function DigitalList({
+  orders, downloadsByOrder, allEmpty, currentYear, selected, onToggle, onDelete, deleting,
+}: {
+  orders: ShopOrder[]; downloadsByOrder: OrderDownloads; allEmpty: boolean; currentYear: number
+  selected: Set<string>; onToggle: (id: string) => void; onDelete: (id: string) => void; deleting: boolean
+}) {
+  if (orders.length === 0) {
+    return (
+      <EmptyState
+        icon={<svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg>}
+        label={allEmpty ? 'Aucune commande de fichier' : 'Aucune commande ne correspond'}
+        hint={!allEmpty}
+      />
+    )
+  }
+  const now = Date.now()
+  return (
+    <div className="space-y-2">
+      {orders.map((order) => {
+        const status = order.status as ShopOrderStatus
+        const created = new Date(order.created_at)
+        const isSelected = selected.has(order.id)
+        const files = downloadsByOrder[order.id] ?? []
+        const exhausted = files.some((f) => f.download_count >= f.max_downloads)
+        const expired   = files.some((f) => new Date(f.expires_at).getTime() <= now)
+        return (
+          <div key={order.id} className={['group flex items-stretch overflow-hidden rounded-xl border bg-bg-1 transition-all', isSelected ? 'border-amber/40 bg-bg-2' : 'border-[var(--line)] hover:border-amber/30 hover:bg-bg-2'].join(' ')}>
+            <span className="w-[3px] shrink-0" style={{ background: SHOP_STATUS_ACCENT[status] }} />
+
+            <label className="flex cursor-pointer items-center px-2.5" onClick={(e) => e.stopPropagation()}>
+              <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded" style={{ background: isSelected ? 'var(--amber)' : 'var(--bg-3)', border: isSelected ? '1px solid var(--amber)' : '1px solid var(--line-2)' }}>
+                {isSelected && <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#1A1300" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4l2 2 4-3.5" /></svg>}
+                <input type="checkbox" checked={isSelected} onChange={() => onToggle(order.id)} className="sr-only" />
+              </span>
+            </label>
+
+            <Link href={`/admin/boutique/commande/${order.id}`} className="flex min-w-0 flex-1 flex-col gap-2 py-3 pr-2 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5 sm:pr-3">
+              <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-lg sm:flex" style={{ background: 'color-mix(in srgb, #22d3ee 10%, transparent)', border: '1px solid var(--line)' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-ink-0 group-hover:text-amber">{order.name}</p>
+                  <span className="shrink-0 font-mono text-[10px] text-ink-3">#{order.id.slice(0, 8).toUpperCase()}</span>
+                  {exhausted && <span className="shrink-0 rounded-pill border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">Quota épuisé</span>}
+                  {expired && <span className="shrink-0 rounded-pill border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-orange-400">Lien expiré</span>}
+                </div>
+                <p className="mt-0.5 truncate text-xs text-ink-3">{order.email}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {files.length === 0 ? (
+                    <span className="rounded-pill border border-[var(--line)] px-2 py-0.5 font-mono text-[10px] text-ink-3">
+                      {status === 'pending_payment' ? 'accès non ouvert — paiement en attente' : 'aucun droit de téléchargement'}
+                    </span>
+                  ) : files.slice(0, 3).map((f, i) => (
+                    <span key={i} className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
+                      {f.file_name} · {f.download_count}/{f.max_downloads}
+                    </span>
+                  ))}
+                  {files.length > 3 && <span className="text-[10px] text-ink-3">+{files.length - 3}</span>}
                 </div>
               </div>
 

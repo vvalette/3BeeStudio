@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus } from '@/types/shop-order'
+import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus, type ShopOrderDownload } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { estimateShopPackage, volumetricWeight } from '@/lib/boxtal'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT } from '@/lib/status-ui'
@@ -20,8 +20,20 @@ const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'pro
 // événement de suivi, la commande resterait sinon bloquée en préparation.
 const AUTO_STATUSES: ShopOrderStatus[] = ['shipped', 'delivered']
 
-export default function AdminShopOrderDetail({ order: initialOrder }: { order: ShopOrder }) {
+// Une commande de fichiers ne connaît que deux états : payée ou non. Pas de
+// préparation, pas d'expédition, pas de livraison à constater.
+const DIGITAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed']
+
+export default function AdminShopOrderDetail({
+  order: initialOrder,
+  downloads: initialDownloads = [],
+}: {
+  order: ShopOrder
+  downloads?: ShopOrderDownload[]
+}) {
   const [order, setOrder] = useState(initialOrder)
+  const [downloads, setDownloads] = useState(initialDownloads)
+  const [reopening, setReopening] = useState<string | null>(null)
   const { mutate, loading: saving, error: mutationError, success: successMsg, flashSuccess, clear } = useAdminMutation()
   const [trackingInput, setTrackingInput] = useState(order.tracking_number ?? '')
   const [notesInput, setNotesInput] = useState(order.admin_notes ?? '')
@@ -44,6 +56,9 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const status = order.status
   const isPickup = order.delivery_mode === 'pickup'
   const isRelay  = order.delivery_mode === 'relay'
+  // Commande 100 % fichiers : ni colis, ni étiquette, ni adresse. La carte
+  // Expédition n'a rien à y faire — elle affichait « Adresse manquante ».
+  const isDigitalOnly = order.delivery_mode === 'digital'
 
   // Le colis déclaré à Boxtal. Affiché AVANT génération : les transporteurs
   // facturent au max(poids réel, volumétrique), donc un weight_grams produit
@@ -148,6 +163,22 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
     }
   }
 
+  /** Remet le quota à zéro et repousse l'expiration de 30 jours. */
+  async function reopenDownload(downloadId: string, fileName: string) {
+    if (!await confirm({
+      title: `Réouvrir l'accès à « ${fileName} » ?`,
+      message: 'Le compteur repart à zéro et le lien est valable 30 jours de plus.',
+      confirmLabel: 'Réouvrir l’accès',
+    })) return
+    setReopening(downloadId)
+    const updated = await mutate<ShopOrderDownload>(
+      `/api/admin/boutique/orders/${order.id}/reopen-download`,
+      { method: 'POST', body: { download_id: downloadId }, successMessage: 'Accès réouvert — 30 jours, quota remis à zéro' },
+    )
+    setReopening(null)
+    if (updated) setDownloads((prev) => prev.map((d) => d.id === updated.id ? { ...d, ...updated } : d))
+  }
+
   // `shipment_email_sent` est renvoyé par la route : il vaut true uniquement sur la
   // vraie transition vers « expédiée », donc le message ne ment jamais.
   async function updateField(updates: Partial<ShopOrder>, successMessage = 'Sauvegardé') {
@@ -212,7 +243,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
             {/* Statut */}
             <Card title="Statut de commande">
               <div className="flex flex-wrap gap-2">
-                {MANUAL_STATUSES.map((s) => {
+                {(isDigitalOnly ? DIGITAL_STATUSES : MANUAL_STATUSES).map((s) => {
                   const active = order.status === s
                   return (
                     <button key={s} disabled={saving || active} onClick={() => updateField({ status: s })}
@@ -229,6 +260,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                 })}
               </div>
 
+              {!isDigitalOnly && (
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-3.5">
                 {AUTO_STATUSES.map((s) => {
                   const active = order.status === s
@@ -250,6 +282,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                   Renseignés par le suivi Boxtal — cliquez pour forcer
                 </span>
               </div>
+              )}
             </Card>
 
             {/* Articles */}
@@ -278,7 +311,8 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
               </ul>
             </Card>
 
-            {/* Expédition */}
+            {/* Expédition — rien à expédier sur une commande de fichiers */}
+            {!isDigitalOnly && (
             <Card title={isPickup ? 'Retrait en studio' : isRelay ? 'Expédition — point relais' : 'Expédition'}
               right={order.boxtal_order_id ? <span className="font-mono text-[10px] text-ink-3">{order.boxtal_order_id}</span> : undefined}>
               {isPickup ? (
@@ -422,6 +456,68 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                 </div>
               )}
             </Card>
+            )}
+
+            {/* Fichiers vendus — compteurs et réouverture d'accès */}
+            {order.has_digital && (
+              <Card
+                title="Fichiers vendus"
+                right={<span className="font-mono text-[10px] text-ink-3">{downloads.length} fichier{downloads.length > 1 ? 's' : ''}</span>}
+              >
+                {downloads.length === 0 ? (
+                  <p className="text-[13px] text-ink-2">
+                    {order.status === 'pending_payment'
+                      ? 'Accès non ouvert — le paiement n’a pas encore été encaissé.'
+                      : 'Aucun droit de téléchargement enregistré pour cette commande.'}
+                  </p>
+                ) : (
+                  <ul className="space-y-2.5">
+                    {downloads.map((d) => {
+                      const expired   = new Date(d.expires_at).getTime() <= Date.now()
+                      const exhausted = d.download_count >= d.max_downloads
+                      const blocked   = expired || exhausted
+                      return (
+                        <li
+                          key={d.id}
+                          className={[
+                            'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3.5 py-3',
+                            blocked ? 'border-orange-500/25 bg-orange-500/5' : 'border-[var(--line)] bg-bg-2',
+                          ].join(' ')}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-medium text-ink-0">{d.file_name}</p>
+                            <p className="mt-0.5 font-mono text-[11px] text-ink-3">
+                              {d.download_count}/{d.max_downloads} téléchargé{d.download_count > 1 ? 's' : ''}
+                              {' · '}
+                              {expired
+                                ? <span className="text-orange-400">expiré le {new Date(d.expires_at).toLocaleDateString('fr-FR')}</span>
+                                : <>expire le {new Date(d.expires_at).toLocaleDateString('fr-FR')}</>}
+                              {d.last_download_at && ` · dernier le ${new Date(d.last_download_at).toLocaleDateString('fr-FR')}`}
+                            </p>
+                          </div>
+                          {exhausted && !expired && (
+                            <span className="shrink-0 rounded-pill border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+                              Quota épuisé
+                            </span>
+                          )}
+                          <button
+                            onClick={() => reopenDownload(d.id, d.file_name)}
+                            disabled={reopening === d.id || saving}
+                            className="shrink-0 cursor-pointer rounded-pill border border-[var(--line-2)] px-3 py-1.5 text-[11px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {reopening === d.id ? '…' : 'Réouvrir l’accès'}
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+                <p className="mt-3 text-[11px] leading-snug text-ink-3">
+                  Réouvrir remet le compteur à zéro et repousse l’expiration de 30 jours.
+                  L’acheteur récupère le fichier qu’il a payé, même si le produit a changé depuis.
+                </p>
+              </Card>
+            )}
           </div>
 
           {/* ════ Colonne latérale ════ */}
@@ -457,14 +553,18 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                     <span className="font-mono font-semibold text-emerald-400">−{formatPrice(order.discount_amount)}</span>
                   </div>
                 )}
-                <div className="flex items-baseline justify-between">
-                  <span className="text-ink-2">Livraison</span>
-                  {order.shipping === 0 ? (
-                    <span className="font-mono font-semibold text-emerald-400">{isPickup ? 'Retrait' : 'Offerte'}</span>
-                  ) : (
-                    <span className="font-mono text-ink-1">{formatPrice(order.shipping)}</span>
-                  )}
-                </div>
+                {/* Pas de ligne livraison sans colis : « Offerte » laisserait croire
+                    qu'un port a été remisé alors qu'il n'y en a jamais eu. */}
+                {!isDigitalOnly && (
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-ink-2">Livraison</span>
+                    {order.shipping === 0 ? (
+                      <span className="font-mono font-semibold text-emerald-400">{isPickup ? 'Retrait' : 'Offerte'}</span>
+                    ) : (
+                      <span className="font-mono text-ink-1">{formatPrice(order.shipping)}</span>
+                    )}
+                  </div>
+                )}
                 <div className="my-1 border-t border-dashed" style={{ borderColor: 'var(--line-amber)' }} />
                 <div className="flex items-baseline justify-between">
                   <span className="font-semibold text-amber">Total payé</span>

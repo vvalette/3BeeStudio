@@ -16,12 +16,15 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type Section         = 'nfc' | 'custom' | 'boutique'
+// 'boutique' = commandes avec un colis (physique pur ou mixte) · 'digital' =
+// commandes 100 % fichiers, qui n'ont ni étiquette, ni adresse, ni suivi.
+export type Section         = 'nfc' | 'custom' | 'boutique' | 'digital'
 export type Period          = 'week' | 'month' | 'year' | 'all'
 export type SortKey         = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'amount_desc'
 export type NfcFilterKey    = 'all' | 'active' | 'no_label' | OrderStatus
 export type CustomFilterKey = 'all' | 'active' | CustomOrderStatus
 export type ShopFilterKey   = 'all' | 'active' | ShopOrderStatus
+export type DigitalFilterKey = 'all' | 'active' | 'pending_payment' | 'confirmed' | 'cancelled'
 
 export interface FilterDef<T, K extends string> {
   key: K
@@ -85,6 +88,19 @@ export const SHOP_FILTERS: FilterDef<ShopOrder, ShopFilterKey>[] = [
   })),
 ]
 
+/**
+ * Filtres des commandes de fichiers. On ne reprend pas SHOP_FILTERS : une commande
+ * numérique ne passe jamais en préparation / expédiée / livrée, et afficher
+ * « Expédiées 0 · Livrées 0 » serait du bruit permanent.
+ */
+export const DIGITAL_FILTERS: FilterDef<ShopOrder, DigitalFilterKey>[] = [
+  { key: 'active',          label: 'À traiter',  match: (o) => o.status === 'pending_payment' },
+  { key: 'all',             label: 'Toutes',     match: () => true },
+  { key: 'pending_payment', label: SHOP_STATUS_SHORT_LABELS.pending_payment, dot: SHOP_STATUS_ACCENT.pending_payment, match: (o) => o.status === 'pending_payment' },
+  { key: 'confirmed',       label: 'Livrées',    dot: SHOP_STATUS_ACCENT.confirmed,       match: (o) => o.status === 'confirmed' },
+  { key: 'cancelled',       label: SHOP_STATUS_SHORT_LABELS.cancelled,       dot: SHOP_STATUS_ACCENT.cancelled,       match: (o) => o.status === 'cancelled' },
+]
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 export function sortList<T>(arr: T[], sort: SortKey, getName: (o: T) => string, getDate: (o: T) => string, getAmount: (o: T) => number): T[] {
@@ -145,6 +161,20 @@ export const CUSTOM_SECTION: SectionConfig<CustomOrder, CustomFilterKey> = {
 export const SHOP_SECTION: SectionConfig<ShopOrder, ShopFilterKey> = {
   filters: SHOP_FILTERS,
   initialFilter: 'active',
+  getName:   (o) => o.name,
+  getDate:   (o) => o.created_at,
+  getAmount: (o) => o.total_amount,
+  searchIn:  (o) => [o.name, o.email, o.id],
+}
+
+/**
+ * Même mécanique que SHOP_SECTION : seuls les filtres changent. Le tri par nom
+ * reste utile (retrouver un acheteur), celui par montant beaucoup moins puisque
+ * les fichiers sont à prix fixe — mais on garde le jeu complet par cohérence.
+ */
+export const DIGITAL_SECTION: SectionConfig<ShopOrder, DigitalFilterKey> = {
+  filters: DIGITAL_FILTERS,
+  initialFilter: 'all',
   getName:   (o) => o.name,
   getDate:   (o) => o.created_at,
   getAmount: (o) => o.total_amount,

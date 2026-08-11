@@ -52,21 +52,21 @@
       lui, `/api/cron/low-stock` répond 503 (fail-closed voulu) et le digest
       hebdomadaire des stocks bas ne part pas.
 
-## 🟡 À faire — plus tard (demandé le 11/08)
+## ✅ Séparation numérique / physique dans l'admin — fait
 
-- [ ] **Séparer numérique et physique dans l'admin**, sur les deux écrans :
-      - **Commandes** (`/admin/commandes`) : aujourd'hui l'onglet « Boutique »
-        mélange les deux. Une commande de fichiers n'a ni étiquette à générer,
-        ni adresse, ni suivi — elle n'a rien à faire dans la même liste que les
-        colis. Piste : un 4ᵉ onglet « Fichiers » à côté de Boutique /
-        Sur-mesure / NFC, alimenté par `shop_orders.has_digital`.
-      - **Produits** (`/admin/boutique`) : séparer le catalogue physique du
-        catalogue numérique, comme `/boutique` et `/designs` le sont côté
-        public. Les colonnes utiles diffèrent (stock/poids d'un côté, fichier
-        vendu et compteurs de téléchargement de l'autre).
-      À prévoir aussi : afficher les téléchargements consommés sur la fiche de
-      commande admin, et pouvoir réouvrir un accès (remettre le quota à zéro)
-      quand un client se plaint.
+- [x] **Commandes** : 4ᵉ onglet « Fichiers » à côté de Boutique / Sur-mesure /
+      NFC, avec ses propres filtres (une commande de fichiers ne passe jamais en
+      préparation / expédiée / livrée) et ses propres stats : CA fichiers,
+      paiements en attente, téléchargements consommés. Un panier **mixte** reste
+      dans « Boutique » — il y a un colis à sortir — avec un badge « + fichiers ».
+- [x] **Fiche commande** : carte « Fichiers vendus » (compteurs, expiration,
+      dernier téléchargement), bouton **Réouvrir l'accès** (quota à zéro,
+      +30 jours), carte Expédition masquée, statuts réduits à payée / non payée,
+      ligne « Livraison » retirée.
+- [x] **Produits** : onglets Objets / Fichiers. Sur un fichier, la place du
+      contrôle de stock affiche le fichier vendu et son poids ; alerte rouge si
+      aucun fichier n'est attaché (fiche impayable). Alerte stocks bas et réglage
+      « Livraison offerte » masqués sur l'onglet Fichiers.
 
 ## 🔵 Améliorations produit
 
