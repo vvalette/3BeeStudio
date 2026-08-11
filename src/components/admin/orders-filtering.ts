@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order, OrderStatus } from '@/types/order'
 import type { CustomOrder, CustomOrderStatus } from '@/types/custom-order'
 import type { ShopOrder, ShopOrderStatus } from '@/types/shop-order'
@@ -136,7 +136,7 @@ export const NFC_SECTION: SectionConfig<Order, NfcFilterKey> = {
 export const CUSTOM_SECTION: SectionConfig<CustomOrder, CustomFilterKey> = {
   filters: CUSTOM_FILTERS,
   initialFilter: 'active',
-  getName:   (o) => o.company ?? o.name,
+  getName:   (o) => o.company || o.name, // `||` : company vaut '' pour un particulier
   getDate:   (o) => o.created_at,
   getAmount: (o) => o.deposit_amount ?? 0,
   searchIn:  (o) => [o.name, o.company, o.email, o.id],
@@ -190,4 +190,36 @@ export function useOrderSection<T extends { id: string }, K extends string>(
   const clearSelection = useCallback(() => setSelected(new Set()), [])
 
   return { filter, setFilter, query, setQuery, sort, setSort, selected, toggle, toggleAll, clearSelection, filtered, counts }
+}
+
+// ── Fenêtrage d'affichage ─────────────────────────────────────────────────────
+
+export const PAGE_SIZE = 25
+
+/**
+ * N'affiche qu'une fenêtre de la liste filtrée, avec un « charger plus ».
+ *
+ * Les cartes de commande sont riches (articles, adresse, pastilles de statut) :
+ * au-delà de quelques dizaines de lignes, tout monter d'un coup rend le premier
+ * paint et chaque changement de filtre nettement plus lents. La fenêtre repart à
+ * zéro dès que la liste change (filtre, recherche, tri, période) — sinon on
+ * garderait un « charger plus » déjà consommé sur une liste toute neuve.
+ */
+export function usePagedList<T>(items: T[], step = PAGE_SIZE) {
+  const [visible, setVisible] = useState(step)
+  const previous = useRef(items)
+
+  useEffect(() => {
+    if (previous.current !== items) {
+      previous.current = items
+      setVisible(step)
+    }
+  }, [items, step])
+
+  return {
+    shown: items.slice(0, visible),
+    hasMore: items.length > visible,
+    remaining: Math.max(0, items.length - visible),
+    loadMore: useCallback(() => setVisible((v) => v + step), [step]),
+  }
 }

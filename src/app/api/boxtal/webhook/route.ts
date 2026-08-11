@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase'
+import { sendNfcShipmentNotification, sendShopShipmentNotification } from '@/lib/resend'
+import type { Order } from '@/types/order'
+import type { ShopOrder } from '@/types/shop-order'
 
 function matches(computed: string, signature: string): boolean {
   try {
@@ -85,21 +88,45 @@ export async function POST(req: Request) {
   // 2. Transitions de statut avec gardes (évite tout retour en arrière).
   // SHIPPED = colis pris en charge / déposé ; DELIVERED = livré.
   if (status === 'SHIPPED' || status === 'IN_TRANSIT') {
-    const { error: nfcErr } = await supabaseAdmin
+    // `.select()` sur l'update gardé porte l'idempotence de l'email : seul le
+    // premier événement fait basculer confirmed|processing → shipped et renvoie
+    // donc une ligne. Boxtal rejoue TRACKING_CHANGED à chaque scan transporteur —
+    // sans cette garde le client recevrait un mail par scan.
+    const { data: nfcShipped, error: nfcErr } = await supabaseAdmin
       .from('orders')
       .update({ status: 'shipped' })
       .eq('boxtal_order_id', boxtalOrderId)
       .in('status', ['confirmed', 'processing'])
-    const { error: shopErr } = await supabaseAdmin
+      .select()
+    const { data: shopShipped, error: shopErr } = await supabaseAdmin
       .from('shop_orders')
       .update({ status: 'shipped' })
       .eq('boxtal_order_id', boxtalOrderId)
       .in('status', ['confirmed', 'processing'])
+      .select()
     if (nfcErr || shopErr) {
       console.error('[boxtal-webhook] erreur mise à jour shipped:', nfcErr ?? shopErr)
       return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
     }
-    console.info('[boxtal-webhook]', JSON.stringify({ event: 'shipped', boxtalOrderId, status, trackingNumber: trackingNumber ?? null }))
+
+    // Jamais bloquant : un échec Resend ne doit pas faire répondre 500 (Boxtal
+    // retenterait alors que la commande est déjà passée en expédiée en base).
+    await Promise.all([
+      ...((nfcShipped ?? []) as Order[]).map((o) =>
+        sendNfcShipmentNotification(o).catch((err) =>
+          console.error('[boxtal-webhook] email expédition NFC non bloquant:', err)),
+      ),
+      ...((shopShipped ?? []) as ShopOrder[]).map((o) =>
+        sendShopShipmentNotification(o).catch((err) =>
+          console.error('[boxtal-webhook] email expédition boutique non bloquant:', err)),
+      ),
+    ])
+
+    console.info('[boxtal-webhook]', JSON.stringify({
+      event: 'shipped', boxtalOrderId, status,
+      trackingNumber: trackingNumber ?? null,
+      notified: (nfcShipped?.length ?? 0) + (shopShipped?.length ?? 0),
+    }))
   } else if (status === 'DELIVERED') {
     const { error: nfcErr } = await supabaseAdmin
       .from('orders')

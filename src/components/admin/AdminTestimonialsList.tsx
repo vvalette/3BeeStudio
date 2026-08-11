@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Tooltip from '@/components/ui/Tooltip'
 import Select from '@/components/ui/Select'
 import { useConfirm } from '@/components/ui/ConfirmModal'
+import { useAdminMutation } from './useAdminMutation'
+import AdminFeedback from './AdminFeedback'
 
 interface Testimonial {
   id: string
@@ -57,12 +58,11 @@ type EditForm = {
 const GOOGLE_DEFAULT_ROLE = 'Avis Google'
 
 export default function AdminTestimonialsList({ initialItems }: { initialItems: Testimonial[] }) {
-  const router = useRouter()
   const { confirm, modal } = useConfirm()
+  const { mutate, loading, error: mutationError, success, clear } = useAdminMutation()
   const [items, setItems] = useState<Testimonial[]>(initialItems)
   const [form, setForm] = useState<EditForm>(EMPTY_FORM)
   const [adding, setAdding] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<EditForm>(EMPTY_FORM)
 
@@ -85,19 +85,18 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
   }
 
   async function toggleVisible(item: Testimonial) {
-    const res = await fetch(`/api/admin/testimonials/${item.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visible: !item.visible }),
+    const ok = await mutate(`/api/admin/testimonials/${item.id}`, {
+      body: { visible: !item.visible },
+      refresh: false,
     })
-    if (!res.ok) return
+    if (!ok) return
     setItems((prev) => prev.map((t) => t.id === item.id ? { ...t, visible: !t.visible } : t))
   }
 
   async function deleteItem(id: string) {
     if (!await confirm({ title: 'Supprimer ce témoignage ?', confirmLabel: 'Supprimer', variant: 'danger' })) return
-    const res = await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' })
-    if (!res.ok) return
+    const ok = await mutate(`/api/admin/testimonials/${id}`, { method: 'DELETE', successMessage: 'Témoignage supprimé' })
+    if (!ok) return
     setItems((prev) => prev.filter((t) => t.id !== id))
   }
 
@@ -108,37 +107,27 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
-    const res = await fetch('/api/admin/testimonials', {
+    const created = await mutate<Testimonial>('/api/admin/testimonials', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toPayload(form)),
+      body: toPayload(form),
+      successMessage: 'Témoignage ajouté',
     })
-    if (res.ok) {
-      const created = await res.json()
-      setItems((prev) => [...prev, created].sort((a, b) => a.display_order - b.display_order))
-      setForm(EMPTY_FORM)
-      setAdding(false)
-      router.refresh()
-    }
-    setLoading(false)
+    if (!created) return
+    setItems((prev) => [...prev, created].sort((a, b) => a.display_order - b.display_order))
+    setForm(EMPTY_FORM)
+    setAdding(false)
   }
 
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault()
     if (!editingId) return
-    setLoading(true)
-    const res = await fetch(`/api/admin/testimonials/${editingId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toPayload(editForm)),
+    const updated = await mutate<Testimonial>(`/api/admin/testimonials/${editingId}`, {
+      body: toPayload(editForm),
+      successMessage: 'Témoignage mis à jour',
     })
-    if (res.ok) {
-      const updated = await res.json()
-      setItems((prev) => prev.map((t) => t.id === editingId ? updated : t).sort((a, b) => a.display_order - b.display_order))
-      setEditingId(null)
-    }
-    setLoading(false)
+    if (!updated) return
+    setItems((prev) => prev.map((t) => t.id === editingId ? updated : t).sort((a, b) => a.display_order - b.display_order))
+    setEditingId(null)
   }
 
   return (
@@ -157,6 +146,8 @@ export default function AdminTestimonialsList({ initialItems }: { initialItems: 
           </button>
         </div>
       </div>
+
+      <AdminFeedback error={mutationError} success={success} onDismiss={clear} className="mb-6" />
 
       {/* Add form */}
       {adding && (

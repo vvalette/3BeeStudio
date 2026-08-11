@@ -18,9 +18,11 @@ import Select from '@/components/ui/Select'
 import {
   NFC_FILTERS, CUSTOM_FILTERS, SHOP_FILTERS, PERIODS, SORT_OPTIONS,
   NFC_SECTION, CUSTOM_SECTION, SHOP_SECTION,
-  periodStart, useOrderSection,
+  periodStart, useOrderSection, usePagedList,
   type Section, type Period, type SortKey,
 } from './orders-filtering'
+import AdminGlobalSearch from './AdminGlobalSearch'
+import AdminExportButton from './AdminExportButton'
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
@@ -67,6 +69,12 @@ export default function AdminOrdersList({
   const nfc    = useOrderSection(periodNfc, NFC_SECTION)
   const custom = useOrderSection(periodCustom, CUSTOM_SECTION)
   const shop   = useOrderSection(periodShop, SHOP_SECTION)
+
+  // Fenêtrage d'affichage : les stats et le CA restent calculés sur la liste
+  // complète, seul le rendu est limité.
+  const nfcPage    = usePagedList(nfc.filtered)
+  const customPage = usePagedList(custom.filtered)
+  const shopPage   = usePagedList(shop.filtered)
 
   // ── Stats ──
   const stats = useMemo(() => {
@@ -139,17 +147,26 @@ export default function AdminOrdersList({
               {initialSection === 'nfc' ? 'Porte-clé NFC' : initialSection === 'custom' ? 'Sur-mesure' : 'Commandes'}
             </h1>
           </div>
-          <button
-            onClick={handleLogout}
-            aria-label="Déconnexion"
-            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-3 py-2 text-xs font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-1 sm:px-4"
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 14H3.5A1.5 1.5 0 012 12.5v-9A1.5 1.5 0 013.5 2H6M11 11l3-3-3-3M14 8H6" />
-            </svg>
-            <span className="hidden sm:inline">Déconnexion</span>
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <AdminExportButton />
+            <button
+              onClick={handleLogout}
+              aria-label="Déconnexion"
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-3 py-2 text-xs font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-1 sm:px-4"
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 14H3.5A1.5 1.5 0 012 12.5v-9A1.5 1.5 0 013.5 2H6M11 11l3-3-3-3M14 8H6" />
+              </svg>
+              <span className="hidden sm:inline">Déconnexion</span>
+            </button>
+          </div>
         </div>
+
+        {/* Recherche globale — page Commandes seulement : sur les pages dédiées la
+            recherche de section suffit et couvre déjà le seul flux affiché. */}
+        {!initialSection && (
+          <AdminGlobalSearch orders={orders} customOrders={customOrders} shopOrders={shopOrders} />
+        )}
 
         {/* Période */}
         <div className="flex items-center justify-between gap-3">
@@ -263,7 +280,7 @@ export default function AdminOrdersList({
               deleting={deleting}
             />
             <NfcList
-              orders={nfc.filtered}
+              orders={nfcPage.shown}
               allEmpty={orders.length === 0}
               currentYear={currentYear}
               selected={nfc.selected}
@@ -271,6 +288,7 @@ export default function AdminOrdersList({
               onDelete={(id) => deleteNfc([id])}
               deleting={deleting}
             />
+            <LoadMore page={nfcPage} />
           </>
         )}
 
@@ -294,7 +312,7 @@ export default function AdminOrdersList({
               searchPlaceholder="Nom, email, référence…"
             />
             <CustomList
-              orders={custom.filtered}
+              orders={customPage.shown}
               allEmpty={customOrders.length === 0}
               currentYear={currentYear}
               selected={custom.selected}
@@ -302,6 +320,7 @@ export default function AdminOrdersList({
               onDelete={(id) => deleteCustom([id])}
               deleting={deleting}
             />
+            <LoadMore page={customPage} />
           </>
         )}
 
@@ -335,7 +354,7 @@ export default function AdminOrdersList({
               searchPlaceholder="Nom, email, référence…"
             />
             <ShopList
-              orders={shop.filtered}
+              orders={shopPage.shown}
               allEmpty={shopOrders.length === 0}
               currentYear={currentYear}
               selected={shop.selected}
@@ -343,11 +362,26 @@ export default function AdminOrdersList({
               onDelete={(id) => deleteShop([id])}
               deleting={deleting}
             />
+            <LoadMore page={shopPage} />
           </>
         )}
       </div>
       {modal}
     </main>
+  )
+}
+
+// ── Charger plus ──────────────────────────────────────────────────────────────
+
+function LoadMore({ page }: { page: { hasMore: boolean; remaining: number; loadMore: () => void } }) {
+  if (!page.hasMore) return null
+  return (
+    <button
+      onClick={page.loadMore}
+      className="w-full cursor-pointer rounded-xl border border-dashed border-[var(--line-2)] py-3 text-[12px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
+    >
+      Charger plus — {page.remaining} restante{page.remaining > 1 ? 's' : ''}
+    </button>
   )
 }
 

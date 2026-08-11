@@ -7,7 +7,20 @@ import { usePathname } from 'next/navigation'
 // `short` : libellé réduit sur mobile — les 5 libellés complets font ~560 px et
 // débordaient la largeur d'écran, ce qui rendait TOUTE la page admin scrollable
 // horizontalement (le conteneur nav n'avait ni wrap ni scroll).
-const LINKS: { href: Route; label: string; short: string; icon: React.ReactNode }[] = [
+const LINKS: { href: Route; label: string; short: string; exact?: boolean; icon: React.ReactNode }[] = [
+  {
+    href: '/admin',
+    label: 'Aujourd’hui',
+    short: 'Auj.',
+    // `exact` : sans ça `/admin` préfixe toutes les autres routes et resterait
+    // surligné en permanence.
+    exact: true,
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 4.5v3.5l2.5 1.5" /><circle cx="8" cy="8" r="6" />
+      </svg>
+    ),
+  },
   {
     href: '/admin/commandes',
     label: 'Commandes',
@@ -60,11 +73,12 @@ const LINKS: { href: Route; label: string; short: string; icon: React.ReactNode 
   },
 ]
 
-export default function AdminNav() {
+export default function AdminNav({ authenticated }: { authenticated: boolean }) {
   const pathname = usePathname()
 
-  // Ne pas afficher sur la page login
-  if (pathname === '/admin') return null
+  // Pas de nav sur l'écran de connexion. Le test ne peut pas porter sur l'URL :
+  // `/admin` est aussi le tableau de bord une fois connecté.
+  if (!authenticated) return null
 
   return (
     <div
@@ -75,8 +89,8 @@ export default function AdminNav() {
           admin scrollable horizontalement) ou d'être masquées par un scroll latéral. */}
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-3 py-2 sm:flex-nowrap sm:px-4">
         <span className="mr-2 hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3 sm:block">Admin</span>
-        {LINKS.map(({ href, label, short, icon }) => {
-          const active = pathname.startsWith(href)
+        {LINKS.map(({ href, label, short, exact, icon }) => {
+          const active = exact ? pathname === href : pathname.startsWith(href)
           return (
             <Link
               key={href}

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import type { TablesUpdate } from '@/types/database'
 import { isAuthenticated } from '@/lib/auth'
+import { notifyShipmentIfNewlyShipped } from '@/lib/notify-shipment'
+import type { Order } from '@/types/order'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -31,6 +33,11 @@ export async function PATCH(
   if (parsed.data.tracking_number !== undefined) updates.tracking_number = parsed.data.tracking_number
   if (parsed.data.admin_notes !== undefined) updates.admin_notes = parsed.data.admin_notes
 
+  // Statut d'avant l'update : sert à n'envoyer l'email d'expédition que sur la
+  // vraie transition (voir notifyShipmentIfNewlyShipped).
+  const { data: before } = await supabaseAdmin
+    .from('orders').select('status').eq('id', id).single()
+
   const { data, error } = await supabaseAdmin
     .from('orders')
     .update(updates)
@@ -42,7 +49,12 @@ export async function PATCH(
     return NextResponse.json({ error: 'Erreur mise à jour' }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  const order = data as Order
+  const notified = before
+    ? await notifyShipmentIfNewlyShipped('nfc', before.status as Order['status'], order)
+    : false
+
+  return NextResponse.json({ ...order, shipment_email_sent: notified })
 }
 
 export async function DELETE(

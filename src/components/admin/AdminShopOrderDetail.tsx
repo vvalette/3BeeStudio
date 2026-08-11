@@ -8,6 +8,9 @@ import { formatPrice } from '@/lib/utils'
 import { estimateShopPackage, volumetricWeight } from '@/lib/boxtal'
 import { SHOP_STATUS_PILL, SHOP_STATUS_ACCENT } from '@/lib/status-ui'
 import { useConfirm } from '@/components/ui/ConfirmModal'
+import { useAdminMutation } from './useAdminMutation'
+import AdminFeedback, { UnsavedDot } from './AdminFeedback'
+import useUnsavedWarning from './useUnsavedWarning'
 
 // Statuts du déroulé normal, pilotés par l'admin.
 const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'processing']
@@ -19,10 +22,9 @@ const AUTO_STATUSES: ShopOrderStatus[] = ['shipped', 'delivered']
 
 export default function AdminShopOrderDetail({ order: initialOrder }: { order: ShopOrder }) {
   const [order, setOrder] = useState(initialOrder)
-  const [saving, setSaving] = useState(false)
+  const { mutate, loading: saving, error: mutationError, success: successMsg, flashSuccess, clear } = useAdminMutation()
   const [trackingInput, setTrackingInput] = useState(order.tracking_number ?? '')
   const [notesInput, setNotesInput] = useState(order.admin_notes ?? '')
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [shipping, setShipping] = useState(false)
   const [shippingError, setShippingError] = useState<string | null>(null)
   const [labelUrl, setLabelUrl] = useState<string | null>(null)
@@ -50,6 +52,12 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
   const volume  = volumetricWeight(pkg)
   const billed  = Math.max(pkg.weight, volume)
   const suiviUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'}/boutique/suivi/${order.id}`
+
+  // Champs sans autosave : on signale la saisie non enregistrée plutôt que de la
+  // perdre silencieusement au changement de page.
+  const trackingDirty = trackingInput !== (order.tracking_number ?? '')
+  const notesDirty    = notesInput !== (order.admin_notes ?? '')
+  useUnsavedWarning(trackingDirty || notesDirty)
 
   function copyLink() {
     navigator.clipboard.writeText(`${window.location.origin}/boutique/suivi/${order.id}`)
@@ -93,10 +101,9 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
       setOrder(json.order)
       setTrackingInput(json.order.tracking_number ?? '')
       setEditingLink(false)
-      setSuccessMsg(json.tracking_found
+      flashSuccess(json.tracking_found
         ? 'Expédition rattachée — suivi récupéré'
         : 'Expédition rattachée — suivi pas encore disponible chez Boxtal')
-      setTimeout(() => setSuccessMsg(null), 4000)
       router.refresh()
     } catch (e) {
       setLinkError(e instanceof Error ? e.message : 'Erreur Boxtal')
@@ -141,24 +148,17 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
     }
   }
 
-  async function updateField(updates: Partial<ShopOrder>) {
-    setSaving(true)
-    setSuccessMsg(null)
-    try {
-      const res = await fetch(`/api/admin/boutique/orders/${order.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setOrder(updated)
-        setSuccessMsg('Sauvegardé')
-        setTimeout(() => setSuccessMsg(null), 2000)
-        router.refresh()
-      }
-    } finally {
-      setSaving(false)
+  // `shipment_email_sent` est renvoyé par la route : il vaut true uniquement sur la
+  // vraie transition vers « expédiée », donc le message ne ment jamais.
+  async function updateField(updates: Partial<ShopOrder>, successMessage = 'Sauvegardé') {
+    const updated = await mutate<ShopOrder & { shipment_email_sent?: boolean }>(
+      `/api/admin/boutique/orders/${order.id}`,
+      { body: updates, successMessage },
+    )
+    if (!updated) return
+    setOrder(updated)
+    if (updated.shipment_email_sent) {
+      flashSuccess('Statut enregistré — email d’expédition envoyé au client')
     }
   }
 
@@ -202,12 +202,7 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
           </a>
         </div>
 
-        {successMsg && (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 7l3.5 3.5L12 4" /></svg>
-            {successMsg}
-          </div>
-        )}
+        <AdminFeedback error={mutationError} success={successMsg} onDismiss={clear} />
 
         <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr] lg:items-start">
 
@@ -408,12 +403,18 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
                   )}
 
                   <div className="border-t border-[var(--line)] pt-4">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-ink-3">Numéro de suivi</p>
+                    <div className="mb-2 flex items-center gap-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Numéro de suivi</p>
+                      {trackingDirty && <UnsavedDot />}
+                    </div>
                     <div className="flex gap-2">
                       <input value={trackingInput} onChange={(e) => setTrackingInput(e.target.value)} placeholder="Numéro de suivi transporteur"
-                        className="min-w-0 flex-1 rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none" />
-                      <button onClick={() => updateField({ tracking_number: trackingInput })} disabled={saving}
-                        className="cursor-pointer rounded-lg border border-[var(--line-2)] bg-bg-3 px-4 py-2 text-sm font-medium text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 disabled:opacity-40">
+                        className={[
+                          'min-w-0 flex-1 rounded-lg border bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:outline-none',
+                          trackingDirty ? 'border-amber/50' : 'border-[var(--line-2)] focus:border-amber/50',
+                        ].join(' ')} />
+                      <button onClick={() => updateField({ tracking_number: trackingInput })} disabled={saving || !trackingDirty}
+                        className="cursor-pointer rounded-lg border border-[var(--line-2)] bg-bg-3 px-4 py-2 text-sm font-medium text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 disabled:cursor-default disabled:opacity-40">
                         {saving ? '…' : 'Sauver'}
                       </button>
                     </div>
@@ -490,11 +491,14 @@ export default function AdminShopOrderDetail({ order: initialOrder }: { order: S
             </Card>
 
             {/* Notes internes */}
-            <Card title="Notes internes">
+            <Card title="Notes internes" right={notesDirty ? <UnsavedDot /> : undefined}>
               <textarea value={notesInput} onChange={(e) => setNotesInput(e.target.value)} rows={4} placeholder="Remarques, todo…"
-                className="w-full resize-none rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none" />
-              <button onClick={() => updateField({ admin_notes: notesInput })} disabled={saving}
-                className="mt-2 cursor-pointer rounded-lg border border-[var(--line-2)] bg-bg-3 px-4 py-2 text-sm text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 disabled:opacity-40">
+                className={[
+                  'w-full resize-none rounded-lg border bg-bg-2 px-3 py-2 text-sm text-ink-0 placeholder:text-ink-3 focus:outline-none',
+                  notesDirty ? 'border-amber/50' : 'border-[var(--line-2)] focus:border-amber/50',
+                ].join(' ')} />
+              <button onClick={() => updateField({ admin_notes: notesInput }, 'Notes sauvegardées')} disabled={saving || !notesDirty}
+                className="mt-2 cursor-pointer rounded-lg border border-[var(--line-2)] bg-bg-3 px-4 py-2 text-sm text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 disabled:cursor-default disabled:opacity-40">
                 {saving ? 'Sauvegarde…' : 'Sauvegarder les notes'}
               </button>
             </Card>
