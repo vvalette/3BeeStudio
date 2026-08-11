@@ -1029,6 +1029,12 @@
         "exhausted": "Download limit reached",
         "expired": "Link expired",
         "help": "Trouble with a download? Email us at contact@3beestudio.fr and we will reopen access."
+      },
+      "digital": {
+        "heading": "Order status",
+        "pill": "Files available",
+        "ready": "Payment confirmed",
+        "hint": "Nothing will be shipped: this order contains downloadable files only."
       }
     }
   },
