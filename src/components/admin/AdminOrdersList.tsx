@@ -37,7 +37,7 @@ export default function AdminOrdersList({
 }) {
   const router = useRouter()
   const { confirm, modal } = useConfirm()
-  const [section, setSection] = useState<Section>(initialSection ?? 'nfc')
+  const [section, setSection] = useState<Section>(initialSection ?? 'boutique')
   const [period, setPeriod]   = useState<Period>('all')
   const [deleting, setDeleting] = useState(false)
 
@@ -179,9 +179,9 @@ export default function AdminOrdersList({
             </div>
             <div className="ml-auto hidden sm:flex items-center divide-x divide-[var(--line)]">
               {[
-                { label: 'NFC', value: formatPrice(stats.nfcRevenue), color: '#a3e635' },
-                { label: 'Sur-mesure', value: formatPrice(stats.customRevenue), color: '#c084fc' },
                 { label: 'Boutique', value: formatPrice(stats.shopRevenue), color: '#38bdf8' },
+                { label: 'Sur-mesure', value: formatPrice(stats.customRevenue), color: '#c084fc' },
+                { label: 'NFC', value: formatPrice(stats.nfcRevenue), color: '#a3e635' },
               ].map((x) => (
                 <div key={x.label} className="px-4 text-right">
                   <p className="font-mono text-sm font-bold" style={{ color: x.color }}>{x.value}</p>
@@ -226,9 +226,9 @@ export default function AdminOrdersList({
         {!initialSection && (
           <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--line)' }}>
             {([
-              { key: 'nfc' as Section, label: 'Porte-clé NFC', short: 'NFC', count: periodNfc.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /><path d="M8 8v2M8 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg> },
-              { key: 'custom' as Section, label: 'Sur-mesure', short: 'Sur-mesure', count: periodCustom.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /><path d="M8.5 4.5l3 3" /></svg> },
               { key: 'boutique' as Section, label: 'Boutique', short: 'Boutique', count: periodShop.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
+              { key: 'custom' as Section, label: 'Sur-mesure', short: 'Sur-mesure', count: periodCustom.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /><path d="M8.5 4.5l3 3" /></svg> },
+              { key: 'nfc' as Section, label: 'Porte-clé NFC', short: 'NFC', count: periodNfc.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="12" height="9" rx="1.5" /><path d="M5.5 4V3a2.5 2.5 0 015 0v1" /><path d="M8 8v2M8 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg> },
             ] as const).map(({ key, label, short, count, icon }) => (
               <button
                 key={key}
