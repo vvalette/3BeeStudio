@@ -64,7 +64,16 @@ Pages **placeholder** (Phase 2) : `/portfolio`, `/contact`
 1. **Next.js 15** avec App Router — jamais Pages Router
 2. **TypeScript strict** — pas de `any`
 3. **Mobile-first** — audience TikTok/Instagram
-4. **Aucun fichier numérique vendu** — livrable toujours physique
+4. **Deux natures de produit en boutique** (`shop_products.product_type`) :
+   - `physical` → objet imprimé et expédié (stock, poids, port, Boxtal)
+   - `digital` → fichier 3D téléchargeable (ni stock, ni poids, ni port)
+
+   Règles non négociables sur le numérique :
+   - Le fichier **vendu** vit dans le bucket **privé** `stl-downloads`, jamais exposé — servi uniquement par URL signée (2 min) via `/api/boutique/download/[orderId]`, après paiement, avec quota et expiration
+   - `stl_url` reste le **maillage d'aperçu public** du viewer 3D : y mettre une version décimée, **jamais** le fichier vendu (le navigateur le charge, donc il est extractible)
+   - Le renoncement au droit de rétractation (art. L221-28 3°) est **obligatoire** au checkout et horodaté (`shop_orders.digital_waiver_at`) — sans lui la commande est refusée côté serveur
+   - Panier mixte : le port se calcule sur la part **physique** seule (`splitCart`) ; un panier 100 % fichiers passe en `delivery_mode = 'digital'` (pas d'adresse collectée)
+   - CA à déclarer séparément : les fichiers sont une **prestation de service**, pas une vente de marchandise (plafonds et abattements différents) — colonne « Catégorie fiscale » dans l'export CSV
 5. Flux Stripe NFC = **paiement intégral** (Checkout Session) — pas d'acompte sur le flux actuel
 6. **i18n implémentée** (next-intl) : FR par défaut + EN (`localePrefix: 'as-needed'` → `/` FR, `/en/` EN). Toute chaîne visible passe par `messages/fr.json` + `messages/en.json` — ne jamais hardcoder de texte non-extractible
 7. **`cursor-pointer`** obligatoire sur tous les éléments interactifs (boutons, sélecteurs, options)

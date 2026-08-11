@@ -8,9 +8,15 @@ interface Props {
   order: ShopOrder
   appUrl: string
   locale?: string
+  /**
+   * Fichiers achetés, si la commande en contient. On n'envoie PAS de lien signé
+   * ici : un email est stocké durablement, alors qu'une URL signée expire en
+   * 2 minutes. Le lien pointe donc sur la page de suivi, qui régénère l'accès.
+   */
+  downloads?: { id: string; file_name: string }[]
 }
 
-export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: Props) {
+export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr', downloads = [] }: Props) {
   const isEn      = locale === 'en'
   const orderRef  = order.id.slice(0, 8).toUpperCase()
   const trackingUrl = isEn
@@ -52,6 +58,14 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: 
       ? 'Any questions? Reply to this email or write to'
       : 'Une question ? Répondez directement à cet email ou écrivez à',
     footerStudio: isEn ? '3D Printing · Made in France' : 'Impression 3D française',
+    digitalTitle: isEn ? 'YOUR FILES' : 'VOS FICHIERS',
+    digitalIntro: isEn
+      ? 'Your download is ready. Open your order page to get your files:'
+      : 'Votre téléchargement est prêt. Ouvrez votre page de commande pour récupérer vos fichiers :',
+    digitalBtn:   isEn ? 'Download my files →' : 'Télécharger mes fichiers →',
+    digitalNote:  isEn
+      ? 'Links are valid for 30 days, 10 downloads per file. Keep this email.'
+      : 'Liens valables 30 jours, 10 téléchargements par fichier. Conservez cet email.',
   }
 
   return (
@@ -109,6 +123,24 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: 
             </div>
           </Section>
 
+          {downloads.length > 0 && (
+            <Section style={section}>
+              <Text style={sectionTitle}>{copy.digitalTitle}</Text>
+              <div style={card}>
+                {downloads.map((f) => (
+                  <Text key={f.id} style={itemName}>📦 {f.file_name}</Text>
+                ))}
+              </div>
+              <Text style={{ ...intro, marginTop: 12 }}>{copy.digitalIntro}</Text>
+              <Text style={{ margin: '12px 0 0' }}>
+                <Link href={trackingUrl} style={ctaBtn}>{copy.digitalBtn}</Link>
+              </Text>
+              <Text style={{ ...intro, fontSize: 13, marginTop: 10 }}>{copy.digitalNote}</Text>
+            </Section>
+          )}
+
+          {/* Une commande 100 % numérique n'a ni adresse ni point relais à montrer. */}
+          {order.delivery_mode !== 'digital' && (
           <Section style={section}>
             {order.delivery_mode === 'pickup' ? (
               <>
@@ -144,6 +176,7 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr' }: 
               </>
             )}
           </Section>
+          )}
 
           <Section style={{ ...section, textAlign: 'center' as const }}>
             <Text style={ctaText}>{copy.ctaText}</Text>

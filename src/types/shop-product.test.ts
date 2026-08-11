@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+  splitCart,
+  resolveDeliveryMode,
   calcShopShipping,
   mergeCartQuantities,
   computeNewsletterDiscount,
@@ -146,5 +148,68 @@ describe('checkout totals (promo + livraison)', () => {
     const subtotal = 900
     const shipping = 0
     expect(subtotal - computeNewsletterDiscount(subtotal) + shipping).toBe(810)
+  })
+})
+
+describe('splitCart', () => {
+  const physical = (price: number, qty = 1) => ({ product_type: 'physical' as const, unit_price: price, quantity: qty })
+  const digital  = (price: number, qty = 1) => ({ product_type: 'digital'  as const, unit_price: price, quantity: qty })
+
+  it('sépare les deux parts', () => {
+    const s = splitCart([physical(1000, 2), digital(500)])
+    expect(s.physicalSubtotal).toBe(2000)
+    expect(s.digitalSubtotal).toBe(500)
+    expect(s.subtotal).toBe(2500)
+    expect(s.hasPhysical).toBe(true)
+    expect(s.hasDigital).toBe(true)
+  })
+
+  it('détecte un panier 100 % numérique', () => {
+    const s = splitCart([digital(300), digital(700, 2)])
+    expect(s.hasPhysical).toBe(false)
+    expect(s.hasDigital).toBe(true)
+    expect(s.physicalSubtotal).toBe(0)
+  })
+
+  it('traite un panier vide sans rien casser', () => {
+    const s = splitCart([])
+    expect(s).toMatchObject({ subtotal: 0, hasPhysical: false, hasDigital: false })
+  })
+})
+
+describe('calcShopShipping — produits numériques', () => {
+  it('ne facture rien en mode digital', () => {
+    expect(calcShopShipping(0, 'digital')).toBe(0)
+    expect(calcShopShipping(10000, 'digital')).toBe(0)
+  })
+
+  // Pas de garde sur un sous-total à 0 ici : le court-circuit appartient aux
+  // appelants (CartProvider, CheckoutClient, route checkout), qui testent
+  // `hasPhysical` avant d'appeler. Cf. les tests du tarif plein plus haut.
+
+  // Le cas qui coûte de l'argent : 45 € de fichiers + un objet à 5 € ne doivent
+  // PAS franchir le seuil de 50 € et offrir le port. D'où le calcul sur la part
+  // physique seule.
+  it('ne laisse pas des fichiers offrir le port sur un panier mixte', () => {
+    const cart = splitCart([
+      { product_type: 'digital',  unit_price: 4500, quantity: 1 },
+      { product_type: 'physical', unit_price: 500,  quantity: 1 },
+    ])
+    expect(cart.subtotal).toBeGreaterThanOrEqual(SHOP_FREE_SHIPPING_THRESHOLD)
+    expect(calcShopShipping(cart.physicalSubtotal, 'relay')).toBe(SHOP_RELAY_SHIPPING_PRICE)
+    // À comparer avec le bug qu'on évite : le seuil serait franchi sur le total.
+    expect(calcShopShipping(cart.subtotal, 'relay')).toBe(0)
+  })
+})
+
+describe('resolveDeliveryMode', () => {
+  it('force digital sans article physique', () => {
+    expect(resolveDeliveryMode(false, 'relay')).toBe('digital')
+    expect(resolveDeliveryMode(false, 'delivery')).toBe('digital')
+  })
+
+  it('respecte le choix du client dès qu’il y a un colis', () => {
+    expect(resolveDeliveryMode(true, 'pickup')).toBe('pickup')
+    expect(resolveDeliveryMode(true, 'relay')).toBe('relay')
   })
 })

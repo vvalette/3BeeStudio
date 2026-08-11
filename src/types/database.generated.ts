@@ -242,14 +242,71 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_order_downloads: {
+        Row: {
+          created_at: string
+          download_count: number
+          expires_at: string
+          file_name: string
+          file_path: string
+          id: string
+          last_download_at: string | null
+          max_downloads: number
+          order_id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          download_count?: number
+          expires_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          last_download_at?: string | null
+          max_downloads?: number
+          order_id: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          download_count?: number
+          expires_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          last_download_at?: string | null
+          max_downloads?: number
+          order_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_order_downloads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shop_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_order_downloads_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "shop_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_orders: {
         Row: {
           admin_notes: string | null
           boxtal_order_id: string | null
           created_at: string
           delivery_mode: string
+          digital_waiver_at: string | null
           discount_amount: number
           email: string
+          has_digital: boolean
+          has_physical: boolean
           id: string
           items: Json
           locale: string
@@ -281,8 +338,11 @@ export type Database = {
           boxtal_order_id?: string | null
           created_at?: string
           delivery_mode?: string
+          digital_waiver_at?: string | null
           discount_amount?: number
           email: string
+          has_digital?: boolean
+          has_physical?: boolean
           id?: string
           items?: Json
           locale?: string
@@ -314,8 +374,11 @@ export type Database = {
           boxtal_order_id?: string | null
           created_at?: string
           delivery_mode?: string
+          digital_waiver_at?: string | null
           discount_amount?: number
           email?: string
+          has_digital?: boolean
+          has_physical?: boolean
           id?: string
           items?: Json
           locale?: string
@@ -352,6 +415,9 @@ export type Database = {
           custom_fields: Json
           description: string
           description_en: string | null
+          digital_file_name: string | null
+          digital_file_path: string | null
+          digital_file_size: number | null
           featured: boolean
           id: string
           images: string[]
@@ -359,6 +425,7 @@ export type Database = {
           name: string
           name_en: string | null
           price: number
+          product_type: string
           sale_price: number | null
           slug: string
           stl_url: string | null
@@ -377,6 +444,9 @@ export type Database = {
           custom_fields?: Json
           description?: string
           description_en?: string | null
+          digital_file_name?: string | null
+          digital_file_path?: string | null
+          digital_file_size?: number | null
           featured?: boolean
           id?: string
           images?: string[]
@@ -384,6 +454,7 @@ export type Database = {
           name: string
           name_en?: string | null
           price: number
+          product_type?: string
           sale_price?: number | null
           slug: string
           stl_url?: string | null
@@ -402,6 +473,9 @@ export type Database = {
           custom_fields?: Json
           description?: string
           description_en?: string | null
+          digital_file_name?: string | null
+          digital_file_path?: string | null
+          digital_file_size?: number | null
           featured?: boolean
           id?: string
           images?: string[]
@@ -409,6 +483,7 @@ export type Database = {
           name?: string
           name_en?: string | null
           price?: number
+          product_type?: string
           sale_price?: number | null
           slug?: string
           stl_url?: string | null
@@ -490,6 +565,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_download: {
+        Args: { p_download_id: string }
+        Returns: {
+          file_name: string
+          file_path: string
+          ok: boolean
+          remaining: number
+        }[]
+      }
       decrement_shop_stock: {
         Args: { p_product_id: string; p_qty: number }
         Returns: {

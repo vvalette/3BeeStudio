@@ -32,8 +32,11 @@ export default async function BoutiquePage({ params }: Props) {
   const [{ data: productsData }, { data: catsData }] = await Promise.all([
     supabase
       .from('shop_products')
-      .select('id, slug, name, name_en, subtitle, subtitle_en, price, sale_price, stock, images, stl_url, model_rotation, category, featured')
+      .select('id, slug, name, name_en, subtitle, subtitle_en, price, sale_price, stock, images, stl_url, model_rotation, category, featured, product_type')
       .eq('active', true)
+      // Les fichiers 3D ont leur propre page (/designs) : les mélanger ici affichait
+      // des frais de port à côté de produits sans port, et du stock à côté d'illimité.
+      .eq('product_type', 'physical')
       .order('created_at', { ascending: false }),
     supabase.from('shop_categories').select('*').order('sort_order').order('created_at'),
   ])

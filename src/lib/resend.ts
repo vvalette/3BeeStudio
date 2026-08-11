@@ -9,6 +9,7 @@ import ShopOrderAdmin from '@/emails/ShopOrderAdmin'
 import NfcOrderAdmin from '@/emails/NfcOrderAdmin'
 import ContactMessage from '@/emails/ContactMessage'
 import ShipmentNotification from '@/emails/ShipmentNotification'
+import { listDownloads } from '@/lib/digital-delivery'
 import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
 import type { CustomOrder } from '@/types/custom-order'
@@ -207,11 +208,20 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
   const isEn   = locale === 'en'
   const ref    = order.id.slice(0, 8).toUpperCase()
 
-  const html = await render(ShopOrderConfirmation({ order, appUrl, locale }))
+  // Fichiers achetés : listés dans l'email, mais le lien renvoie vers la page de
+  // suivi. Mettre une URL signée dans un email serait absurde — elle expire en
+  // 2 minutes, l'email se garde des mois.
+  const downloads = order.has_digital
+    ? (await listDownloads(order.id)).map((d) => ({ id: d.id, file_name: d.file_name }))
+    : []
 
-  const subject = isEn
-    ? `✅ Shop order #${ref} confirmed — 3BeeStudio`
-    : `✅ Commande boutique #${ref} confirmée — 3BeeStudio`
+  const html = await render(ShopOrderConfirmation({ order, appUrl, locale, downloads }))
+
+  const subject = order.has_digital && !order.has_physical
+    ? (isEn ? `⬇️ Your files are ready #${ref} — 3BeeStudio` : `⬇️ Vos fichiers sont prêts #${ref} — 3BeeStudio`)
+    : isEn
+      ? `✅ Shop order #${ref} confirmed — 3BeeStudio`
+      : `✅ Commande boutique #${ref} confirmée — 3BeeStudio`
 
   const { data, error } = await resend.emails.send({
     from,
@@ -233,6 +243,13 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
  * suivi Boxtal (le webhook TRACKING_CHANGED peut rejouer plusieurs fois).
  */
 export async function sendShopShipmentNotification(order: ShopOrder): Promise<void> {
+  // Une commande 100 % fichiers n'a pas de colis : parler d'expédition au client
+  // n'aurait aucun sens. Les appelants filtrent déjà, ceci est le garde-fou.
+  if (order.delivery_mode === 'digital') {
+    console.warn('[resend] email expédition ignoré — commande numérique', order.id)
+    return
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
   const from   = getFrom()
   const locale = order.locale ?? 'fr'
@@ -245,6 +262,7 @@ export async function sendShopShipmentNotification(order: ShopOrder): Promise<vo
     trackingUrl: `${appUrl}${isEn ? '/en' : ''}/boutique/suivi/${order.id}`,
     carrierTrackingNumber: order.tracking_number,
     carrierTrackingUrl: order.tracking_url,
+    // 'digital' est exclu par la garde en tête de fonction.
     deliveryMode: order.delivery_mode,
     relay: {
       name:       order.pickup_point_name,

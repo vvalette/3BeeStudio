@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import type { CartItem } from '@/types/cart'
-import { calcShopShipping } from '@/types/shop-product'
+import { calcShopShipping, splitCart } from '@/types/shop-product'
 
 const STORAGE_KEY = '3bee_cart_v1'
 
@@ -13,6 +13,10 @@ interface CartContextValue {
   shipping: number
   total: number
   freeShippingEnabled: boolean
+  /** Sous-total des seuls articles physiques — base du calcul de port. */
+  physicalSubtotal: number
+  hasDigital: boolean
+  hasPhysical: boolean
   isOpen: boolean
   open: () => void
   close: () => void
@@ -99,15 +103,32 @@ export default function CartProvider({ children }: { children: React.ReactNode }
   const open  = useCallback(() => setIsOpen(true), [])
   const close = useCallback(() => setIsOpen(false), [])
 
-  const { count, subtotal, shipping, total } = useMemo(() => {
-    const count    = items.reduce((acc, i) => acc + i.quantity, 0)
-    const subtotal = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
-    const shipping = items.length > 0 ? (freeShippingEnabled ? 0 : calcShopShipping(subtotal)) : 0
-    return { count, subtotal, shipping, total: subtotal + shipping }
+  const { count, subtotal, shipping, total, physicalSubtotal, hasDigital, hasPhysical } = useMemo(() => {
+    const count = items.reduce((acc, i) => acc + i.quantity, 0)
+    const split = splitCart(items.map((i) => ({
+      product_type: i.is_digital ? 'digital' as const : 'physical' as const,
+      unit_price: i.price,
+      quantity: i.quantity,
+    })))
+    // Le port ne porte que sur la part physique — un fichier ne s'expédie pas et
+    // ne doit pas faire franchir le seuil de gratuité.
+    const shipping = split.hasPhysical
+      ? (freeShippingEnabled ? 0 : calcShopShipping(split.physicalSubtotal))
+      : 0
+    return {
+      count,
+      subtotal: split.subtotal,
+      physicalSubtotal: split.physicalSubtotal,
+      hasDigital: split.hasDigital,
+      hasPhysical: split.hasPhysical,
+      shipping,
+      total: split.subtotal + shipping,
+    }
   }, [items, freeShippingEnabled])
 
   const value: CartContextValue = {
     items, count, subtotal, shipping, total, freeShippingEnabled,
+    physicalSubtotal, hasDigital, hasPhysical,
     isOpen, open, close,
     addItem, setQuantity, removeItem, clear,
   }
