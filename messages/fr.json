@@ -9,7 +9,9 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
     "switchToDark": "Passer en mode sombre",
-    "switchToLight": "Passer en mode clair"
+    "switchToLight": "Passer en mode clair",
+    "designs": "Designs 3D",
+    "nfcShort": "Porte-clé"
   },
   "footer": {
     "tagline1": "Studio de design 3D et fabrication sur mesure.",
@@ -800,7 +802,7 @@
   "legalCgv": {
     "title": "Conditions Générales de Vente",
     "lastUpdated": "Juin 2026",
-    "body": "<div class='info-box'><strong>3BeeStudio</strong> — Micro-entreprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais<br />SIREN : 931 419 550 · SIRET : 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a> · 3beestudio.fr</div><h2>Article 1 — Objet</h2><p>Les présentes Conditions Générales de Vente (CGV) régissent les relations contractuelles entre 3BeeStudio et tout client souhaitant acquérir un produit ou service proposé sur le site <strong>3beestudio.fr</strong>. Toute commande implique l'acceptation sans réserve des présentes CGV.</p><h2>Article 2 — Produits et services</h2><p>3BeeStudio propose deux types de commandes :</p><ul><li><strong>Objets de série</strong> : produits disponibles en boutique, expédiés sous 48h à 5 jours ouvrés.</li><li><strong>Créations sur mesure</strong> : objets conçus et fabriqués selon les spécifications du client. Un devis est établi avant toute production. Un acompte de 50% est requis à la commande.</li><li><strong>Porte-clés connectés</strong> : porte-clés 3D personnalisés avec puce NFC intégrée. La destination de la puce NFC est programmée selon le choix indiqué par le client à la commande.</li><li><strong>Vectorisation de logo</strong> : si le logo est fourni dans un format non vectoriel (PNG, JPG), une mise au format vectoriel (SVG) peut être facturée en supplément. Le surcoût est communiqué et accepté avant toute production.</li></ul><p>Tous les objets sont fabriqués en France. Les photos et visuels sont fournis à titre illustratif ; de légères variations de couleur peuvent apparaître selon le filament utilisé.</p><h2>Article 3 — Prix</h2><p>Les prix sont indiqués en euros TTC. 3BeeStudio, en tant que micro-entreprise, n'est pas assujettie à la TVA (article 293 B du CGI). Les prix sont susceptibles d'être modifiés à tout moment ; le prix applicable est celui affiché au moment de la commande.</p><p>Les frais de livraison sont indiqués au moment du paiement et sont à la charge du client, sauf mention contraire lors d'une offre promotionnelle.</p><h2>Article 4 — Commande et paiement</h2><p>Les commandes sont passées directement sur le site. Le paiement est sécurisé via <strong>Stripe</strong> et accepte les cartes bancaires (Visa, Mastercard, American Express) ainsi que les solutions de paiement compatibles.</p><p>Pour les créations sur mesure, la commande est confirmée à réception de l'acompte de 50%. Le solde est réglé à la livraison ou avant expédition.</p><p>3BeeStudio se réserve le droit d'annuler toute commande en cas de problème de disponibilité ou d'erreur manifeste sur le prix.</p><h2>Article 5 — Livraison</h2><ul><li>Objets de série : expédition sous 2 à 5 jours ouvrés.</li><li>Créations sur mesure : délai précisé dans le devis (généralement 7 à 14 jours).</li><li>Livraison en France métropolitaine par transporteur (Colissimo ou équivalent).</li><li>Un numéro de suivi est communiqué par email dès l'expédition.</li></ul><p>En cas de retard de livraison imputable au transporteur, 3BeeStudio ne pourra être tenu responsable mais s'engage à accompagner le client dans la résolution du problème.</p><h2>Article 6 — Droit de rétractation</h2><p>Conformément à l'article L221-18 du Code de la consommation, le client dispose d'un délai de <strong>14 jours</strong> à compter de la réception pour exercer son droit de rétractation, sans justification, pour les produits de série.</p><p><strong>Exception :</strong> le droit de rétractation ne s'applique pas aux produits fabriqués selon les spécifications du client (sur mesure, porte-clés personnalisés), conformément à l'article L221-28 du Code de la consommation.</p><p>Pour exercer ce droit, contactez-nous à <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Les frais de retour sont à la charge du client. Le remboursement est effectué sous 14 jours après réception du retour.</p><h2>Article 7 — Garanties</h2><p>Tous les produits bénéficient de la garantie légale de conformité (articles L217-4 et suivants du Code de la consommation) et de la garantie contre les vices cachés (articles 1641 et suivants du Code civil).</p><p>En cas de produit défectueux, contactez-nous dans les meilleurs délais avec photos à l'appui. Nous procéderons au remplacement ou au remboursement selon le cas.</p><h2>Article 8 — Responsabilité</h2><p>3BeeStudio ne saurait être tenu responsable des dommages indirects liés à l'utilisation des produits. La responsabilité est limitée au montant de la commande concernée.</p><h2>Article 9 — Données personnelles</h2><p>Les données collectées lors de la commande sont utilisées uniquement dans le cadre du traitement et de la livraison de celle-ci. Consultez notre <a href='/politique-de-confidentialite'>Politique de confidentialité</a> pour plus d'informations.</p><h2>Article 10 — Litiges</h2><p>En cas de litige, une solution amiable sera recherchée en priorité. À défaut, le client peut recourir à la médiation via la plateforme européenne de règlement en ligne des litiges : <a href='https://ec.europa.eu/consumers/odr' target='_blank' rel='noopener noreferrer'>ec.europa.eu/consumers/odr</a>.</p><p>Les présentes CGV sont soumises au droit français. Tout litige sera soumis à la compétence des tribunaux de Villefranche-sur-Saône.</p>"
+    "body": "<div class='info-box'><strong>3BeeStudio</strong> — Micro-entreprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais<br />SIREN : 931 419 550 · SIRET : 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a> · 3beestudio.fr</div><h2>Article 1 — Objet</h2><p>Les présentes Conditions Générales de Vente (CGV) régissent les relations contractuelles entre 3BeeStudio et tout client souhaitant acquérir un produit ou service proposé sur le site <strong>3beestudio.fr</strong>. Toute commande implique l'acceptation sans réserve des présentes CGV.</p><h2>Article 2 — Produits et services</h2><p>3BeeStudio propose deux types de commandes :</p><ul><li><strong>Objets de série</strong> : produits disponibles en boutique, expédiés sous 48h à 5 jours ouvrés.</li><li><strong>Créations sur mesure</strong> : objets conçus et fabriqués selon les spécifications du client. Un devis est établi avant toute production. Un acompte de 50% est requis à la commande.</li><li><strong>Porte-clés connectés</strong> : porte-clés 3D personnalisés avec puce NFC intégrée. La destination de la puce NFC est programmée selon le choix indiqué par le client à la commande.</li><li><strong>Vectorisation de logo</strong> : si le logo est fourni dans un format non vectoriel (PNG, JPG), une mise au format vectoriel (SVG) peut être facturée en supplément. Le surcoût est communiqué et accepté avant toute production.</li><li><strong>Fichiers 3D téléchargeables</strong> : modèles numériques livrés par lien de téléchargement, sans expédition (voir article 6 bis).</li></ul><p>Tous les objets sont fabriqués en France. Les photos et visuels sont fournis à titre illustratif ; de légères variations de couleur peuvent apparaître selon le filament utilisé.</p><h2>Article 3 — Prix</h2><p>Les prix sont indiqués en euros TTC. 3BeeStudio, en tant que micro-entreprise, n'est pas assujettie à la TVA (article 293 B du CGI). Les prix sont susceptibles d'être modifiés à tout moment ; le prix applicable est celui affiché au moment de la commande.</p><p>Les frais de livraison sont indiqués au moment du paiement et sont à la charge du client, sauf mention contraire lors d'une offre promotionnelle.</p><h2>Article 4 — Commande et paiement</h2><p>Les commandes sont passées directement sur le site. Le paiement est sécurisé via <strong>Stripe</strong> et accepte les cartes bancaires (Visa, Mastercard, American Express) ainsi que les solutions de paiement compatibles.</p><p>Pour les créations sur mesure, la commande est confirmée à réception de l'acompte de 50%. Le solde est réglé à la livraison ou avant expédition.</p><p>3BeeStudio se réserve le droit d'annuler toute commande en cas de problème de disponibilité ou d'erreur manifeste sur le prix.</p><h2>Article 5 — Livraison</h2><ul><li>Objets de série : expédition sous 2 à 5 jours ouvrés.</li><li>Créations sur mesure : délai précisé dans le devis (généralement 7 à 14 jours).</li><li>Livraison en France métropolitaine par transporteur (Colissimo ou équivalent).</li><li>Un numéro de suivi est communiqué par email dès l'expédition.</li></ul><p>En cas de retard de livraison imputable au transporteur, 3BeeStudio ne pourra être tenu responsable mais s'engage à accompagner le client dans la résolution du problème.</p><h2>Article 6 — Droit de rétractation</h2><p>Conformément à l'article L221-18 du Code de la consommation, le client dispose d'un délai de <strong>14 jours</strong> à compter de la réception pour exercer son droit de rétractation, sans justification, pour les produits de série.</p><p><strong>Exception :</strong> le droit de rétractation ne s'applique pas aux produits fabriqués selon les spécifications du client (sur mesure, porte-clés personnalisés), conformément à l'article L221-28 du Code de la consommation.</p><p>Pour exercer ce droit, contactez-nous à <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Les frais de retour sont à la charge du client. Le remboursement est effectué sous 14 jours après réception du retour.</p><h2>Article 6 bis — Produits numériques (fichiers 3D)</h2><p>3BeeStudio propose à la vente des <strong>fichiers 3D téléchargeables</strong> (formats STL, 3MF, STEP ou archive). Ces produits ne donnent lieu à aucune expédition et aucun frais de port n'est facturé.</p><p><strong>Livraison.</strong> Les liens de téléchargement sont mis à disposition sur la page de suivi de commande immédiatement après confirmation du paiement, et communiqués par email. Chaque lien est valable 30 jours et limité à 10 téléchargements par fichier. En cas de difficulté, un nouvel accès est ouvert sur simple demande à contact@3beestudio.fr.</p><p><strong>Droit de rétractation.</strong> Conformément à l'article L221-28 3° du Code de la consommation, le droit de rétractation ne peut être exercé sur un contenu numérique fourni sur support immatériel dont l'exécution a commencé après accord préalable exprès du client et renoncement exprès à son droit de rétractation. Ce renoncement est recueilli par une case à cocher obligatoire lors de la commande, et horodaté. Sans ce consentement, la commande ne peut pas être validée.</p><p><strong>Licence d'utilisation.</strong> L'achat confère un droit d'usage personnel et non exclusif : impression pour un usage privé, en nombre libre. Sont exclus la revente, la redistribution, le partage du fichier et son utilisation à des fins commerciales, sauf accord écrit de 3BeeStudio. Les fichiers restent la propriété intellectuelle de 3BeeStudio.</p><p><strong>Aucune garantie de résultat d'impression.</strong> Le résultat dépend de l'imprimante, du matériau et des réglages utilisés par le client. 3BeeStudio garantit la conformité et l'intégrité du fichier livré, non le résultat obtenu sur une machine tierce.</p><h2>Article 7 — Garanties</h2><p>Tous les produits bénéficient de la garantie légale de conformité (articles L217-4 et suivants du Code de la consommation) et de la garantie contre les vices cachés (articles 1641 et suivants du Code civil).</p><p>En cas de produit défectueux, contactez-nous dans les meilleurs délais avec photos à l'appui. Nous procéderons au remplacement ou au remboursement selon le cas.</p><h2>Article 8 — Responsabilité</h2><p>3BeeStudio ne saurait être tenu responsable des dommages indirects liés à l'utilisation des produits. La responsabilité est limitée au montant de la commande concernée.</p><h2>Article 9 — Données personnelles</h2><p>Les données collectées lors de la commande sont utilisées uniquement dans le cadre du traitement et de la livraison de celle-ci. Consultez notre <a href='/politique-de-confidentialite'>Politique de confidentialité</a> pour plus d'informations.</p><h2>Article 10 — Litiges</h2><p>En cas de litige, une solution amiable sera recherchée en priorité. À défaut, le client peut recourir à la médiation via la plateforme européenne de règlement en ligne des litiges : <a href='https://ec.europa.eu/consumers/odr' target='_blank' rel='noopener noreferrer'>ec.europa.eu/consumers/odr</a>.</p><p>Les présentes CGV sont soumises au droit français. Tout litige sera soumis à la compétence des tribunaux de Villefranche-sur-Saône.</p>"
   },
   "legalPrivacy": {
     "title": "Politique de confidentialité",
@@ -843,7 +845,14 @@
       "leadTime": "3 à 7 jours",
       "leadTimeLabel": "délai indicatif",
       "handmade": "Fait main",
-      "madeInFrance": "imprimé en France"
+      "madeInFrance": "imprimé en France",
+      "digital": {
+        "badge": "Fichier 3D à télécharger",
+        "title": "Livraison numérique",
+        "description": "Téléchargement disponible immédiatement après paiement. Aucun objet ne vous sera expédié.",
+        "noShipping": "Pas de frais de port",
+        "previewNotice": "L’aperçu 3D ci-dessus est une version allégée. Le fichier vendu est en pleine résolution."
+      }
     },
     "checkout": {
       "breadcrumb": "Boutique",
@@ -856,7 +865,8 @@
       "outOfStock": "Rupture de stock",
       "available": "{count} dispo",
       "inStock": "En stock",
-      "order": "Commander"
+      "order": "Commander",
+      "digitalBadge": "Fichier à télécharger"
     },
     "addToCart": {
       "quantity": "Quantité",
@@ -952,6 +962,12 @@
           "sat": "Sam",
           "sun": "Dim"
         }
+      },
+      "digital": {
+        "title": "Commande 100 % numérique",
+        "description": "Aucun colis : vos fichiers sont disponibles au téléchargement dès le paiement validé, et les liens vous sont aussi envoyés par email.",
+        "waiverLabel": "J’accepte que le téléchargement démarre immédiatement après le paiement et je renonce expressément à mon droit de rétractation de 14 jours sur les fichiers numériques (art. L221-28 3° du Code de la consommation).",
+        "waiverRequired": "Vous devez accepter le renoncement au droit de rétractation pour commander un fichier numérique."
       }
     },
     "descriptionExpand": {
@@ -1004,6 +1020,15 @@
         "processing": "Vos objets sont préparés à la main dans nos studios.",
         "shipped": "Votre colis est en route.",
         "delivered": "Votre commande est arrivée. Merci pour votre confiance !"
+      },
+      "downloads": {
+        "title": "Vos fichiers",
+        "description": "Cliquez pour télécharger. Chaque lien est valable {days} jours et limité à {max} téléchargements.",
+        "download": "Télécharger",
+        "remaining": "{remaining} téléchargement(s) restant(s)",
+        "exhausted": "Quota atteint",
+        "expired": "Lien expiré",
+        "help": "Un problème avec un téléchargement ? Écrivez-nous à contact@3beestudio.fr, on réouvre l’accès."
       }
     }
   },
@@ -1067,5 +1092,24 @@
     "errEmail": "Adresse email invalide",
     "errMessage": "Votre message est trop court (10 caractères min.)",
     "directLine": "Vous pouvez aussi nous écrire directement à"
+  },
+  "designs": {
+    "metaTitle": "Designs 3D à télécharger — fichiers STL | 3BeeStudio",
+    "metaDescription": "Nos modèles 3D en téléchargement immédiat : fichiers STL prêts à imprimer, conçus dans nos studios français. Sans frais de port.",
+    "eyebrow": "3BeeStudio · Fichiers 3D",
+    "title": "Nos designs à imprimer.",
+    "description": "Vous avez déjà une imprimante 3D ? Récupérez nos modèles en téléchargement immédiat et imprimez-les autant de fois que vous voulez.",
+    "perks": {
+      "instant": "Téléchargement immédiat",
+      "noShipping": "Aucun frais de port",
+      "personalUse": "Impressions illimitées pour un usage personnel"
+    },
+    "empty": "Aucun design disponible au téléchargement pour le moment.",
+    "emptyCta": "Voir les objets imprimés →",
+    "crossSell": {
+      "title": "Pas d’imprimante 3D ?",
+      "description": "On imprime la pièce pour vous, à la main dans nos studios français, et on vous l’envoie.",
+      "cta": "Voir la boutique"
+    }
   }
 }

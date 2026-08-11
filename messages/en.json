@@ -9,7 +9,9 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "switchToDark": "Switch to dark mode",
-    "switchToLight": "Switch to light mode"
+    "switchToLight": "Switch to light mode",
+    "designs": "3D Designs",
+    "nfcShort": "Keychain"
   },
   "footer": {
     "tagline1": "3D design studio and made-to-order manufacturing.",
@@ -800,7 +802,7 @@
   "legalCgv": {
     "title": "Terms and Conditions of Sale",
     "lastUpdated": "June 2026",
-    "body": "<div class='info-box'><strong>3BeeStudio</strong> — Micro-enterprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais, France<br />SIREN: 931 419 550 · SIRET: 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a> · 3beestudio.fr</div><h2>Article 1 — Purpose</h2><p>These Terms and Conditions of Sale (T&Cs) govern the contractual relationship between 3BeeStudio and any customer wishing to purchase a product or service offered on the site <strong>3beestudio.fr</strong>. Any order implies unreserved acceptance of these T&Cs.</p><h2>Article 2 — Products and services</h2><p>3BeeStudio offers two types of orders:</p><ul><li><strong>Stock items</strong>: products available in the shop, shipped within 48h to 5 business days.</li><li><strong>Custom creations</strong>: objects designed and made to the customer's specifications. A quote is issued before any production. A 50% deposit is required when ordering.</li><li><strong>Connected keychains</strong>: custom 3D keychains with a built-in NFC chip. The NFC chip destination is programmed according to the choice indicated by the customer when ordering.</li><li><strong>Logo vectorisation</strong>: if the logo is supplied in a non-vector format (PNG, JPG), conversion to a vector format (SVG) may be charged as an extra. The additional cost is communicated and accepted before any production.</li></ul><p>All objects are made in France. Photos and visuals are provided for illustration only; slight colour variations may appear depending on the filament used.</p><h2>Article 3 — Prices</h2><p>Prices are shown in euros, all taxes included. As a micro-enterprise, 3BeeStudio is not subject to VAT (article 293 B of the French Tax Code). Prices may be changed at any time; the applicable price is the one displayed at the time of the order.</p><p>Shipping costs are indicated at the time of payment and are payable by the customer, unless otherwise stated during a promotional offer.</p><h2>Article 4 — Order and payment</h2><p>Orders are placed directly on the site. Payment is secured via <strong>Stripe</strong> and accepts bank cards (Visa, Mastercard, American Express) as well as compatible payment solutions.</p><p>For custom creations, the order is confirmed upon receipt of the 50% deposit. The balance is paid on delivery or before shipping.</p><p>3BeeStudio reserves the right to cancel any order in the event of an availability issue or an obvious error in the price.</p><h2>Article 5 — Delivery</h2><ul><li>Stock items: shipped within 2 to 5 business days.</li><li>Custom creations: lead time specified in the quote (generally 7 to 14 days).</li><li>Delivery within mainland France by carrier (Colissimo or equivalent).</li><li>A tracking number is provided by email as soon as the order ships.</li></ul><p>In the event of a delivery delay attributable to the carrier, 3BeeStudio cannot be held responsible but undertakes to support the customer in resolving the issue.</p><h2>Article 6 — Right of withdrawal</h2><p>In accordance with article L221-18 of the French Consumer Code, the customer has a period of <strong>14 days</strong> from receipt to exercise their right of withdrawal, without justification, for stock products.</p><p><strong>Exception:</strong> the right of withdrawal does not apply to products made to the customer's specifications (custom, personalised keychains), in accordance with article L221-28 of the French Consumer Code.</p><p>To exercise this right, contact us at <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Return costs are payable by the customer. The refund is made within 14 days of receiving the return.</p><h2>Article 7 — Warranties</h2><p>All products benefit from the legal warranty of conformity (articles L217-4 et seq. of the French Consumer Code) and the warranty against hidden defects (articles 1641 et seq. of the French Civil Code).</p><p>In the event of a defective product, contact us as soon as possible with supporting photos. We will proceed with replacement or refund depending on the case.</p><h2>Article 8 — Liability</h2><p>3BeeStudio cannot be held responsible for indirect damage related to the use of the products. Liability is limited to the amount of the order concerned.</p><h2>Article 9 — Personal data</h2><p>The data collected when ordering is used solely for processing and delivering the order. See our <a href='/en/politique-de-confidentialite'>Privacy policy</a> for more information.</p><h2>Article 10 — Disputes</h2><p>In the event of a dispute, an amicable solution will be sought as a priority. Failing that, the customer may resort to mediation via the European online dispute resolution platform: <a href='https://ec.europa.eu/consumers/odr' target='_blank' rel='noopener noreferrer'>ec.europa.eu/consumers/odr</a>.</p><p>These T&Cs are governed by French law. Any dispute will be submitted to the jurisdiction of the courts of Villefranche-sur-Saône.</p>"
+    "body": "<div class='info-box'><strong>3BeeStudio</strong> — Micro-enterprise<br />VALETTE Valentin — 144 rue de la République, 69220 Belleville-en-Beaujolais, France<br />SIREN: 931 419 550 · SIRET: 931 419 550 00039<br /><a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a> · 3beestudio.fr</div><h2>Article 1 — Purpose</h2><p>These Terms and Conditions of Sale (T&Cs) govern the contractual relationship between 3BeeStudio and any customer wishing to purchase a product or service offered on the site <strong>3beestudio.fr</strong>. Any order implies unreserved acceptance of these T&Cs.</p><h2>Article 2 — Products and services</h2><p>3BeeStudio offers two types of orders:</p><ul><li><strong>Stock items</strong>: products available in the shop, shipped within 48h to 5 business days.</li><li><strong>Custom creations</strong>: objects designed and made to the customer's specifications. A quote is issued before any production. A 50% deposit is required when ordering.</li><li><strong>Connected keychains</strong>: custom 3D keychains with a built-in NFC chip. The NFC chip destination is programmed according to the choice indicated by the customer when ordering.</li><li><strong>Logo vectorisation</strong>: if the logo is supplied in a non-vector format (PNG, JPG), conversion to a vector format (SVG) may be charged as an extra. The additional cost is communicated and accepted before any production.</li><li><strong>Downloadable 3D files</strong>: digital models delivered via download link, with no shipment (see article 6a).</li></ul><p>All objects are made in France. Photos and visuals are provided for illustration only; slight colour variations may appear depending on the filament used.</p><h2>Article 3 — Prices</h2><p>Prices are shown in euros, all taxes included. As a micro-enterprise, 3BeeStudio is not subject to VAT (article 293 B of the French Tax Code). Prices may be changed at any time; the applicable price is the one displayed at the time of the order.</p><p>Shipping costs are indicated at the time of payment and are payable by the customer, unless otherwise stated during a promotional offer.</p><h2>Article 4 — Order and payment</h2><p>Orders are placed directly on the site. Payment is secured via <strong>Stripe</strong> and accepts bank cards (Visa, Mastercard, American Express) as well as compatible payment solutions.</p><p>For custom creations, the order is confirmed upon receipt of the 50% deposit. The balance is paid on delivery or before shipping.</p><p>3BeeStudio reserves the right to cancel any order in the event of an availability issue or an obvious error in the price.</p><h2>Article 5 — Delivery</h2><ul><li>Stock items: shipped within 2 to 5 business days.</li><li>Custom creations: lead time specified in the quote (generally 7 to 14 days).</li><li>Delivery within mainland France by carrier (Colissimo or equivalent).</li><li>A tracking number is provided by email as soon as the order ships.</li></ul><p>In the event of a delivery delay attributable to the carrier, 3BeeStudio cannot be held responsible but undertakes to support the customer in resolving the issue.</p><h2>Article 6 — Right of withdrawal</h2><p>In accordance with article L221-18 of the French Consumer Code, the customer has a period of <strong>14 days</strong> from receipt to exercise their right of withdrawal, without justification, for stock products.</p><p><strong>Exception:</strong> the right of withdrawal does not apply to products made to the customer's specifications (custom, personalised keychains), in accordance with article L221-28 of the French Consumer Code.</p><p>To exercise this right, contact us at <a href='mailto:contact@3beestudio.fr'>contact@3beestudio.fr</a>. Return costs are payable by the customer. The refund is made within 14 days of receiving the return.</p><h2>Article 6a — Digital products (3D files)</h2><p>3BeeStudio sells <strong>downloadable 3D files</strong> (STL, 3MF, STEP or archive). These products involve no shipment and no delivery fees.</p><p><strong>Delivery.</strong> Download links are made available on the order tracking page immediately after payment confirmation, and sent by email. Each link is valid for 30 days and limited to 10 downloads per file. In case of trouble, access is reopened on request at contact@3beestudio.fr.</p><p><strong>Right of withdrawal.</strong> Under article L221-28 3° of the French Consumer Code, the right of withdrawal cannot be exercised on digital content supplied on an intangible medium where performance began after the customer's prior express consent and express waiver of that right. This waiver is collected through a mandatory checkbox at checkout and timestamped. Without it, the order cannot be placed.</p><p><strong>Licence.</strong> Purchase grants a personal, non-exclusive right of use: printing for private use, in any quantity. Resale, redistribution, file sharing and commercial use are excluded without written consent from 3BeeStudio. Files remain the intellectual property of 3BeeStudio.</p><p><strong>No print-result warranty.</strong> The outcome depends on the printer, material and settings used by the customer. 3BeeStudio warrants the conformity and integrity of the delivered file, not the result obtained on third-party hardware.</p><h2>Article 7 — Warranties</h2><p>All products benefit from the legal warranty of conformity (articles L217-4 et seq. of the French Consumer Code) and the warranty against hidden defects (articles 1641 et seq. of the French Civil Code).</p><p>In the event of a defective product, contact us as soon as possible with supporting photos. We will proceed with replacement or refund depending on the case.</p><h2>Article 8 — Liability</h2><p>3BeeStudio cannot be held responsible for indirect damage related to the use of the products. Liability is limited to the amount of the order concerned.</p><h2>Article 9 — Personal data</h2><p>The data collected when ordering is used solely for processing and delivering the order. See our <a href='/en/politique-de-confidentialite'>Privacy policy</a> for more information.</p><h2>Article 10 — Disputes</h2><p>In the event of a dispute, an amicable solution will be sought as a priority. Failing that, the customer may resort to mediation via the European online dispute resolution platform: <a href='https://ec.europa.eu/consumers/odr' target='_blank' rel='noopener noreferrer'>ec.europa.eu/consumers/odr</a>.</p><p>These T&Cs are governed by French law. Any dispute will be submitted to the jurisdiction of the courts of Villefranche-sur-Saône.</p>"
   },
   "legalPrivacy": {
     "title": "Privacy policy",
@@ -843,7 +845,14 @@
       "leadTime": "3 to 7 days",
       "leadTimeLabel": "estimated",
       "handmade": "Handmade",
-      "madeInFrance": "printed in France"
+      "madeInFrance": "printed in France",
+      "digital": {
+        "badge": "3D file download",
+        "title": "Digital delivery",
+        "description": "Download available immediately after payment. Nothing will be shipped to you.",
+        "noShipping": "No shipping fees",
+        "previewNotice": "The 3D preview above is a lightweight version. The file you buy is full resolution."
+      }
     },
     "checkout": {
       "breadcrumb": "Shop",
@@ -856,7 +865,8 @@
       "outOfStock": "Out of stock",
       "available": "{count} left",
       "inStock": "In stock",
-      "order": "Order"
+      "order": "Order",
+      "digitalBadge": "Digital download"
     },
     "addToCart": {
       "quantity": "Quantity",
@@ -952,6 +962,12 @@
           "sat": "Sat",
           "sun": "Sun"
         }
+      },
+      "digital": {
+        "title": "Digital-only order",
+        "description": "No parcel: your files are available to download as soon as payment clears, and the links are emailed to you as well.",
+        "waiverLabel": "I agree that the download starts immediately after payment and I expressly waive my 14-day right of withdrawal on digital files (art. L221-28 3° of the French Consumer Code).",
+        "waiverRequired": "You must accept the waiver of the right of withdrawal to order a digital file."
       }
     },
     "descriptionExpand": {
@@ -1004,6 +1020,15 @@
         "processing": "Your items are handmade in our studios.",
         "shipped": "Your parcel is on its way.",
         "delivered": "Your order has arrived. Thank you for your trust!"
+      },
+      "downloads": {
+        "title": "Your files",
+        "description": "Click to download. Each link is valid for {days} days and limited to {max} downloads.",
+        "download": "Download",
+        "remaining": "{remaining} download(s) left",
+        "exhausted": "Download limit reached",
+        "expired": "Link expired",
+        "help": "Trouble with a download? Email us at contact@3beestudio.fr and we will reopen access."
       }
     }
   },
@@ -1067,5 +1092,24 @@
     "errEmail": "Invalid email address",
     "errMessage": "Your message is too short (min. 10 characters)",
     "directLine": "You can also write to us directly at"
+  },
+  "designs": {
+    "metaTitle": "3D designs to download — STL files | 3BeeStudio",
+    "metaDescription": "Our 3D models as instant downloads: print-ready STL files designed in our French studio. No shipping fees.",
+    "eyebrow": "3BeeStudio · 3D Files",
+    "title": "Our designs, ready to print.",
+    "description": "Already own a 3D printer? Get our models as an instant download and print them as many times as you like.",
+    "perks": {
+      "instant": "Instant download",
+      "noShipping": "No shipping fees",
+      "personalUse": "Unlimited prints for personal use"
+    },
+    "empty": "No design available for download right now.",
+    "emptyCta": "Browse printed objects →",
+    "crossSell": {
+      "title": "No 3D printer?",
+      "description": "We print the piece for you by hand in our French studio and ship it to you.",
+      "cta": "Visit the shop"
+    }
   }
 }

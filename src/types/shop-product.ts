@@ -5,6 +5,12 @@ export interface ProductCustomField {
   required: boolean
 }
 
+/**
+ * 'physical' = objet imprimé et expédié · 'digital' = fichier STL téléchargeable.
+ * Un même objet vendu dans les deux formats = deux produits (cf. « Dupliquer »).
+ */
+export type ProductType = 'physical' | 'digital'
+
 export interface ShopProduct {
   id: string
   created_at: string
@@ -24,11 +30,44 @@ export interface ShopProduct {
   weight_grams: number
   stripe_product_id: string | null
   stripe_price_id: string | null
+  /**
+   * Maillage d'APERÇU, bucket public — alimente le viewer 3D des fiches produit.
+   * Extractible par nature (le navigateur le charge) : sur un produit numérique,
+   * y mettre une version décimée, jamais le fichier vendu.
+   */
   stl_url: string | null
   custom_fields: ProductCustomField[]
   category: string | null
   featured: boolean
   model_rotation: { x: number; y: number; z: number } | null
+
+  // ── Produit numérique ──
+  product_type: ProductType
+  /** Chemin dans le bucket PRIVÉ `stl-downloads`. Ne doit jamais atteindre le client. */
+  digital_file_path: string | null
+  digital_file_name: string | null
+  digital_file_size: number | null // octets
+}
+
+/**
+ * Produit tel qu'exposé au client, sans le chemin du fichier vendu.
+ *
+ * ⚠️ Ce type documente l'intention mais ne suffit PAS : le typage structurel de
+ * TypeScript accepte un `ShopProduct` complet là où un `PublicShopProduct` est
+ * attendu (les propriétés en trop ne sont refusées que sur un littéral). La vraie
+ * protection est l'appel à `toPublicProduct()` côté serveur, qui retire le champ
+ * pour de bon avant qu'il n'entre dans le payload RSC.
+ */
+export type PublicShopProduct = Omit<ShopProduct, 'digital_file_path'>
+
+export function toPublicProduct(product: ShopProduct): PublicShopProduct {
+  const rest: Record<string, unknown> = { ...product }
+  delete rest.digital_file_path
+  return rest as PublicShopProduct
+}
+
+export function isDigital(product: Pick<ShopProduct, 'product_type'>): boolean {
+  return product.product_type === 'digital'
 }
 
 // Champs utilisés par les cartes catalogue (BoutiqueCatalog/ProductsGrid) — évite de transférer
@@ -36,7 +75,7 @@ export interface ShopProduct {
 export type ShopProductCard = Pick<ShopProduct,
   | 'id' | 'slug' | 'name' | 'name_en' | 'subtitle' | 'subtitle_en'
   | 'price' | 'sale_price' | 'stock' | 'images' | 'stl_url' | 'model_rotation'
-  | 'category' | 'featured'
+  | 'category' | 'featured' | 'product_type'
 >
 
 export const SHOP_FREE_SHIPPING_THRESHOLD = 5000 // 50 € en centimes
@@ -48,14 +87,66 @@ export const SHOP_RELAY_SHIPPING_PRICE = 390     // 3,90 € — point relais (M
  * Le relais est nettement moins cher à l'achat côté Boxtal (~5 € contre ~11 €
  * en Colissimo domicile), on répercute cet écart au client.
  * Le seuil de gratuité s'applique aux deux modes ; le retrait studio est gratuit.
+ *
+ * ⚠️ `subtotal` doit être le sous-total **physique** (cf. splitCart) : un fichier
+ * STL ne coûte rien à expédier et ne doit pas faire franchir le seuil de
+ * gratuité. Sans ça, 45 € de fichiers + un objet à 5 € offriraient le port.
+ *
+ * ⚠️ Un sous-total à 0 renvoie quand même le tarif plein (comportement historique,
+ * couvert par les tests) : c'est à l'appelant de court-circuiter quand il n'y a
+ * rien à expédier — panier vide ou 100 % numérique.
  */
 export function calcShopShipping(
   subtotal: number,
-  mode: 'delivery' | 'pickup' | 'relay' = 'delivery',
+  mode: 'delivery' | 'pickup' | 'relay' | 'digital' = 'delivery',
 ): number {
-  if (mode === 'pickup') return 0
+  if (mode === 'pickup' || mode === 'digital') return 0
   if (subtotal >= SHOP_FREE_SHIPPING_THRESHOLD) return 0
   return mode === 'relay' ? SHOP_RELAY_SHIPPING_PRICE : SHOP_SHIPPING_PRICE
+}
+
+export interface CartSplitLine {
+  product_type: ProductType
+  unit_price: number
+  quantity: number
+}
+
+/**
+ * Sépare un panier mixte en part physique et part numérique.
+ *
+ * Un panier peut contenir les deux (un support imprimé + son fichier) : le port
+ * ne se calcule alors que sur la part physique, et l'adresse de livraison n'est
+ * requise que s'il reste quelque chose à expédier.
+ */
+export function splitCart(lines: CartSplitLine[]) {
+  let physicalSubtotal = 0
+  let digitalSubtotal = 0
+
+  for (const l of lines) {
+    const amount = l.unit_price * l.quantity
+    if (l.product_type === 'digital') digitalSubtotal += amount
+    else physicalSubtotal += amount
+  }
+
+  return {
+    physicalSubtotal,
+    digitalSubtotal,
+    subtotal: physicalSubtotal + digitalSubtotal,
+    hasPhysical: physicalSubtotal > 0,
+    hasDigital: digitalSubtotal > 0,
+  }
+}
+
+/**
+ * Mode de livraison imposé par la composition du panier.
+ * Un panier 100 % numérique n'a ni adresse, ni port, ni expédition Boxtal : le
+ * sélecteur de livraison du checkout doit disparaître, pas juste afficher 0 €.
+ */
+export function resolveDeliveryMode(
+  hasPhysical: boolean,
+  chosen: 'delivery' | 'pickup' | 'relay',
+): 'delivery' | 'pickup' | 'relay' | 'digital' {
+  return hasPhysical ? chosen : 'digital'
 }
 
 /** Retourne le prix effectif (promo si disponible, sinon prix de base) */

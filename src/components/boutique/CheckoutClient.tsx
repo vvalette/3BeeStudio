@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { CartItem } from '@/types/cart'
-import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
+import { calcShopShipping, splitCart, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 import type { DeliveryMode } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
@@ -64,11 +64,21 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const [deliveryMode, setDeliveryMode]           = useState<DeliveryMode>('relay')
   const [relay, setRelay]                         = useState<SelectedRelay | null>(null)
   const [hasNewsletterDiscount, setHasDiscount]   = useState(false)
+  const [digitalWaiver, setDigitalWaiver]         = useState(false)
   const [loading, setLoading]                     = useState(false)
   const [error, setError]                         = useState<string | null>(null)
 
-  const isPickup = deliveryMode === 'pickup'
-  const isRelay  = deliveryMode === 'relay'
+  // Composition du panier : un panier 100 % fichiers n'a ni port, ni adresse, ni
+  // mode de livraison à choisir. Un panier mixte reste une commande à expédier.
+  const split = useMemo(() => splitCart(items.map((i) => ({
+    product_type: i.is_digital ? 'digital' as const : 'physical' as const,
+    unit_price: i.price,
+    quantity: i.quantity,
+  }))), [items])
+  const digitalOnly = split.hasDigital && !split.hasPhysical
+
+  const isPickup = !digitalOnly && deliveryMode === 'pickup'
+  const isRelay  = !digitalOnly && deliveryMode === 'relay'
   // Le relais n'est desservi qu'en France métropolitaine par l'offre Boxtal
   const relayAvailable = country === 'FR'
 
@@ -78,13 +88,15 @@ export default function CheckoutClient({ forcedItems }: Props) {
   )
 
   const { subtotal, discountAmount, shipping, total } = useMemo(() => {
-    const subtotal      = items.reduce((acc, i) => acc + i.price * i.quantity, 0)
+    const subtotal      = split.subtotal
     const discountAmount = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
-    const shipping      = items.length === 0 || freeShippingEnabled
+    // Port calculé sur la part physique seule (cf. splitCart) : sinon des fichiers
+    // dans le panier feraient franchir le seuil de gratuité sans rien à expédier.
+    const shipping      = items.length === 0 || freeShippingEnabled || !split.hasPhysical
       ? 0
-      : calcShopShipping(subtotal, deliveryMode)
+      : calcShopShipping(split.physicalSubtotal, deliveryMode)
     return { subtotal, discountAmount, shipping, total: subtotal - discountAmount + shipping }
-  }, [items, freeShippingEnabled, deliveryMode, hasNewsletterDiscount])
+  }, [items, split, freeShippingEnabled, deliveryMode, hasNewsletterDiscount])
 
   // L'offre relais ne dessert que la France : hors FR, on repasse en domicile
   // (sinon le checkout resterait bloqué sur un sélecteur sans résultat).
@@ -120,6 +132,12 @@ export default function CheckoutClient({ forcedItems }: Props) {
       setError(t('relay.required'))
       return
     }
+    // Le serveur refuse la commande sans ce consentement (art. L221-28 3°) : on le
+    // signale ici pour éviter un aller-retour inutile.
+    if (split.hasDigital && !digitalWaiver) {
+      setError(t('digital.waiverRequired'))
+      return
+    }
 
     setLoading(true)
 
@@ -136,7 +154,8 @@ export default function CheckoutClient({ forcedItems }: Props) {
         name: `${firstName} ${lastName}`.trim(),
         phone: phone || undefined,
         locale,
-        delivery_mode: deliveryMode,
+        delivery_mode: digitalOnly ? 'digital' : deliveryMode,
+        ...(split.hasDigital ? { digital_waiver: digitalWaiver } : {}),
         ...(isRelay && relay ? {
           pickup_point_code:        relay.code,
           pickup_point_name:        relay.name,
@@ -144,7 +163,9 @@ export default function CheckoutClient({ forcedItems }: Props) {
           pickup_point_city:        relay.city,
           pickup_point_postal_code: relay.postalCode,
         } : {}),
-        ...(isPickup ? {} : {
+        // Aucune adresse envoyée sur une commande sans colis : le serveur la
+        // refuserait de toute façon, et c'est une donnée à ne pas collecter.
+        ...(isPickup || digitalOnly ? {} : {
           shipping_name: `${shippingFirstName || firstName} ${shippingLastName || lastName}`.trim(),
           shipping_address:     address,
           shipping_address2:    address2 || undefined,
@@ -185,7 +206,22 @@ export default function CheckoutClient({ forcedItems }: Props) {
       {/* Formulaire */}
       <form onSubmit={handleSubmit} autoComplete="off" className="space-y-6 order-2 lg:order-1">
 
-        {/* Sélecteur mode de livraison */}
+        {/* Commande 100 % fichiers : rien à expédier, on l'annonce au lieu
+            d'afficher un sélecteur de livraison à 0 €. */}
+        {digitalOnly && (
+          <div className="rounded-xl px-4 py-3.5" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
+            <p className="flex items-center gap-2 text-[13px] font-semibold text-amber">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" />
+              </svg>
+              {t('digital.title')}
+            </p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{t('digital.description')}</p>
+          </div>
+        )}
+
+        {/* Sélecteur mode de livraison — masqué s'il n'y a aucun colis */}
+        {!digitalOnly && (
         <fieldset className="space-y-2">
           <legend className="mb-3 font-semibold text-ink-0">{t('deliveryTitle')}</legend>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -251,6 +287,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
             </p>
           )}
         </fieldset>
+        )}
 
         {/* Contact */}
         <fieldset className="space-y-4">
@@ -275,8 +312,8 @@ export default function CheckoutClient({ forcedItems }: Props) {
           </div>
         </fieldset>
 
-        {/* Adresse — masquée en mode retrait */}
-        {!isPickup && (
+        {/* Adresse — masquée en retrait studio et sur un panier 100 % numérique */}
+        {!isPickup && !digitalOnly && (
           <fieldset className="space-y-4">
             <legend className="mb-2 font-semibold text-ink-0">{t('addressTitle')}</legend>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -326,13 +363,35 @@ export default function CheckoutClient({ forcedItems }: Props) {
           </fieldset>
         )}
 
+        {/* Renoncement au droit de rétractation — art. L221-28 3° du Code de la
+            consommation. Sans consentement explicite recueilli AVANT le
+            téléchargement, le client garde ses 14 jours sur un fichier déjà
+            récupéré. Case volontairement décochée : un pré-cochage invaliderait
+            le consentement. */}
+        {split.hasDigital && (
+          <fieldset>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--line)] bg-bg-0 px-4 py-3.5 transition-colors hover:border-[var(--line-amber)]">
+              <input
+                type="checkbox"
+                checked={digitalWaiver}
+                onChange={(e) => setDigitalWaiver(e.target.checked)}
+                required
+                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-amber"
+              />
+              <span className="text-[12px] leading-relaxed text-ink-2">
+                {t('digital.waiverLabel')}
+              </span>
+            </label>
+          </fieldset>
+        )}
+
         {error && (
           <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>
         )}
 
         <button
           type="submit"
-          disabled={loading || (isRelay && !relay)}
+          disabled={loading || (isRelay && !relay) || (split.hasDigital && !digitalWaiver)}
           className="w-full cursor-pointer rounded-pill bg-amber py-3.5 font-bold text-bg-0 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
@@ -399,10 +458,14 @@ export default function CheckoutClient({ forcedItems }: Props) {
               <span>{t('newsletterDiscount')}</span><span>−{formatPrice(discountAmount)}</span>
             </div>
           )}
-          <div className="flex justify-between text-ink-2">
-            <span>{isRelay ? t('relay.summaryLabel') : t('shipping')}</span>
-            <span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
-          </div>
+          {/* Pas de ligne livraison sans colis : afficher « Offerte » laisserait
+              croire qu'un port a été remisé, alors qu'il n'y en a jamais eu. */}
+          {!digitalOnly && (
+            <div className="flex justify-between text-ink-2">
+              <span>{isRelay ? t('relay.summaryLabel') : t('shipping')}</span>
+              <span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
+            </div>
+          )}
           {shipping > 0 && (
             <p className="text-[11px] text-ink-3">{t('freeShippingThreshold', { price: formatPrice(SHOP_FREE_SHIPPING_THRESHOLD) })}</p>
           )}

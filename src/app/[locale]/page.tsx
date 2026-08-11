@@ -36,12 +36,14 @@ export default async function HomePage({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category, model_rotation'
+  const SELECT = 'id, name, name_en, slug, subtitle, subtitle_en, price, sale_price, images, stock, stl_url, featured, category, model_rotation, product_type'
 
   const { data: featuredData } = await supabase
     .from('shop_products')
     .select(SELECT)
     .eq('active', true)
+    // Grille « favoris » = objets physiques ; les fichiers 3D vivent sur /designs
+    .eq('product_type', 'physical')
     .eq('featured', true)
     .order('created_at', { ascending: false })
     .limit(8)
@@ -52,6 +54,8 @@ export default async function HomePage({ params }: Props) {
     .from('shop_products')
     .select(SELECT)
     .eq('active', true)
+    // Grille « favoris » = objets physiques ; les fichiers 3D vivent sur /designs
+    .eq('product_type', 'physical')
     .order('created_at', { ascending: false })
     .limit(8)
 

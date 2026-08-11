@@ -16,7 +16,15 @@ const schema = z.object({
   email:         z.string().email(),
   name:          z.string().min(2),
   phone:         z.string().min(8),
-  delivery_mode: z.enum(['delivery', 'pickup', 'relay']).default('delivery'),
+  delivery_mode: z.enum(['delivery', 'pickup', 'relay', 'digital']).default('delivery'),
+
+  /**
+   * Renoncement explicite au droit de rétractation (art. L221-28 3° du Code de la
+   * consommation), obligatoire dès qu'un fichier est vendu : sans consentement
+   * recueilli AVANT le téléchargement, le client conserve ses 14 jours et peut se
+   * faire rembourser un fichier déjà récupéré.
+   */
+  digital_waiver: z.boolean().optional(),
 
   // Point relais — obligatoire quand delivery_mode === 'relay' :
   // l'API Boxtal refuse une expédition relais sans pickupPointCode.
@@ -35,8 +43,10 @@ const schema = z.object({
   shipping_country:     z.string().length(2).default('FR'),
 }).refine(
   // Le relais exige aussi l'adresse : Boxtal veut un toAddress destinataire
-  // en plus du point de retrait.
-  (d) => d.delivery_mode === 'pickup' || (
+  // en plus du point de retrait. Retrait studio et panier numérique en sont exemptés
+  // (rien à expédier). La cohérence entre ce mode et le contenu réel du panier est
+  // revérifiée côté serveur après lecture des produits — le client ne décide pas.
+  (d) => d.delivery_mode === 'pickup' || d.delivery_mode === 'digital' || (
     d.shipping_name && d.shipping_address && d.shipping_city && d.shipping_postal_code
   ),
   { message: 'Adresse de livraison requise pour la livraison à domicile' },
@@ -96,13 +106,26 @@ export async function POST(req: Request) {
     | { price_data: { currency: string; product: string; unit_amount: number }; quantity: number }
     | { price_data: { currency: string; product_data: { name: string; images?: string[] }; unit_amount: number }; quantity: number }
   )[] = []
-  const orderItems: { product_id: string; product_name: string; quantity: number; unit_price: number; weight_grams?: number }[] = []
+  const orderItems: {
+    product_id: string; product_name: string; quantity: number
+    unit_price: number; weight_grams?: number; is_digital?: boolean
+  }[] = []
   let subtotal = 0
+  // Sous-total physique tenu à part : le port se calcule sur lui seul, et le seuil
+  // de gratuité ne doit pas être franchi par des fichiers (rien à expédier).
+  let physicalSubtotal = 0
+  let digitalCount = 0
 
   for (const product of products) {
     const entry     = qtyByProduct.get(product.id)!
     const quantity  = entry.quantity
     const unitPrice = product.sale_price ?? product.price
+    const digital   = product.product_type === 'digital'
+
+    // Un produit numérique publié sans fichier ne doit pas pouvoir être payé.
+    // La contrainte DB l'empêche déjà, ceci couvre les données antérieures.
+    if (digital && !product.digital_file_path)
+      return NextResponse.json({ error: `« ${product.name} » n'est pas encore disponible au téléchargement` }, { status: 400 })
 
     if (product.stock !== null && product.stock < quantity)
       return NextResponse.json({ error: `Stock insuffisant pour « ${product.name} » (${product.stock} disponible${product.stock > 1 ? 's' : ''})` }, { status: 409 })
@@ -131,6 +154,8 @@ export async function POST(req: Request) {
     }
 
     subtotal += unitPrice * quantity
+    if (digital) digitalCount += quantity
+    else physicalSubtotal += unitPrice * quantity
 
     // Enrichit les custom_field_values avec les libellés définis sur le produit
     const rawCfv = entry.custom_field_values
@@ -146,13 +171,34 @@ export async function POST(req: Request) {
       quantity,
       unit_price:   unitPrice,
       weight_grams: product.weight_grams,
+      ...(digital ? { is_digital: true } : {}),
       ...(enrichedCfv?.length ? { custom_field_values: enrichedCfv } : {}),
     })
   }
 
-  const isPickup = d.delivery_mode === 'pickup'
-  const isRelay  = d.delivery_mode === 'relay'
-  const shipping = globalFreeShipping ? 0 : calcShopShipping(subtotal, d.delivery_mode)
+  const hasDigital  = digitalCount > 0
+  const hasPhysical = physicalSubtotal > 0 || orderItems.some((i) => !i.is_digital)
+
+  // Le mode de livraison est recalculé à partir du panier réel, jamais accepté tel
+  // quel : un client qui annoncerait 'digital' avec un objet dedans obtiendrait une
+  // commande payée sans adresse, donc inexpédiable.
+  if (hasPhysical && d.delivery_mode === 'digital')
+    return NextResponse.json({ error: 'Adresse de livraison requise : le panier contient un article à expédier' }, { status: 400 })
+
+  const deliveryMode = hasPhysical ? d.delivery_mode : 'digital'
+
+  // Consentement L221-28 obligatoire dès qu'un fichier est vendu.
+  if (hasDigital && d.digital_waiver !== true)
+    return NextResponse.json(
+      { error: 'Le renoncement au droit de rétractation est obligatoire pour les fichiers numériques' },
+      { status: 400 },
+    )
+
+  const isPickup  = deliveryMode === 'pickup'
+  const isRelay   = deliveryMode === 'relay'
+  const isDigital = deliveryMode === 'digital'
+  // Port sur la part physique uniquement.
+  const shipping  = globalFreeShipping ? 0 : calcShopShipping(physicalSubtotal, deliveryMode)
 
   // Vérifie la promo newsletter (-10% sur le sous-total, frais de port inchangés)
   const { data: newsletterSub } = await supabaseAdmin
@@ -179,18 +225,25 @@ export async function POST(req: Request) {
       shipping,
       total_amount:         total,
       status:               'pending_payment',
-      delivery_mode:        d.delivery_mode,
+      delivery_mode:        deliveryMode,
+      has_digital:          hasDigital,
+      has_physical:         hasPhysical,
+      // Horodaté ici et pas à la livraison du fichier : c'est le moment où le client
+      // a effectivement donné son accord, et c'est cette date qui fait preuve.
+      digital_waiver_at:    hasDigital ? new Date().toISOString() : null,
       pickup_point_code:        isRelay ? (d.pickup_point_code ?? null) : null,
       pickup_point_name:        isRelay ? (d.pickup_point_name ?? null) : null,
       pickup_point_street:      isRelay ? (d.pickup_point_street ?? null) : null,
       pickup_point_city:        isRelay ? (d.pickup_point_city ?? null) : null,
       pickup_point_postal_code: isRelay ? (d.pickup_point_postal_code ?? null) : null,
       locale:               d.locale,
-      shipping_name:        isPickup ? null : (d.shipping_name ?? null),
-      shipping_address:     isPickup ? null : (d.shipping_address ?? null),
-      shipping_address2:    isPickup ? null : (d.shipping_address2 ?? null),
-      shipping_city:        isPickup ? null : (d.shipping_city ?? null),
-      shipping_postal_code: isPickup ? null : (d.shipping_postal_code ?? null),
+      // Aucune adresse stockée sur une commande sans colis : la conserver serait une
+      // donnée personnelle collectée sans finalité.
+      shipping_name:        isPickup || isDigital ? null : (d.shipping_name ?? null),
+      shipping_address:     isPickup || isDigital ? null : (d.shipping_address ?? null),
+      shipping_address2:    isPickup || isDigital ? null : (d.shipping_address2 ?? null),
+      shipping_city:        isPickup || isDigital ? null : (d.shipping_city ?? null),
+      shipping_postal_code: isPickup || isDigital ? null : (d.shipping_postal_code ?? null),
       shipping_country:     d.shipping_country,
     })
     .select()
@@ -240,6 +293,9 @@ export async function POST(req: Request) {
     deliveryMsg:  isEn
       ? 'Your order is handmade in our studio. Estimated time: 3 to 7 business days.'
       : 'Votre commande est préparée à la main dans nos studios. Délai indicatif : 3 à 7 jours ouvrés.',
+    digitalMsg:   isEn
+      ? 'Your download links are available immediately after payment, and are also sent by email.'
+      : 'Vos liens de téléchargement sont disponibles immédiatement après le paiement, et vous sont aussi envoyés par email.',
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -249,7 +305,7 @@ export async function POST(req: Request) {
     customer_email: d.email,
     line_items:     lineItems,
     ...(stripeDiscounts.length > 0 ? { discounts: stripeDiscounts } : {}),
-    ...(isPickup ? {} : {
+    ...(isPickup || isDigital ? {} : {
       payment_intent_data: {
         shipping: {
           name: d.shipping_name!,
@@ -263,34 +319,38 @@ export async function POST(req: Request) {
         },
       },
     }),
-    shipping_options: isPickup
-      ? [
-          {
-            shipping_rate_data: {
-              type:         'fixed_amount',
-              fixed_amount: { amount: 0, currency: 'eur' },
-              display_name: tx.pickupRate,
-            },
-          },
-        ]
-      : [
-          {
-            shipping_rate_data: {
-              type:           'fixed_amount',
-              fixed_amount:   { amount: shipping, currency: 'eur' },
-              display_name:   shipping === 0
-                ? tx.freeShipping
-                : isRelay ? tx.relayRate : tx.trackedShip,
-              delivery_estimate: {
-                minimum: { unit: 'business_day', value: 3 },
-                maximum: { unit: 'business_day', value: 7 },
+    // Aucune ligne de livraison sur une commande 100 % numérique : afficher
+    // « Livraison offerte » à 0 € pour un fichier n'aurait pas de sens.
+    ...(isDigital ? {} : {
+      shipping_options: isPickup
+        ? [
+            {
+              shipping_rate_data: {
+                type:         'fixed_amount' as const,
+                fixed_amount: { amount: 0, currency: 'eur' },
+                display_name: tx.pickupRate,
               },
             },
-          },
-        ],
+          ]
+        : [
+            {
+              shipping_rate_data: {
+                type:           'fixed_amount' as const,
+                fixed_amount:   { amount: shipping, currency: 'eur' },
+                display_name:   shipping === 0
+                  ? tx.freeShipping
+                  : isRelay ? tx.relayRate : tx.trackedShip,
+                delivery_estimate: {
+                  minimum: { unit: 'business_day' as const, value: 3 },
+                  maximum: { unit: 'business_day' as const, value: 7 },
+                },
+              },
+            },
+          ],
+    }),
     custom_text: {
       submit: {
-        message: isPickup ? tx.pickupMsg : isRelay ? tx.relayMsg : tx.deliveryMsg,
+        message: isDigital ? tx.digitalMsg : isPickup ? tx.pickupMsg : isRelay ? tx.relayMsg : tx.deliveryMsg,
       },
     },
     success_url: `${appUrl}${prefix}/boutique/suivi/${order.id}?payment=success`,

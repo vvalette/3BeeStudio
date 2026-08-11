@@ -8,6 +8,7 @@ import { useConfirm } from '@/components/ui/ConfirmModal'
 import { formatPrice } from '@/lib/utils'
 import ImageDropzone from './product-form/ImageDropzone'
 import StlUpload from './product-form/StlUpload'
+import DigitalProductSection from './product-form/DigitalProductSection'
 import LocalizedContentSection from './product-form/LocalizedContentSection'
 import ModelRotationSection from './product-form/ModelRotationSection'
 import CustomFieldsSection from './product-form/CustomFieldsSection'
@@ -40,6 +41,10 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
   function set<K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
+
+  // Un fichier n'a ni stock ni poids : ces champs sont remplacés par une mention
+  // explicite plutôt que masqués, pour qu'on voie que c'est voulu.
+  const isDigitalProduct = form.productType === 'digital'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -117,7 +122,10 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
           {/* Contenu FR/EN : nom, slug, sous-titre, description */}
           <LocalizedContentSection form={form} set={set} />
 
-          {/* Prix + Stock */}
+          {/* Type de produit + fichier vendu (si numérique) */}
+          <DigitalProductSection form={form} set={set} />
+
+          {/* Prix + Stock — le stock n'a pas de sens pour un fichier */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Prix (€) *</label>
@@ -129,10 +137,19 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
                 <p className="mt-1 text-[11px] text-ink-3">→ {formatPrice(parseEuros(form.priceEuros))}</p>
               )}
             </div>
-            <div>
-              <label className={labelClass}>Stock (vide = illimité)</label>
-              <input className={inputClass} value={form.stock} onChange={(e) => set('stock', e.target.value)} placeholder="∞" type="number" min="0" />
-            </div>
+            {isDigitalProduct ? (
+              <div className="flex flex-col justify-end pb-0.5">
+                <label className={labelClass}>Stock</label>
+                <p className="rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-2.5 text-sm text-ink-3">
+                  Illimité — un fichier ne s&apos;épuise pas
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className={labelClass}>Stock (vide = illimité)</label>
+                <input className={inputClass} value={form.stock} onChange={(e) => set('stock', e.target.value)} placeholder="∞" type="number" min="0" />
+              </div>
+            )}
           </div>
 
           {/* Prix promotionnel */}
@@ -201,18 +218,27 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
             onFeatured={(v) => set('featured', v)}
           />
 
-          {/* Poids + Actif */}
+          {/* Poids + Actif — le poids ne concerne que les colis */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Poids (grammes) *</label>
-              <div className="relative">
-                <input className={inputClass + ' pr-8'} value={form.weightGrams} onChange={(e) => set('weightGrams', e.target.value)} type="number" min="1" required placeholder="ex. 7" />
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-ink-3">g</span>
+            {isDigitalProduct ? (
+              <div className="flex flex-col justify-end pb-0.5">
+                <label className={labelClass}>Poids</label>
+                <p className="rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-2.5 text-sm text-ink-3">
+                  Sans objet — aucun colis
+                </p>
               </div>
-              <p className="mt-1 text-[11px] text-ink-3">
-                Poids réel de la pièce. Sert à calculer le colis Boxtal : une valeur trop haute fait payer l&apos;expédition bien plus cher.
-              </p>
-            </div>
+            ) : (
+              <div>
+                <label className={labelClass}>Poids (grammes) *</label>
+                <div className="relative">
+                  <input className={inputClass + ' pr-8'} value={form.weightGrams} onChange={(e) => set('weightGrams', e.target.value)} type="number" min="1" required placeholder="ex. 7" />
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-ink-3">g</span>
+                </div>
+                <p className="mt-1 text-[11px] text-ink-3">
+                  Poids réel de la pièce. Sert à calculer le colis Boxtal : une valeur trop haute fait payer l&apos;expédition bien plus cher.
+                </p>
+              </div>
+            )}
             <div className="flex flex-col justify-end pb-0.5">
               <label className={labelClass}>Visibilité</label>
               <button

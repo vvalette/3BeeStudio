@@ -10,11 +10,17 @@ import LocaleSwitcher from './LocaleSwitcher'
 import ThemeToggle from './ThemeToggle'
 import CartButton from '@/components/boutique/CartButton'
 
+// `shortKey` : libellé réduit entre 1024 et 1279 px. À 5 entrées, « Porte-clé
+// connecté » en entier faisait passer la barre sur deux lignes à 1024 px.
+// `shortKey` sur TOUTES les entrées (null quand inutile) : avec `as const`, une
+// propriété absente d'un seul membre n'existe plus sur l'union à la déstructuration.
+// Le `as const` est conservé pour garder les href en types littéraux (typedRoutes).
 const navLinks = [
-  { href: '/nfc',       key: 'nfc' },
-  { href: '/custom',    key: 'custom' },
-  { href: '/boutique',  key: 'boutique' },
-  { href: '/portfolio', key: 'portfolio' },
+  { href: '/nfc',       key: 'nfc',       shortKey: 'nfcShort' },
+  { href: '/custom',    key: 'custom',    shortKey: null },
+  { href: '/boutique',  key: 'boutique',  shortKey: null },
+  { href: '/designs',   key: 'designs',   shortKey: null },
+  { href: '/portfolio', key: 'portfolio', shortKey: null },
 ] as const
 
 type Props = {
@@ -73,19 +79,24 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
           </Link>
 
           {/* ── Desktop links ── */}
-          <ul className="hidden items-center gap-0.5 md:flex">
-            {navLinks.map(({ href, key }) => (
+          <ul className="hidden items-center gap-0.5 lg:flex">
+            {navLinks.map(({ href, key, shortKey }) => (
               <li key={href}>
                 <Link
                   href={href}
                   className={cn(
-                    'relative px-4 py-2 text-[14px] font-medium rounded-md transition-colors',
+                    'relative px-2.5 xl:px-4 py-2 text-[14px] font-medium rounded-md transition-colors',
                     isActive(href)
                       ? 'text-ink-0'
                       : 'text-ink-2 hover:text-ink-0'
                   )}
                 >
-                  {t(key)}
+                  {shortKey ? (
+                    <>
+                      <span className="xl:hidden">{t(shortKey)}</span>
+                      <span className="hidden xl:inline">{t(key)}</span>
+                    </>
+                  ) : t(key)}
                   {isActive(href) && (
                     <span
                       className="absolute bottom-1 left-1/2 -translate-x-1/2 block h-[3px] w-[3px] rounded-full bg-amber"
@@ -107,7 +118,7 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
 
             <Link
               href="/contact"
-              className="hidden md:inline-flex h-10 items-center gap-1.5 rounded-pill px-5 text-[13px] font-semibold text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-110"
+              className="hidden lg:inline-flex h-10 items-center gap-1.5 rounded-pill px-5 text-[13px] font-semibold text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-110"
               style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
             >
               {t('contact')}
@@ -118,7 +129,7 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
               aria-label={open ? t('closeMenu') : t('openMenu')}
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--line)] bg-bg-2 text-ink-1 transition-colors hover:bg-bg-3 hover:text-ink-0 md:hidden cursor-pointer"
+              className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--line)] bg-bg-2 text-ink-1 transition-colors hover:bg-bg-3 hover:text-ink-0 lg:hidden cursor-pointer"
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -129,7 +140,7 @@ export default function Navbar({ showLocaleSwitcher = false, showCart = true }: 
       {/* ── Mobile overlay ── */}
       {open && (
         <div
-          className="fixed inset-0 z-40 flex flex-col md:hidden"
+          className="fixed inset-0 z-40 flex flex-col lg:hidden"
           style={{ background: 'var(--bg-0)', paddingTop: 72 }}
         >
           <div aria-hidden className="pointer-events-none absolute inset-0"

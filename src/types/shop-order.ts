@@ -11,7 +11,11 @@ export type ShopOrderStatus =
  * Colissimo domicile), mais l'API impose un pickupPointCode → le client choisit
  * son relais au checkout.
  */
-export type DeliveryMode = 'delivery' | 'pickup' | 'relay'
+/**
+ * 'digital' = panier 100 % fichiers : ni adresse, ni port, ni expédition Boxtal.
+ * Un panier mixte reste 'delivery' / 'relay' / 'pickup' (il y a un colis à sortir).
+ */
+export type DeliveryMode = 'delivery' | 'pickup' | 'relay' | 'digital'
 
 export interface ShopOrderItem {
   product_id: string
@@ -19,6 +23,8 @@ export interface ShopOrderItem {
   quantity: number
   unit_price: number // centimes
   weight_grams?: number // poids unitaire du produit au moment de la commande
+  /** Snapshot : le produit peut changer de type après la commande. */
+  is_digital?: boolean
   custom_field_values?: Array<{ key: string; label: string; value: string }>
 }
 
@@ -76,7 +82,32 @@ export interface ShopOrder {
 
   // Locale utilisé lors de la commande
   locale?: string
+
+  // ── Produits numériques ──
+  has_digital: boolean
+  has_physical: boolean
+  /**
+   * Horodatage du renoncement explicite au droit de rétractation
+   * (art. L221-28 3° du Code de la consommation). Obligatoire dès qu'un fichier
+   * est vendu : sans cette preuve, le client garde ses 14 jours.
+   */
+  digital_waiver_at: string | null
 }
+
+/** Droit de téléchargement ouvert après paiement (table shop_order_downloads). */
+export interface ShopOrderDownload {
+  id: string
+  order_id: string
+  product_id: string
+  file_name: string
+  download_count: number
+  max_downloads: number
+  expires_at: string
+  last_download_at: string | null
+}
+
+/** Vue client d'un droit de téléchargement — le chemin du fichier n'y figure pas. */
+export type PublicDownload = Omit<ShopOrderDownload, 'order_id'> & { available: boolean }
 
 export const SHOP_STATUS_LABELS: Record<ShopOrderStatus, string> = {
   pending_payment: 'En attente de paiement',

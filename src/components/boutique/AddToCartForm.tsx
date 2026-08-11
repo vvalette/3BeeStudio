@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import type { ShopProduct } from '@/types/shop-product'
+import type { PublicShopProduct } from '@/types/shop-product'
 import { effectivePrice } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
 
-export default function AddToCartForm({ product }: { product: ShopProduct }) {
+export default function AddToCartForm({ product }: { product: PublicShopProduct }) {
   const router = useRouter()
   const t = useTranslations('boutique.addToCart')
   const locale = useLocale()
@@ -41,6 +41,9 @@ export default function AddToCartForm({ product }: { product: ShopProduct }) {
       original_price:      product.sale_price !== null ? product.price : null,
       image:               product.images[0] ?? null,
       max_stock:           product.stock,
+      // Portée jusqu'au panier : c'est ce drapeau qui exclut la ligne du calcul
+      // de port et dispense la commande d'adresse de livraison.
+      ...(product.product_type === 'digital' ? { is_digital: true } : {}),
       custom_field_values: hasCustomFields ? { ...fieldValues } : undefined,
     }, quantity)
     open()
