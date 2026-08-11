@@ -118,6 +118,15 @@
 
 ---
 
+## 📥 Produits numériques
+
+Suivi dans un fichier dédié : [`TODO-produits-numeriques.md`](TODO-produits-numeriques.md)
+— la vente de fichiers 3D est livrée et en prod ; il reste l'upload de gros
+fichiers depuis l'admin, la séparation numérique/physique dans l'admin, et le
+ticket GitHub de purge.
+
+---
+
 ## 🐞 Points de vigilance
 
 - **Next.js 15** — App Router uniquement, jamais Pages Router
