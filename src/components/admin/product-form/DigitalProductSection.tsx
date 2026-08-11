@@ -50,26 +50,55 @@ export default function DigitalProductSection({
   set: <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) => void
 }) {
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Envoi direct vers Supabase, via une URL signée obtenue de l'API.
+   *
+   * Le fichier ne passe pas par notre serveur : la limite de taille de requête de
+   * la plateforme rejetait tout envoi de quelques Mo en production. XHR et non
+   * `fetch`, parce que `fetch` n'expose aucune progression d'upload — sur 18 Mo,
+   * un simple spinner laisse croire à un blocage.
+   */
   const onDrop = useCallback(async (accepted: File[]) => {
     const file = accepted[0]
     if (!file) return
     setError(null)
     setUploading(true)
+    setProgress(0)
+
     try {
-      const body = new FormData()
-      body.append('file', file)
-      const res = await fetch('/api/admin/upload/digital-file', { method: 'POST', body })
+      const res = await fetch('/api/admin/upload/digital-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, size: file.size }),
+      })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Erreur upload'); return }
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('PUT', data.uploadUrl)
+        xhr.setRequestHeader('content-type', file.type || 'application/octet-stream')
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => xhr.status >= 200 && xhr.status < 300
+          ? resolve()
+          : reject(new Error(`Supabase a refusé le fichier (${xhr.status})`))
+        xhr.onerror = () => reject(new Error('Réseau interrompu pendant l’envoi'))
+        xhr.send(file)
+      })
+
       set('digitalFilePath', data.path)
       set('digitalFileName', data.name)
       set('digitalFileSize', data.size)
-    } catch {
-      setError('Réseau indisponible — fichier non envoyé')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Réseau indisponible — fichier non envoyé')
     } finally {
       setUploading(false)
+      setProgress(0)
     }
   }, [set])
 
@@ -149,26 +178,43 @@ export default function DigitalProductSection({
                   </svg>
                 </button>
               </div>
+            ) : uploading ? (
+              /* Progression réelle : sur un STL de 18 Mo, un spinner sans chiffre
+                 fait croire que l'admin est figée. */
+              <div className="rounded-xl border border-amber/30 bg-amber/5 px-4 py-4">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-[13px] font-semibold text-amber">Envoi vers le stockage privé…</p>
+                  <p className="font-mono text-[13px] font-bold tabular-nums text-amber">{progress} %</p>
+                </div>
+                <div className="mt-2.5 h-1.5 overflow-hidden rounded-pill bg-bg-3">
+                  <div
+                    className="h-full rounded-pill bg-amber transition-[width] duration-200"
+                    style={{ width: `${Math.max(2, progress)}%` }}
+                    role="progressbar"
+                    aria-valuenow={progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] text-ink-3">
+                  Le fichier va directement chez Supabase, sans passer par le serveur du site.
+                </p>
+              </div>
             ) : (
               <div
                 {...getRootProps()}
                 className={[
                   'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all',
                   isDragActive ? 'border-amber bg-amber/5 text-amber' : 'border-[var(--line)] text-ink-3 hover:border-amber/50 hover:text-ink-2',
-                  uploading ? 'pointer-events-none opacity-40' : '',
                 ].join(' ')}
               >
                 <input {...getInputProps()} />
-                {uploading ? (
-                  <svg className="animate-spin text-amber" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round" /></svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="7" width="10" height="6.5" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
-                  </svg>
-                )}
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="7" width="10" height="6.5" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
+                </svg>
                 <div>
-                  <p className="text-sm font-medium">{uploading ? 'Envoi en cours…' : 'Glisser ou cliquer pour ajouter le fichier vendu'}</p>
-                  <p className="text-[11px]">.stl · .3mf · .step · .obj · .zip — max 100 Mo</p>
+                  <p className="text-sm font-medium">Glisser ou cliquer pour ajouter le fichier vendu</p>
+                  <p className="text-[11px]">.stl · .3mf · .step · .obj · .zip — max 200 Mo</p>
                 </div>
               </div>
             )}

@@ -20,17 +20,19 @@
 
 ---
 
-## 🔴 À faire — bloquant pour l'autonomie
+## ✅ Upload de gros fichiers — corrigé
 
-- [ ] **Upload de gros fichiers depuis le formulaire admin.**
-      La limite de taille de requête Vercel rejette les fichiers de plus de
-      quelques Mo : le STL Oral-B (18 Mo) a dû être poussé directement dans
-      Supabase depuis un poste local. Un fichier léger (259 Ko) passe bien.
-      → Correctif : une route qui renvoie une **URL d'upload signée** Supabase
-      (`createSignedUploadUrl`), et `DigitalProductSection` envoie le fichier
-      directement à Supabase sans transiter par Vercel.
-      Tant que ce n'est pas fait, tout produit numérique avec un fichier > ~4 Mo
-      doit être créé par script.
+- [x] `/api/admin/upload/digital-file` ne reçoit plus le fichier : elle délivre
+      une **URL d'upload signée** Supabase, et le navigateur envoie le fichier
+      directement (XHR, avec barre de progression). La limite de taille de requête
+      de la plateforme n'est plus dans le chemin.
+      Testé par le formulaire admin avec le vrai STL de 17,3 Mo : 2,4 s, fichier
+      déposé dans le bucket **privé** uniquement, inaccessible publiquement.
+      Plafond applicatif : 200 Mo.
+
+## 🔴 À faire
+
+*(rien de bloquant pour l'instant)*
 
 ## 🟠 À faire — sécurité / administratif
 
@@ -82,6 +84,10 @@
       des services électroniques (seuil de 10 000 €, guichet OSS).
 - [ ] Un achat test réel en clés **Live** (1,50 €) reste le seul moyen de
       valider la chaîne en production. Elle est validée en clés test.
+- [ ] L'upload d'**images** produit passe toujours par le serveur (route
+      classique en `FormData`). Sans conséquence aujourd'hui — les photos font
+      quelques centaines de Ko — mais la même limite s'appliquerait à une image
+      lourde. À basculer sur URL signée si le cas se présente.
 
 ---
 
