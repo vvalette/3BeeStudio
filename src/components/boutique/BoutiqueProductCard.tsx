@@ -145,8 +145,10 @@ export default function BoutiqueProductCard({
       onPointerDown={handlePointerDown}
       onClick={() => { if (!wasDrag.current) router.push(`/boutique/${product.slug}`) }}
     >
-      {/* Visuel */}
-      <div className="relative w-full overflow-hidden bg-bg-2 aspect-[4/3]">
+      {/* Visuel — carré : c'est le ratio du recadrage à l'upload (ImageCropModal,
+          défaut 1:1) et celui de la fiche produit. Un cadre 4/3 rognait 25 % de
+          la hauteur des photos, coupant le haut et le bas du produit. */}
+      <div className="relative w-full overflow-hidden bg-bg-2 aspect-square">
 
         {/* Le viewer 3D n'est monté (contexte WebGL) que sur son slide actif, carte visible
             et bundle préchauffé — pas de fondu, cut assumé. */}
