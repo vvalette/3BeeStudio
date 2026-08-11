@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import type { ShopProduct } from '@/types/shop-product'
+import { useRouter, useSearchParams } from 'next/navigation'
+import type { ShopProduct, ProductType } from '@/types/shop-product'
 import type { ShopOrder } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { LOW_STOCK_THRESHOLD, isLowStock, isOutOfStock } from '@/lib/stock'
@@ -33,12 +33,14 @@ export default function AdminBoutiqueProducts({
   freeShipping: boolean
 }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { confirm, modal } = useConfirm()
   const { mutate, error: mutationError, success, clear } = useAdminMutation()
   const [products, setProducts]         = useState(initialProducts)
   const [busyId, setBusyId]             = useState<string | null>(null)
   const [freeShipping, setFreeShipping] = useState(initialFreeShipping)
   const [query, setQuery]               = useState('')
+  const [tab, setTab] = useState<ProductType>(() => searchParams.get('tab') === 'digital' ? 'digital' : 'physical')
 
   async function toggleFreeShipping() {
     const next = !freeShipping
@@ -93,12 +95,19 @@ export default function AdminBoutiqueProducts({
     if (ok) setProducts((prev) => prev.filter((p) => p.id !== product.id))
   }
 
+  // Deux catalogues séparés, comme /boutique et /designs côté public : les colonnes
+  // utiles diffèrent (stock et poids d'un côté, fichier vendu de l'autre).
+  const physical = products.filter((p) => p.product_type !== 'digital')
+  const digital  = products.filter((p) => p.product_type === 'digital')
+  const ofTab    = tab === 'digital' ? digital : physical
+
   const q = query.trim().toLowerCase()
   const filtered = q
-    ? products.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q) || (p.category ?? '').toLowerCase().includes(q))
-    : products
+    ? ofTab.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q) || (p.category ?? '').toLowerCase().includes(q))
+    : ofTab
 
-  const lowStock    = products.filter((p) => isLowStock(p.stock))
+  // Le stock ne concerne que les objets : un fichier ne s'épuise pas.
+  const lowStock    = physical.filter((p) => isLowStock(p.stock))
   const activeCount = orderStats.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length
   const revenue     = orderStats
     .filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
@@ -144,8 +153,27 @@ export default function AdminBoutiqueProducts({
           </Link>
         </div>
 
+        {/* Onglets Objets / Fichiers — deux catalogues distincts, comme /boutique
+            et /designs côté public. */}
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--line)' }}>
+          {([
+            { key: 'physical' as ProductType, label: 'Objets',   count: physical.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
+            { key: 'digital'  as ProductType, label: 'Fichiers', count: digital.length,  icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg> },
+          ]).map(({ key, label, count, icon }) => (
+            <button
+              key={key}
+              onClick={() => { setTab(key); setQuery(''); router.replace(key === 'digital' ? '?tab=digital' : '/admin/boutique', { scroll: false }) }}
+              className={['flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all', tab === key ? 'bg-bg-0 text-ink-0 shadow-sm' : 'text-ink-3 hover:text-ink-1'].join(' ')}
+            >
+              <span style={{ color: tab === key ? 'var(--amber)' : 'currentColor' }}>{icon}</span>
+              {label}
+              <span className={['rounded-pill px-2 py-0.5 font-mono text-[11px]', tab === key ? 'bg-amber/10 text-amber' : 'bg-bg-3 text-ink-3'].join(' ')}>{count}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Alerte stocks bas */}
-        {lowStock.length > 0 && (
+        {tab === 'physical' && lowStock.length > 0 && (
           <div className="rounded-xl border border-orange-500/25 bg-orange-500/5 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-orange-400">
               {lowStock.length === 1 ? 'Un produit à réimprimer' : `${lowStock.length} produits à réimprimer`}
@@ -156,7 +184,8 @@ export default function AdminBoutiqueProducts({
           </div>
         )}
 
-        {/* Livraison offerte globale */}
+        {/* Livraison offerte globale — réglage d'expédition, sans objet sur les fichiers */}
+        {tab === 'physical' && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-ink-0">Livraison offerte</p>
@@ -180,9 +209,10 @@ export default function AdminBoutiqueProducts({
             ].join(' ')} />
           </button>
         </div>
+        )}
 
         {/* Recherche produits */}
-        {products.length > 4 && (
+        {ofTab.length > 4 && (
           <input
             className="w-full rounded-xl border border-[var(--line)] bg-bg-1 px-4 py-2 text-sm text-ink-0 placeholder:text-ink-3 transition-colors focus:border-amber focus:outline-none"
             placeholder="Rechercher un produit, un slug, une catégorie…"
@@ -193,15 +223,17 @@ export default function AdminBoutiqueProducts({
 
         {/* Liste produits */}
         <div className="space-y-2">
-          {products.length === 0 && (
+          {ofTab.length === 0 && (
             <div className="rounded-xl border border-dashed border-[var(--line)] py-12 text-center text-ink-3">
-              <p className="text-sm">Aucun produit pour l&apos;instant.</p>
+              <p className="text-sm">
+                {tab === 'digital' ? 'Aucun fichier en vente pour l\u2019instant.' : 'Aucun objet pour l\u2019instant.'}
+              </p>
               <Link href="/admin/boutique/nouveau" className="mt-3 inline-block text-sm text-amber hover:underline">
                 Créer le premier produit →
               </Link>
             </div>
           )}
-          {products.length > 0 && filtered.length === 0 && (
+          {ofTab.length > 0 && filtered.length === 0 && (
             <p className="py-8 text-center text-sm text-ink-3">Aucun produit ne correspond à « {query} ».</p>
           )}
           {filtered.map((product) => {
@@ -238,7 +270,9 @@ export default function AdminBoutiqueProducts({
                 </div>
 
                 {/* Stock éditable */}
-                <StockControl product={product} busy={busy} onChange={(next) => updateStock(product, next)} />
+                {product.product_type === 'digital'
+                  ? <DigitalFileTag product={product} />
+                  : <StockControl product={product} busy={busy} onChange={(next) => updateStock(product, next)} />}
 
                 {/* Statut + actions — passent sous les infos sur mobile */}
                 <div className="flex w-full items-center justify-end gap-1 sm:w-auto sm:contents">
@@ -302,6 +336,35 @@ export default function AdminBoutiqueProducts({
       </div>
       {modal}
     </main>
+  )
+}
+
+/**
+ * Sur un produit numérique, la place du contrôle de stock affiche le fichier vendu :
+ * c'est la seule chose qu'on veut vérifier d'un coup d'œil (est-il bien attaché,
+ * et lequel). Un fichier absent est une fiche impayable — d'où l'alerte rouge.
+ */
+function DigitalFileTag({ product }: { product: ShopProduct }) {
+  if (!product.digital_file_name) {
+    return (
+      <Tooltip content="Produit numérique sans fichier — la vente est impossible">
+        <span className="shrink-0 rounded-pill border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-red-400">
+          aucun fichier
+        </span>
+      </Tooltip>
+    )
+  }
+  const mo = product.digital_file_size ? product.digital_file_size / 1024 / 1024 : 0
+  const size = mo >= 1 ? `${mo.toFixed(1)} Mo` : `${Math.max(1, Math.round((product.digital_file_size ?? 0) / 1024))} Ko`
+  return (
+    <Tooltip content={`${product.digital_file_name} — servi par lien signé après paiement`}>
+      <span className="flex shrink-0 items-center gap-1.5 rounded-pill border border-cyan-400/25 bg-cyan-400/5 px-2.5 py-0.5 font-mono text-[11px] text-cyan-400">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="7" width="10" height="6.5" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 015 0v2" />
+        </svg>
+        {size}
+      </span>
+    </Tooltip>
   )
 }
 
