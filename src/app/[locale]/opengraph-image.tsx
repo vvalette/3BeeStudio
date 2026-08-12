@@ -19,8 +19,11 @@ export default function OpengraphImage() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: '80px',
-          background:
-            'radial-gradient(ellipse at 70% 0%, rgba(245,158,11,0.20), transparent 55%), #0A0A0B',
+          // Satori ne parse pas le raccourci `background` mêlant dégradé + couleur :
+          // les deux propriétés doivent rester séparées.
+          backgroundColor: '#0A0A0B',
+          backgroundImage:
+            'radial-gradient(ellipse at 70% 0%, rgba(245,158,11,0.20), transparent 55%)',
           color: '#FAFAFA',
           fontFamily: 'sans-serif',
         }}
