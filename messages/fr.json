@@ -860,7 +860,6 @@
       "title": "Finaliser ma commande"
     },
     "card": {
-      "view3D": "Voir le modèle 3D",
       "photoAlt": "Photo {n}",
       "outOfStock": "Rupture de stock",
       "available": "{count} dispo",

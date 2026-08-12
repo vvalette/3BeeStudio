@@ -860,7 +860,6 @@
       "title": "Complete my order"
     },
     "card": {
-      "view3D": "View 3D model",
       "photoAlt": "Photo {n}",
       "outOfStock": "Out of stock",
       "available": "{count} left",
