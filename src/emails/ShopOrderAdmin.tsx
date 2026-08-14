@@ -21,6 +21,12 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
   const ref      = `#${order.id.slice(0, 8).toUpperCase()}`
   const isPickup = order.delivery_mode === 'pickup'
   const isRelay  = order.delivery_mode === 'relay'
+  // Commande 100 % fichiers : livrée automatiquement au paiement. Aucune étiquette,
+  // aucun colis, aucune action — l'email doit le dire au lieu de réclamer une
+  // expédition qui n'existe pas.
+  const isDigitalOnly = order.delivery_mode === 'digital'
+  // Panier mixte : il y a un colis ET des fichiers déjà partis.
+  const isMixed  = order.has_digital && order.has_physical
   const items    = order.items ?? []
   const totalQty = items.reduce((sum, i) => sum + i.quantity, 0)
 
@@ -32,13 +38,13 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
 
           <Section style={{ textAlign: 'center', marginBottom: 20 }}>
             <Text style={{ display: 'inline-block', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 999, padding: '6px 16px', color: amber, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', margin: 0 }}>
-              🛒 Nouvelle commande boutique
+              {isDigitalOnly ? '⬇️ Nouvelle vente de fichiers' : '🛒 Nouvelle commande boutique'}
             </Text>
           </Section>
 
           <Section style={{ textAlign: 'center', marginBottom: 24 }}>
             <Text style={{ color: ink0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.025em', margin: '0 0 8px' }}>
-              {formatPrice(order.total_amount)} · {totalQty} article{totalQty > 1 ? 's' : ''}
+              {formatPrice(order.total_amount)} · {totalQty} {isDigitalOnly ? `fichier${totalQty > 1 ? 's' : ''}` : `article${totalQty > 1 ? 's' : ''}`}
             </Text>
             <Text style={{ color: ink2, fontSize: 13, margin: 0 }}>
               Commande {ref} — {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -49,17 +55,24 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
           <Section style={{ textAlign: 'center', marginBottom: 12 }}>
             <Text style={{
               display: 'inline-block',
-              background: isPickup ? 'rgba(56,189,248,0.10)' : 'rgba(52,211,153,0.10)',
-              border: `1px solid ${isPickup ? 'rgba(56,189,248,0.30)' : 'rgba(52,211,153,0.30)'}`,
+              background: isDigitalOnly ? 'rgba(34,211,238,0.10)' : isPickup ? 'rgba(56,189,248,0.10)' : 'rgba(52,211,153,0.10)',
+              border: `1px solid ${isDigitalOnly ? 'rgba(34,211,238,0.30)' : isPickup ? 'rgba(56,189,248,0.30)' : 'rgba(52,211,153,0.30)'}`,
               borderRadius: 999, padding: '6px 16px', margin: 0,
-              color: isPickup ? '#38BDF8' : '#34D399', fontSize: 12, fontWeight: 600,
+              color: isDigitalOnly ? '#22D3EE' : isPickup ? '#38BDF8' : '#34D399', fontSize: 12, fontWeight: 600,
             }}>
-              {isPickup
-                ? '🏠 Retrait au studio — pas d’expédition'
-                : isRelay
-                  ? '📍 Point relais — étiquette à générer'
-                  : '📦 Livraison à domicile — étiquette à générer'}
+              {isDigitalOnly
+                ? '⬇️ Téléchargement — rien à faire'
+                : isPickup
+                  ? '🏠 Retrait au studio — pas d’expédition'
+                  : isRelay
+                    ? '📍 Point relais — étiquette à générer'
+                    : '📦 Livraison à domicile — étiquette à générer'}
             </Text>
+            {isMixed && (
+              <Text style={{ color: ink3, fontSize: 11, margin: '8px 0 0' }}>
+                Panier mixte : les fichiers sont déjà livrés, seul le colis reste à sortir.
+              </Text>
+            )}
           </Section>
 
           {/* Client */}
@@ -108,7 +121,11 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
                 {order.discount_amount > 0 && (
                   <Total label="Réduction newsletter" value={`−${formatPrice(order.discount_amount)}`} valueStyle={{ color: '#34D399' }} />
                 )}
-                <Total label="Livraison" value={order.shipping === 0 ? 'Offerte' : formatPrice(order.shipping)} />
+                {/* Pas de ligne « Livraison : Offerte » sur une vente de fichiers :
+                    il n'y a pas de port, pas même à zéro. */}
+                {!isDigitalOnly && (
+                  <Total label="Livraison" value={order.shipping === 0 ? 'Offerte' : formatPrice(order.shipping)} />
+                )}
                 <Total label="Total payé" value={formatPrice(order.total_amount)} valueStyle={{ color: amber, fontWeight: 700, fontSize: 15 }} />
               </tbody>
             </table>
@@ -141,13 +158,28 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
             </Section>
           )}
 
+          {/* Vente de fichiers : dire explicitement qu'il n'y a rien à faire, sinon
+              l'email se lit comme une commande à traiter. */}
+          {isDigitalOnly && (
+            <Section style={{ background: card, border: `1px solid ${line}`, borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
+              <Text style={{ color: ink3, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 12px' }}>Aucune action requise</Text>
+              <Text style={{ color: ink2, fontSize: 13, lineHeight: '1.65', margin: 0 }}>
+                Les liens de téléchargement ont été ouverts automatiquement et envoyés au client.
+                La commande est marquée comme livrée : rien à imprimer, rien à expédier.
+              </Text>
+              <Text style={{ color: ink3, fontSize: 11, lineHeight: '1.6', margin: '10px 0 0' }}>
+                Comptabilité : recette de <strong style={{ color: ink2 }}>prestation de service</strong>, à déclarer séparément des ventes de marchandises.
+              </Text>
+            </Section>
+          )}
+
           {/* CTA admin */}
           <Section style={{ textAlign: 'center', marginBottom: 24 }}>
             <Link
               href={`${appUrl}/admin/boutique/commande/${order.id}`}
               style={{ display: 'inline-block', background: 'linear-gradient(180deg,#FBBF24,#F59E0B)', color: '#1A1300', fontSize: 14, fontWeight: 700, borderRadius: 999, padding: '12px 28px', textDecoration: 'none' }}
             >
-              {isPickup ? 'Ouvrir dans l’admin →' : 'Préparer l’expédition →'}
+              {isDigitalOnly || isPickup ? 'Ouvrir dans l’admin →' : 'Préparer l’expédition →'}
             </Link>
           </Section>
 

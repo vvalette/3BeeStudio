@@ -767,7 +767,9 @@ function ShopList({
         const status = order.status as ShopOrderStatus
         const created = new Date(order.created_at)
         const isSelected = selected.has(order.id)
-        const needsLabel = order.delivery_mode !== 'pickup'
+        // Ni retrait studio ni vente de fichiers : dans les deux cas il n'y a
+        // pas de colis, donc pas d'étiquette à réclamer.
+        const needsLabel = order.delivery_mode !== 'pickup' && order.delivery_mode !== 'digital'
           && (status === 'confirmed' || status === 'processing')
           && !order.boxtal_order_id
         return (

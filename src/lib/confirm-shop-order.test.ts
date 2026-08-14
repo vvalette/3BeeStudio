@@ -63,11 +63,13 @@ vi.mock('@/lib/resend', () => ({
 }))
 vi.mock('@/lib/alert', () => ({ sendCriticalAlert: vi.fn(async () => {}) }))
 vi.mock('@/lib/revalidate', () => ({ revalidateShop: vi.fn() }))
+vi.mock('@/lib/digital-delivery', () => ({ grantDownloads: vi.fn(async () => 1) }))
 
 import { confirmShopOrder } from './confirm-shop-order'
 import { sendShopOrderConfirmation, sendShopOrderAdminNotification } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { revalidateShop } from '@/lib/revalidate'
+import { grantDownloads } from '@/lib/digital-delivery'
 
 const orderRow = {
   id: 'so_1',
@@ -79,9 +81,24 @@ const orderRow = {
   ],
 }
 
+/** Commande 100 % fichiers : ni port, ni adresse, ni stock à décrémenter. */
+const digitalRow = {
+  id: 'so_2',
+  status: 'confirmed',
+  email: 'client@exemple.fr',
+  locale: 'fr',
+  delivery_mode: 'digital',
+  has_digital: true,
+  has_physical: false,
+  items: [
+    { product_id: 'p2', product_name: 'Modèle Ruche', quantity: 1, unit_price: 900, is_digital: true },
+  ],
+}
+
 beforeEach(() => {
   state.reset()
   vi.clearAllMocks()
+  vi.mocked(grantDownloads).mockResolvedValue(1)
 })
 
 describe('confirmShopOrder', () => {
@@ -158,6 +175,60 @@ describe('confirmShopOrder', () => {
 
     expect(result.order).toBeDefined()
     expect(sendCriticalAlert).not.toHaveBeenCalled()
+  })
+
+  it('commande 100 % fichiers → passe directement en delivered, sans toucher au stock', async () => {
+    state.queue('shop_orders', { data: digitalRow, error: null }, { data: null, error: null })
+    state.queue('shop_products', { data: [{ slug: 'modele-ruche' }], error: null })
+
+    const result = await confirmShopOrder('so_2')
+
+    expect(grantDownloads).toHaveBeenCalledOnce()
+    expect(state.writes[1]).toMatchObject({
+      table: 'shop_orders',
+      op: 'update',
+      values: { status: 'delivered' },
+      filters: [['id', 'so_2']],
+    })
+    // Le statut renvoyé (et transmis aux emails) doit refléter la commande finale.
+    expect(result.order?.status).toBe('delivered')
+    // Un fichier ne se consomme pas : aucun décrément de stock.
+    expect(state.rpcCalls).toHaveLength(0)
+    expect(sendShopOrderAdminNotification).toHaveBeenCalledOnce()
+  })
+
+  it('aucun fichier débloqué → la commande reste confirmed pour rester visible', async () => {
+    vi.mocked(grantDownloads).mockResolvedValueOnce(0)
+    state.queue('shop_orders', { data: digitalRow, error: null })
+    state.queue('shop_products', { data: [{ slug: 'modele-ruche' }], error: null })
+
+    const result = await confirmShopOrder('so_2')
+
+    expect(result.order?.status).toBe('confirmed')
+    expect(state.writes).toHaveLength(1)
+  })
+
+  it('panier mixte → reste confirmed : il y a encore un colis à sortir', async () => {
+    const mixedRow = {
+      ...digitalRow,
+      has_physical: true,
+      items: [
+        { product_id: 'p2', product_name: 'Modèle Ruche', quantity: 1, unit_price: 900, is_digital: true },
+        { product_id: 'p1', product_name: 'Vase Hex', quantity: 2, unit_price: 1500 },
+      ],
+    }
+    state.queue('shop_orders', { data: mixedRow, error: null })
+    state.rpcResults.push({ data: [{ new_stock: 3, oversold: false }], error: null })
+    state.queue('shop_products', { data: [{ slug: 'vase-hex' }], error: null })
+
+    const result = await confirmShopOrder('so_2')
+
+    expect(result.order?.status).toBe('confirmed')
+    expect(state.writes).toHaveLength(1)
+    // Seul l'article physique est décrémenté.
+    expect(state.rpcCalls).toEqual([
+      { fn: 'decrement_shop_stock', args: { p_product_id: 'p1', p_qty: 2 } },
+    ])
   })
 
   it('erreur RPC stock → loggée mais non bloquante (email quand même envoyé)', async () => {

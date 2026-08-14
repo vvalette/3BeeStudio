@@ -45,14 +45,38 @@ export async function confirmShopOrder(
 
   console.info('[confirm-shop-order]', JSON.stringify({ event: 'shop_order_confirmed', shopOrderId }))
 
-  const shopOrder = updatedShop as ShopOrder
+  let shopOrder = updatedShop as ShopOrder
 
   // Ouvre les droits de téléchargement AVANT les emails : la confirmation contient
   // les liens, ils doivent exister au moment où elle part.
   // Idempotent (index unique order_id/product_id) — un rejeu ne remet pas les
   // compteurs à zéro ni ne repousse l'expiration.
   if (shopOrder.has_digital) {
-    await grantDownloads(shopOrder)
+    const granted = await grantDownloads(shopOrder)
+
+    // Une commande 100 % fichiers est terminée à la seconde où le paiement passe :
+    // les liens sont ouverts, il n'y a ni colis à préparer ni étiquette à générer.
+    // La laisser en `confirmed` la ferait apparaître à vie dans les files « à faire »
+    // de l'admin pour un travail qui n'existe pas.
+    //
+    // Conditionné au grant réel : zéro fichier débloqué = anomalie (produit sans
+    // fichier), et la commande doit alors rester visible comme non traitée.
+    if (granted > 0 && !shopOrder.has_physical) {
+      const { error: deliverError } = await supabaseAdmin
+        .from('shop_orders')
+        .update({ status: 'delivered' })
+        .eq('id', shopOrderId)
+
+      if (deliverError) {
+        // Non bloquant : le client a ses fichiers, seule l'étiquette de statut
+        // côté admin reste à jour manuellement.
+        console.error('[confirm-shop-order] Passage en delivered échoué:', deliverError)
+      } else {
+        // Copie plutôt que mutation : la ligne renvoyée par Supabase est aussi
+        // celle que l'appelant reçoit, on ne la modifie pas sous ses pieds.
+        shopOrder = { ...shopOrder, status: 'delivered' }
+      }
+    }
   }
 
   for (const item of shopOrder.items ?? []) {

@@ -20,9 +20,10 @@ const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'pro
 // événement de suivi, la commande resterait sinon bloquée en préparation.
 const AUTO_STATUSES: ShopOrderStatus[] = ['shipped', 'delivered']
 
-// Une commande de fichiers ne connaît que deux états : payée ou non. Pas de
-// préparation, pas d'expédition, pas de livraison à constater.
-const DIGITAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed']
+// Une commande de fichiers ne connaît ni préparation ni expédition : elle passe
+// en `delivered` dès que les liens sont ouverts (cf. confirmShopOrder). `confirmed`
+// reste sélectionnable pour le cas anormal d'un fichier resté à débloquer.
+const DIGITAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'delivered']
 
 export default function AdminShopOrderDetail({
   order: initialOrder,
