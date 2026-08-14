@@ -30,6 +30,13 @@ export async function POST(
     return NextResponse.json({ error: 'Commande en retrait studio — pas d\'expédition' }, { status: 400 })
   }
 
+  // Sans cette garde l'appel échouait plus bas sur « Adresse de livraison
+  // incomplète », un message qui laisse croire à une donnée manquante alors
+  // qu'une vente de fichiers n'a tout simplement pas de colis.
+  if (shopOrder.delivery_mode === 'digital') {
+    return NextResponse.json({ error: 'Commande de fichiers — rien à expédier' }, { status: 400 })
+  }
+
   // Le relais exige un pickupPointCode : sans lui, Boxtal refuse l'expédition.
   if (shopOrder.delivery_mode === 'relay' && !shopOrder.pickup_point_code) {
     return NextResponse.json(

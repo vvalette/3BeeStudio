@@ -152,13 +152,21 @@ export async function sendShopOrderAdminNotification(order: ShopOrder): Promise<
 
   const html = await render(ShopOrderAdmin({ order, appUrl }))
 
-  const mode = order.delivery_mode === 'pickup' ? 'retrait studio' : 'livraison'
+  const ref = order.id.slice(0, 8).toUpperCase()
+
+  // Une vente de fichiers ne demande aucun travail : l'objet doit le dire dès la
+  // boîte de réception, sinon elle se lit comme une commande à préparer.
+  const subject = order.delivery_mode === 'digital'
+    ? `⬇️ Vente de fichiers #${ref} — ${order.name} (rien à faire)`
+    : `🛒 Nouvelle commande boutique #${ref} — ${order.name} (${
+        order.delivery_mode === 'pickup' ? 'retrait studio' : 'livraison'
+      })`
 
   const { data, error } = await resend.emails.send({
     from,
     replyTo: order.email,
     to: getAdminEmails(),
-    subject: `🛒 Nouvelle commande boutique #${order.id.slice(0, 8).toUpperCase()} — ${order.name} (${mode})`,
+    subject,
     html,
   })
 

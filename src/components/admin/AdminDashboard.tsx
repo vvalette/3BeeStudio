@@ -47,14 +47,17 @@ export default function AdminDashboard({
   // Devis sur-mesure en attente : le client a demandé, personne n'a répondu.
   const quotesToSend = customOrders.filter((o) => o.status === 'pending_quote')
 
-  // À préparer : payé, production pas encore lancée.
-  const shopToPrepare = shopOrders.filter((o) => o.status === 'confirmed')
+  // À préparer : payé, production pas encore lancée. Une commande 100 % fichiers
+  // n'a rien à produire — elle est livrée dès le paiement, la faire figurer ici
+  // serait une tâche fantôme qui ne disparaîtrait jamais.
+  const shopToPrepare = shopOrders.filter((o) => o.status === 'confirmed' && o.has_physical)
   const nfcToPrepare  = orders.filter((o) => o.status === 'confirmed')
 
   // Étiquettes à générer : en préparation, sans expédition Boxtal rattachée.
-  // Le retrait studio est exclu — il n'y a pas de colis à expédier.
+  // Retrait studio et vente de fichiers exclus — il n'y a pas de colis à expédier.
   const shopLabels = shopOrders.filter(
-    (o) => o.status === 'processing' && !o.boxtal_order_id && o.delivery_mode !== 'pickup',
+    (o) => o.status === 'processing' && !o.boxtal_order_id
+      && o.delivery_mode !== 'pickup' && o.delivery_mode !== 'digital',
   )
   const nfcLabels = orders.filter((o) => o.status === 'processing' && !o.boxtal_order_id)
 
