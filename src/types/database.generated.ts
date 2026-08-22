@@ -43,6 +43,10 @@ export type Database = {
           payment_url: string | null
           phone: string
           project_type: string
+          quote_issued_at: string | null
+          quote_items: Json | null
+          quote_number: string | null
+          quote_object: string | null
           reference_file_url: string | null
           shipping_address: string | null
           shipping_city: string | null
@@ -74,6 +78,10 @@ export type Database = {
           payment_url?: string | null
           phone: string
           project_type: string
+          quote_issued_at?: string | null
+          quote_items?: Json | null
+          quote_number?: string | null
+          quote_object?: string | null
           reference_file_url?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
@@ -105,6 +113,10 @@ export type Database = {
           payment_url?: string | null
           phone?: string
           project_type?: string
+          quote_issued_at?: string | null
+          quote_items?: Json | null
+          quote_number?: string | null
+          quote_object?: string | null
           reference_file_url?: string | null
           shipping_address?: string | null
           shipping_city?: string | null

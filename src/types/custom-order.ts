@@ -7,6 +7,15 @@ export type CustomOrderStatus =
   | 'delivered'
   | 'cancelled'
 
+/** Une ligne du tableau du devis. `unit_price` est en centimes. */
+export interface QuoteLineItem {
+  label: string
+  /** Précisions sous le libellé, une par ligne (matière, finition, options). */
+  detail?: string
+  quantity: number
+  unit_price: number
+}
+
 export interface CustomOrder {
   id: string
   created_at: string
@@ -34,6 +43,12 @@ export interface CustomOrder {
   total_amount: number | null
   payment_url: string | null
   stripe_checkout_session_id: string | null
+
+  // Devis PDF — données imprimées sur le document
+  quote_number: string | null
+  quote_object: string | null
+  quote_items: QuoteLineItem[] | null
+  quote_issued_at: string | null
 
   // Solde — second encaissement, réclamé avant expédition
   balance_amount: number | null
