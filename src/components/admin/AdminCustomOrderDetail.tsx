@@ -324,12 +324,16 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                   </svg>
                   <span className="truncate">{order.email}</span>
                 </a>
-                <a href={`tel:${order.phone}`} className="flex items-center gap-2 text-[13px] text-amber hover:underline">
-                  <svg className="shrink-0 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3.5 2.5h2l1.3 3.3-1.6 1a7 7 0 003.3 3.3l1-1.6 3.3 1.3v2a1.3 1.3 0 01-1.3 1.3A10.7 10.7 0 012.2 3.8 1.3 1.3 0 013.5 2.5z" />
-                  </svg>
-                  {order.phone}
-                </a>
+                {/* Chaîne vide = demande saisie à la main sans numéro : un lien
+                    `tel:` vide n'aurait rien à composer. */}
+                {order.phone && (
+                  <a href={`tel:${order.phone}`} className="flex items-center gap-2 text-[13px] text-amber hover:underline">
+                    <svg className="shrink-0 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3.5 2.5h2l1.3 3.3-1.6 1a7 7 0 003.3 3.3l1-1.6 3.3 1.3v2a1.3 1.3 0 01-1.3 1.3A10.7 10.7 0 012.2 3.8 1.3 1.3 0 013.5 2.5z" />
+                    </svg>
+                    {order.phone}
+                  </a>
+                )}
               </div>
             </Card>
 

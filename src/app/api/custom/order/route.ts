@@ -84,11 +84,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Erreur lors de la création de la demande' }, { status: 500 })
   }
 
-  // Emails en parallèle, non bloquants
-  Promise.all([
-    sendCustomOrderConfirmation(order as CustomOrder),
-    sendCustomOrderAdminNotification(order as CustomOrder),
-  ]).catch((err) => console.error('[mesure/order] Erreur email:', err))
+  // Emails en parallèle, attendus avant de répondre : sans `await`, la fonction
+  // Vercel peut être gelée dès la réponse renvoyée et les envois Resend ne
+  // partent jamais (cas constaté sur la demande du 15/08). Un échec d'envoi
+  // reste non bloquant : la demande est déjà enregistrée en base.
+  await Promise.all([
+    sendCustomOrderConfirmation(order as CustomOrder).catch((err) =>
+      console.error('[mesure/order] Email client non bloquant:', err),
+    ),
+    sendCustomOrderAdminNotification(order as CustomOrder).catch((err) =>
+      console.error('[mesure/order] Notif admin non bloquante:', err),
+    ),
+  ])
 
   return NextResponse.json({ order_id: order.id }, { status: 201 })
 }

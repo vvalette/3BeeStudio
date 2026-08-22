@@ -12,6 +12,7 @@ import {
   STATUS_PILL, STATUS_ACCENT,
   CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT,
   SHOP_STATUS_PILL, SHOP_STATUS_ACCENT,
+  isShopOrderActionable,
 } from '@/lib/status-ui'
 import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 import Select from '@/components/ui/Select'
@@ -115,7 +116,7 @@ export default function AdminOrdersList({
       shopRevenue:    shopPaid.reduce((s, o) => s + o.total_amount, 0),
       shopTotal:      periodShop.length,
       shopProduction: periodShop.filter((o) => ['confirmed', 'processing'].includes(o.status)).length,
-      shopActive:     periodShop.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length,
+      shopActive:     periodShop.filter((o) => isShopOrderActionable(o.status)).length,
       // Fichiers (commandes 100 % numériques)
       digitalRevenue: digitalPaid.reduce((s, o) => s + o.total_amount, 0),
       digitalTotal:   periodDigital.length,
@@ -332,6 +333,18 @@ export default function AdminOrdersList({
         {/* ── Section Custom ── */}
         {section === 'custom' && (
           <>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[11px] text-ink-3">{periodCustom.length} demande{periodCustom.length !== 1 ? 's' : ''} sur la période</span>
+              {/* Toutes les demandes n'arrivent pas par le formulaire : celles
+                  négociées en DM se saisissent ici pour rejoindre le même flux. */}
+              <Link
+                href="/admin/sur-mesure/nouveau"
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-3 py-1.5 text-[11px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
+              >
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M8 3.5v9M3.5 8h9" /></svg>
+                Nouvelle demande
+              </Link>
+            </div>
             <FilterBar
               filters={CUSTOM_FILTERS}
               active={custom.filter}

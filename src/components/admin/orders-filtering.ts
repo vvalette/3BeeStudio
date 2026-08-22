@@ -8,6 +8,7 @@ import {
   STATUS_ACCENT, STATUS_SHORT_LABELS, ALL_STATUSES,
   CUSTOM_STATUS_ACCENT, CUSTOM_STATUS_SHORT_LABELS,
   SHOP_STATUS_ACCENT, SHOP_STATUS_SHORT_LABELS, ALL_SHOP_STATUSES,
+  isShopOrderActionable,
 } from '@/lib/status-ui'
 
 // Filtres, tri, périodes et hook de section du dashboard commandes admin.
@@ -78,7 +79,7 @@ export const CUSTOM_FILTERS: FilterDef<CustomOrder, CustomFilterKey>[] = [
 ]
 
 export const SHOP_FILTERS: FilterDef<ShopOrder, ShopFilterKey>[] = [
-  { key: 'active', label: 'À traiter', match: (o) => o.status !== 'delivered' && o.status !== 'cancelled' },
+  { key: 'active', label: 'À traiter', match: (o) => isShopOrderActionable(o.status) },
   { key: 'all',    label: 'Toutes',    match: () => true },
   ...ALL_SHOP_STATUSES.map((s) => ({
     key: s as ShopFilterKey,
