@@ -687,6 +687,19 @@
       "total": "Total estimé :",
       "pay": "Régler mon acompte →"
     },
+    "balanceAction": {
+      "eyebrow": "Action requise",
+      "title": "Votre projet est prêt",
+      "desc": "Réglez le solde pour déclencher l'expédition.",
+      "amount": "Solde à régler :",
+      "deposit": "Acompte déjà versé :",
+      "pay": "Régler le solde →"
+    },
+    "balancePaid": {
+      "eyebrow": "Solde reçu",
+      "title": "Merci, tout est réglé !",
+      "desc": "Votre commande part très vite. Vous recevrez un email dès l'expédition."
+    },
     "timeline": {
       "heading": "Avancement",
       "inProgress": "en cours",
