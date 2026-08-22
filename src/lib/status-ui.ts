@@ -99,3 +99,15 @@ export const SHOP_STATUS_SHORT_LABELS: Record<ShopOrderStatus, string> = {
 export const ALL_SHOP_STATUSES: ShopOrderStatus[] = [
   'pending_payment', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled',
 ]
+
+/**
+ * Commandes boutique qui demandent encore une action de l'admin.
+ *
+ * `shipped` en est exclu : une fois l'étiquette générée et le colis remis, il
+ * n'y a plus rien à faire — le webhook Boxtal fait passer la commande en
+ * `delivered` tout seul. La laisser dans « À traiter » gonflait le compteur avec
+ * des lignes sur lesquelles on ne peut pas agir.
+ */
+export function isShopOrderActionable(status: ShopOrderStatus): boolean {
+  return status !== 'shipped' && status !== 'delivered' && status !== 'cancelled'
+}

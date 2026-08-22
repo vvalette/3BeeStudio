@@ -7,6 +7,7 @@ import type { ShopProduct, ProductType } from '@/types/shop-product'
 import type { ShopOrder } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { LOW_STOCK_THRESHOLD, isLowStock, isOutOfStock } from '@/lib/stock'
+import { isShopOrderActionable } from '@/lib/status-ui'
 import Tooltip from '@/components/ui/Tooltip'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 import { useAdminMutation } from './useAdminMutation'
@@ -108,7 +109,7 @@ export default function AdminBoutiqueProducts({
 
   // Le stock ne concerne que les objets : un fichier ne s'épuise pas.
   const lowStock    = physical.filter((p) => isLowStock(p.stock))
-  const activeCount = orderStats.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length
+  const activeCount = orderStats.filter((o) => isShopOrderActionable(o.status)).length
   const revenue     = orderStats
     .filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
     .reduce((s, o) => s + o.total_amount, 0)
