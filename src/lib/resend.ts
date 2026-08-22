@@ -9,7 +9,11 @@ import ShopOrderAdmin from '@/emails/ShopOrderAdmin'
 import NfcOrderAdmin from '@/emails/NfcOrderAdmin'
 import ContactMessage from '@/emails/ContactMessage'
 import ShipmentNotification from '@/emails/ShipmentNotification'
+import OrderDelivered from '@/emails/OrderDelivered'
 import { listDownloads } from '@/lib/digital-delivery'
+import { ensureInvoice, renderInvoicePdf, type InvoiceSource } from '@/lib/documents/invoice'
+import { invoiceFileName } from '@/lib/documents/pdf'
+import type { Order as NfcOrder } from '@/types/order'
 import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
 import type { CustomOrder } from '@/types/custom-order'
@@ -250,6 +254,30 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
  * la transition `confirmed|processing → shipped`, jamais sur un simple refresh du
  * suivi Boxtal (le webhook TRACKING_CHANGED peut rejouer plusieurs fois).
  */
+/**
+ * Facture PDF à joindre à l'email d'expédition.
+ *
+ * Jamais bloquant : si la facture ne peut pas être émise (base indisponible,
+ * migration non appliquée), le client doit quand même être prévenu que son
+ * colis part. On log et on envoie l'email sans pièce jointe.
+ */
+async function invoiceAttachment(
+  source: InvoiceSource,
+  order: NfcOrder | ShopOrder | CustomOrder,
+): Promise<Array<{ filename: string; content: string }>> {
+  try {
+    const invoice = await ensureInvoice(source, order)
+    const pdf = await renderInvoicePdf(invoice)
+    return [{
+      filename: invoiceFileName(invoice.number, invoice.client_name),
+      content: Buffer.from(pdf).toString('base64'),
+    }]
+  } catch (err) {
+    console.error('[resend] facture non jointe:', err)
+    return []
+  }
+}
+
 export async function sendShopShipmentNotification(order: ShopOrder): Promise<void> {
   // Une commande 100 % fichiers n'a pas de colis : parler d'expédition au client
   // n'aurait aucun sens. Les appelants filtrent déjà, ceci est le garde-fou.
@@ -295,6 +323,7 @@ export async function sendShopShipmentNotification(order: ShopOrder): Promise<vo
     subject: isEn
       ? `📦 Order #${ref} shipped — 3BeeStudio`
       : `📦 Commande #${ref} expédiée — 3BeeStudio`,
+    attachments: await invoiceAttachment('shop', order),
     html,
   })
 
@@ -329,11 +358,121 @@ export async function sendNfcShipmentNotification(order: Order): Promise<void> {
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
     subject: `📦 Commande #${ref} expédiée — 3BeeStudio`,
+    attachments: await invoiceAttachment('nfc', order),
     html,
   })
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
   console.info('[resend]', JSON.stringify({ type: 'nfc_shipment_notification', orderId: order.id, resendId: data?.id }))
+}
+
+/** « Votre projet est expédié » — sur-mesure. */
+export async function sendCustomShipmentNotification(order: CustomOrder): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from   = getFrom()
+  const ref    = order.id.slice(0, 8).toUpperCase()
+
+  const html = await render(ShipmentNotification({
+    recipientName: order.name,
+    orderRef: ref,
+    trackingUrl: `${appUrl}/custom/${order.id}`,
+    carrierTrackingNumber: order.tracking_number,
+    carrierTrackingUrl: order.tracking_url,
+    deliveryMode: 'delivery',
+    address: {
+      name:       order.shipping_name,
+      line1:      order.shipping_address,
+      line2:      null,
+      postalCode: order.shipping_postal_code,
+      city:       order.shipping_city,
+    },
+  }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: order.email,
+    subject: `📦 Projet sur-mesure #${ref} expédié — 3BeeStudio`,
+    attachments: await invoiceAttachment('custom', order),
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'custom_shipment_notification', orderId: order.id, resendId: data?.id }))
+}
+
+/**
+ * « Votre colis est arrivé » + demande d'avis Google.
+ *
+ * Un seul émetteur pour les trois flux : à ce stade l'email ne dépend plus que
+ * du destinataire et de sa page de suivi.
+ */
+export async function sendDeliveredNotification(input: {
+  email: string
+  recipientName: string
+  orderRef: string
+  trackingPath: string
+  what?: string
+  locale?: string
+}): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from   = getFrom()
+  const locale = input.locale ?? 'fr'
+  const isEn   = locale === 'en'
+
+  const html = await render(OrderDelivered({
+    recipientName: input.recipientName,
+    orderRef: input.orderRef,
+    trackingUrl: `${appUrl}${isEn ? '/en' : ''}${input.trackingPath}`,
+    what: input.what,
+    locale,
+  }))
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: input.email,
+    subject: isEn
+      ? `Your order #${input.orderRef} has arrived — 3BeeStudio`
+      : `Votre commande #${input.orderRef} est arrivée — 3BeeStudio`,
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'delivered_notification', orderRef: input.orderRef, resendId: data?.id }))
+}
+
+/** Livraison d'une commande NFC. */
+export function sendNfcDeliveredNotification(order: NfcOrder): Promise<void> {
+  return sendDeliveredNotification({
+    email: order.email,
+    recipientName: order.company,
+    orderRef: order.id.slice(0, 8).toUpperCase(),
+    trackingPath: `/suivi/${order.id}`,
+    what: `vos ${order.quantity} porte-clés`,
+  })
+}
+
+/** Livraison d'une commande boutique. */
+export function sendShopDeliveredNotification(order: ShopOrder): Promise<void> {
+  return sendDeliveredNotification({
+    email: order.email,
+    recipientName: order.name,
+    orderRef: order.id.slice(0, 8).toUpperCase(),
+    trackingPath: `/boutique/suivi/${order.id}`,
+    locale: order.locale ?? 'fr',
+  })
+}
+
+/** Livraison d'un projet sur-mesure. */
+export function sendCustomDeliveredNotification(order: CustomOrder): Promise<void> {
+  return sendDeliveredNotification({
+    email: order.email,
+    recipientName: order.name,
+    orderRef: order.id.slice(0, 8).toUpperCase(),
+    trackingPath: `/custom/${order.id}`,
+    what: 'votre pièce sur-mesure',
+  })
 }
 
 export async function sendContactMessage(input: {

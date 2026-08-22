@@ -3,12 +3,15 @@ import { QUOTE_LOGO_PNG_BASE64 } from './logo'
 import type { CustomOrder, QuoteLineItem } from '@/types/custom-order'
 
 /**
- * Devis PDF 3BeeStudio.
+ * Documents PDF 3BeeStudio : devis et factures.
  *
  * Reprend au point près la maquette validée (docs/reference/devis-modele.pdf,
  * produite à la main sous ReportLab) : mêmes marges, mêmes couleurs, mêmes
  * corps de texte. Le tableau et les conditions coulent verticalement, donc un
- * devis à huit lignes reste lisible là où la maquette n'en montrait qu'une.
+ * document à huit lignes reste lisible là où la maquette n'en montrait qu'une.
+ *
+ * Devis et facture partagent tout sauf l'en-tête, les conditions et le pied :
+ * un devis attend une signature, une facture constate un paiement reçu.
  */
 
 // ── Géométrie (points PostScript, A4) ────────────────────────────────────────
@@ -52,15 +55,43 @@ const ISSUER = {
 /** Jours de validité du devis, alignés sur la mention des conditions. */
 export const QUOTE_VALIDITY_DAYS = 30
 
-export interface QuotePdfInput {
-  order: CustomOrder
-  quoteNumber: string
-  /** Objet du devis — une phrase, imprimée dans le bandeau crème. */
+/** Destinataire imprimé dans le bloc CLIENT. */
+export interface DocumentRecipient {
+  name: string
+  company?: string | null
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  postalCode?: string | null
+  city?: string | null
+}
+
+/**
+ * Ligne de total hors désignations : port, remise, ajustement. Un montant
+ * négatif s'imprime tel quel (« − 8,00 € »).
+ */
+export interface DocumentAdjustment {
+  label: string
+  amount: number // centimes
+}
+
+export interface DocumentPdfInput {
+  kind: 'quote' | 'invoice'
+  /** Numéro imprimé : DEV-AAAA-NNN ou FAC-AAAA-NNN. */
+  number: string
+  recipient: DocumentRecipient
+  /** Objet du document — une phrase, imprimée dans le bandeau crème. */
   object: string
   items: QuoteLineItem[]
-  /** Défaut : maintenant. Fixé pour qu'un devis regénéré soit identique. */
+  adjustments?: DocumentAdjustment[]
+  /** Défaut : maintenant. Fixé pour qu'un document régénéré soit identique. */
   issuedAt?: Date
+  /** Devis : découpe acompte / solde annoncée dans les conditions. */
   depositAmount?: number | null
+  /** Facture : date d'encaissement, mentionnée comme acquittement. */
+  paidAt?: Date | null
+  /** Facture : rappel de la référence de commande côté client. */
+  orderRef?: string | null
 }
 
 // ── Encodage ─────────────────────────────────────────────────────────────────
@@ -177,13 +208,14 @@ class QuoteDoc {
 
 // ── Composition ──────────────────────────────────────────────────────────────
 
-export async function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
-  const { order, quoteNumber, object, items } = input
+export async function buildDocumentPdf(input: DocumentPdfInput): Promise<Uint8Array> {
+  const { kind, number, recipient, object, items } = input
+  const isInvoice = kind === 'invoice'
   const issuedAt = input.issuedAt ?? new Date()
   const validUntil = new Date(issuedAt.getTime() + QUOTE_VALIDITY_DAYS * 24 * 3600 * 1000)
 
   const doc = await PDFDocument.create()
-  doc.setTitle(`Devis 3BeeStudio ${quoteNumber}`)
+  doc.setTitle(`${isInvoice ? 'Facture' : 'Devis'} 3BeeStudio ${number}`)
   doc.setAuthor('3BeeStudio - VALETTE Valentin')
   doc.setSubject(safe(object))
   doc.setCreationDate(issuedAt)
@@ -195,12 +227,17 @@ export async function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
   const d = new QuoteDoc(doc, regular, bold)
   d.newPage()
 
-  // ── En-tête : logo + bloc DEVIS ──
+  // ── En-tête : logo + bloc titre ──
   d.page.drawImage(logo, { x: LEFT, y: 711.4961, width: 86.10691, height: 73.70079 })
-  d.textRight('DEVIS', RIGHT, 762.5197, bold, 26, AMBER)
-  d.textRight(`N° ${quoteNumber}`, RIGHT, 745.5118, regular, 9.5, MUTED)
+  d.textRight(isInvoice ? 'FACTURE' : 'DEVIS', RIGHT, 762.5197, bold, 26, AMBER)
+  d.textRight(`N° ${number}`, RIGHT, 745.5118, regular, 9.5, MUTED)
   d.textRight(`Date : ${frDate(issuedAt)}`, RIGHT, 731.3386, regular, 9.5, MUTED)
-  d.textRight(`Validité : ${frDate(validUntil)}`, RIGHT, 717.1654, regular, 9.5, MUTED)
+  d.textRight(
+    isInvoice
+      ? (input.orderRef ? `Commande : ${input.orderRef}` : 'Facture acquittée')
+      : `Validité : ${frDate(validUntil)}`,
+    RIGHT, 717.1654, regular, 9.5, MUTED,
+  )
   d.rule(683.1496, AMBER, 1.6)
 
   // ── Émetteur / Client ──
@@ -216,13 +253,13 @@ export async function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
   }
 
   let yClient = 640.6299
-  d.text(order.name, COL_CLIENT, yClient, bold, 10.5, INK)
+  d.text(recipient.name, COL_CLIENT, yClient, bold, 10.5, INK)
   const clientLines = [
-    order.company,
-    order.shipping_address,
-    [order.shipping_postal_code, order.shipping_city].filter(Boolean).join(' ') || null,
-    order.email,
-    order.phone || null,
+    recipient.company,
+    recipient.address,
+    [recipient.postalCode, recipient.city].filter(Boolean).join(' ') || null,
+    recipient.email,
+    recipient.phone || null,
   ].filter((l): l is string => !!l && l.trim().length > 0)
   for (const line of clientLines) {
     yClient -= LEADING
@@ -289,8 +326,26 @@ export async function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
   d.rule(d.y, LINE, 0.6)
 
   // ── Totaux ──
-  const total = quoteTotal(items)
-  const yNet = d.y - 28.34
+  const adjustments = input.adjustments ?? []
+  const linesTotal = quoteTotal(items)
+  const total = linesTotal + adjustments.reduce((sum, a) => sum + a.amount, 0)
+
+  let yNet = d.y - 20.4
+  if (adjustments.length > 0) {
+    d.text('Sous-total', 334.4882, yNet, regular, 9.5, MUTED)
+    d.textRight(euros(linesTotal), COL_TOTAL, yNet, regular, 9.5, INK)
+    for (const adjustment of adjustments) {
+      yNet -= 13.61
+      d.text(adjustment.label, 334.4882, yNet, regular, 9.5, MUTED)
+      d.textRight(
+        `${adjustment.amount < 0 ? '- ' : ''}${euros(Math.abs(adjustment.amount))}`,
+        COL_TOTAL, yNet, regular, 9.5, INK,
+      )
+    }
+    yNet -= 15.6
+  } else {
+    yNet = d.y - 28.34
+  }
   d.text('Total net à payer', 334.4882, yNet, regular, 9.5, MUTED)
   d.textRight(euros(total), COL_TOTAL, yNet, regular, 10, INK)
 
@@ -305,19 +360,29 @@ export async function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
   d.y = yTva
 
   // ── Conditions ──
-  const deposit = input.depositAmount ?? order.deposit_amount ?? null
+  const deposit = input.depositAmount ?? null
   const settlement = deposit && deposit < total
-    ? `Règlement : 50 % d'acompte à la commande (${euros(deposit)}), 50 % à la réception (${euros(total - deposit)}).`
+    ? `Règlement : acompte de ${euros(deposit)} à la commande, solde de ${euros(total - deposit)} avant expédition.`
     : `Règlement : intégralité à la commande (${euros(total)}).`
 
-  const conditions = [
-    `Validité du devis : ${QUOTE_VALIDITY_DAYS} jours à compter de la date d'émission.`,
-    'Délai de fabrication : 5 à 7 jours ouvrés après acceptation du devis.',
-    settlement,
-    'Moyens de paiement : virement bancaire ou paiement en ligne sécurisé.',
-    'Livraison : remise en main propre ou expédition en France métropolitaine.',
-    'Les modèles 3D restent la propriété intellectuelle de 3BeeStudio.',
-  ]
+  const conditions = isInvoice
+    ? [
+        input.paidAt
+          ? `Facture acquittée le ${frDate(input.paidAt)} — paiement en ligne sécurisé.`
+          : 'Facture acquittée — paiement en ligne sécurisé.',
+        'TVA non applicable, art. 293 B du CGI — micro-entreprise non assujettie.',
+        // Mention obligatoire entre professionnels (art. L441-9 du Code de commerce).
+        'Pénalités de retard : 3 fois le taux d\'intérêt légal. Indemnité forfaitaire pour frais de recouvrement : 40 €.',
+        'Les modèles 3D restent la propriété intellectuelle de 3BeeStudio.',
+      ]
+    : [
+        `Validité du devis : ${QUOTE_VALIDITY_DAYS} jours à compter de la date d'émission.`,
+        'Délai de fabrication : 5 à 7 jours ouvrés après acceptation du devis.',
+        settlement,
+        'Moyens de paiement : virement bancaire ou paiement en ligne sécurisé.',
+        'Livraison : remise en main propre ou expédition en France métropolitaine.',
+        'Les modèles 3D restent la propriété intellectuelle de 3BeeStudio.',
+      ]
 
   const conditionsHeight = 17 + conditions.length * 14.17
   // Le cartouche de signature est ancré en bas de page : si les conditions
@@ -338,14 +403,25 @@ export async function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
     }
   }
 
-  // ── Bon pour accord + pied de page (ancrés en bas de la dernière page) ──
+  // ── Cartouche + pied de page (ancrés en bas de la dernière page) ──
+  // Une facture ne se signe pas : le cartouche constate le paiement au lieu de
+  // réclamer un « bon pour accord ».
   d.page.drawRectangle({
     x: LEFT, y: 89.00787, width: 232.4409, height: 73.70079,
-    borderColor: LINE, borderWidth: 0.8,
+    borderColor: isInvoice ? AMBER : LINE, borderWidth: 0.8,
   })
-  d.text('BON POUR ACCORD', LEFT + PAD, 145.7008, bold, 8.5, INK)
-  d.text('Date et signature du client', LEFT + PAD, 131.5276, regular, 7.5, MUTED)
-  d.text('(précédé de la mention « Bon pour accord »)', LEFT + PAD, 97.5118, regular, 6.8, MUTED)
+  if (isInvoice) {
+    d.text('PAYÉ', LEFT + PAD, 145.7008, bold, 12, AMBER)
+    d.text(
+      input.paidAt ? `Réglée le ${frDate(input.paidAt)}` : 'Règlement encaissé',
+      LEFT + PAD, 128.7, regular, 8, MUTED,
+    )
+    d.text('Aucun règlement complémentaire attendu.', LEFT + PAD, 97.5118, regular, 6.8, MUTED)
+  } else {
+    d.text('BON POUR ACCORD', LEFT + PAD, 145.7008, bold, 8.5, INK)
+    d.text('Date et signature du client', LEFT + PAD, 131.5276, regular, 7.5, MUTED)
+    d.text('(précédé de la mention « Bon pour accord »)', LEFT + PAD, 97.5118, regular, 6.8, MUTED)
+  }
   d.text(ISSUER.name, 306.1417, 145.7008, bold, 8.5, INK)
   d.text(ISSUER.signatory, 306.1417, 131.5276, regular, 8, MUTED)
 
@@ -368,11 +444,54 @@ function drawTableHeader(d: QuoteDoc) {
 }
 
 /** Nom de fichier proposé au téléchargement / en pièce jointe. */
-export function quoteFileName(quoteNumber: string, clientName: string): string {
-  const slug = safe(clientName)
+export function documentFileName(kind: 'quote' | 'invoice', number: string, clientName: string): string {
+const slug = safe(clientName)
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
-  return `Devis_3BeeStudio_${quoteNumber}${slug ? `_${slug}` : ''}.pdf`
+  const prefix = kind === 'invoice' ? 'Facture' : 'Devis'
+  return `${prefix}_3BeeStudio_${number}${slug ? `_${slug}` : ''}.pdf`
+}
+
+export function quoteFileName(quoteNumber: string, clientName: string): string {
+  return documentFileName('quote', quoteNumber, clientName)
+}
+
+export function invoiceFileName(invoiceNumber: string, clientName: string): string {
+  return documentFileName('invoice', invoiceNumber, clientName)
+}
+
+/**
+ * Devis d'un projet sur-mesure — le destinataire se déduit de la demande.
+ * Conserve la signature d'appel historique.
+ */
+export interface QuotePdfInput {
+  order: CustomOrder
+  quoteNumber: string
+  object: string
+  items: QuoteLineItem[]
+  issuedAt?: Date
+  depositAmount?: number | null
+}
+
+export function buildQuotePdf(input: QuotePdfInput): Promise<Uint8Array> {
+  const { order } = input
+  return buildDocumentPdf({
+    kind: 'quote',
+    number: input.quoteNumber,
+    recipient: {
+      name: order.name,
+      company: order.company,
+      email: order.email,
+      phone: order.phone,
+      address: order.shipping_address,
+      postalCode: order.shipping_postal_code,
+      city: order.shipping_city,
+    },
+    object: input.object,
+    items: input.items,
+    issuedAt: input.issuedAt,
+    depositAmount: input.depositAmount ?? order.deposit_amount,
+  })
 }

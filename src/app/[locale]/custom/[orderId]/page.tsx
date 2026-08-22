@@ -1,8 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
-import { CUSTOM_STATUS_STEPS, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS, PROJECT_TYPES, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
+import { getTranslations, getLocale } from 'next-intl/server'
+import { CUSTOM_STATUS_STEPS, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS, PROJECT_TYPES, paymentState, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import { formatPrice } from '@/lib/utils'
 import { resolveTracking } from '@/lib/tracking'
 
@@ -29,6 +29,7 @@ export default async function SuiviMesurePage({
   const { submitted, payment } = await searchParams
   const t = await getTranslations('suiviMesure')
   const tForm = await getTranslations('surMesureForm')
+  const locale = await getLocale()
 
   const { data: orderRaw, error } = await supabaseAdmin
     .from('custom_orders')
@@ -49,6 +50,10 @@ export default async function SuiviMesurePage({
   // Solde : demandé dès qu'un lien existe, soldé quand la date est posée. Pas de
   // statut dédié — la timeline reste pilotée par la production et l'expédition.
   const balanceDue  = o.balance_payment_url && !o.balance_paid_at
+  const pay = paymentState(o)
+  const payDate = (iso: string) => new Date(iso).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+  })
 
   // Libellés traduits (valeurs canoniques FR stockées → libellé localisé, repli sur la valeur brute)
   const statusLabel = (s: CustomOrderStatus) => t(`statuses.${s}`)
@@ -247,6 +252,55 @@ export default async function SuiviMesurePage({
           </div>
         </section>
 
+        {/* ── Paiements ── */}
+        {pay.depositPaid && (
+          <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1 shadow-card">
+            <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3">{t('payments.heading')}</h2>
+              {pay.fullyPaid ? (
+                <span className="rounded-pill bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
+                  {t('payments.settled')}
+                </span>
+              ) : pay.outstanding ? (
+                <span className="rounded-pill bg-amber/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber">
+                  {t('payments.outstanding', { amount: formatPrice(pay.outstanding) })}
+                </span>
+              ) : null}
+            </header>
+
+            <div className="space-y-3 p-6">
+              {o.deposit_amount && (
+                <PaymentRow
+                  label={t('payments.deposit')}
+                  amount={formatPrice(o.deposit_amount)}
+                  note={pay.depositPaidAt
+                    ? t('payments.received', { date: payDate(pay.depositPaidAt) })
+                    : t('payments.receivedNoDate')}
+                  received
+                />
+              )}
+              {(o.balance_amount || pay.outstanding) && (
+                <PaymentRow
+                  label={t('payments.balance')}
+                  amount={formatPrice(o.balance_amount ?? pay.outstanding ?? 0)}
+                  note={pay.balancePaid
+                    ? (pay.balancePaidAt
+                        ? t('payments.received', { date: payDate(pay.balancePaidAt) })
+                        : t('payments.receivedNoDate'))
+                    : t('payments.pending')}
+                  received={pay.balancePaid}
+                />
+              )}
+              {o.total_amount && (
+                <div className="flex items-baseline justify-between border-t border-dashed pt-3" style={{ borderColor: 'var(--line-amber)' }}>
+                  <span className="text-sm font-semibold text-amber">{t('payments.total')}</span>
+                  <span className="font-mono text-base font-bold text-amber">{formatPrice(o.total_amount)}</span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ── Détails du projet ── */}
         <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-bg-1 shadow-card">
           <header className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
@@ -318,6 +372,25 @@ export default async function SuiviMesurePage({
         </a>
       </div>
     </main>
+  )
+}
+
+function PaymentRow({
+  label, amount, note, received,
+}: {
+  label: string
+  amount: string
+  note: string
+  received: boolean
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="min-w-0">
+        <span className="text-sm text-ink-1">{label}</span>
+        <span className={['ml-2 text-xs', received ? 'text-emerald-400' : 'text-ink-3'].join(' ')}>{note}</span>
+      </span>
+      <span className={['shrink-0 font-mono text-sm', received ? 'text-ink-0' : 'text-ink-3'].join(' ')}>{amount}</span>
+    </div>
   )
 }
 

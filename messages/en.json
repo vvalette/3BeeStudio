@@ -687,6 +687,17 @@
       "total": "Estimated total:",
       "pay": "Pay my deposit →"
     },
+    "payments": {
+      "heading": "Payments",
+      "deposit": "Deposit",
+      "balance": "Balance",
+      "total": "Total",
+      "received": "Received on {date}",
+      "receivedNoDate": "Received",
+      "pending": "Pending",
+      "settled": "Fully paid",
+      "outstanding": "Still due: {amount}"
+    },
     "balanceAction": {
       "eyebrow": "Action required",
       "title": "Your project is ready",

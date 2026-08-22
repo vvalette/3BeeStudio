@@ -1,5 +1,6 @@
 import type { Order } from '@/types/order'
 import type { ShopOrder, DeliveryMode } from '@/types/shop-order'
+import type { CustomOrder } from '@/types/custom-order'
 
 const CONTENT_ID = 'content:v1:50180' // Cadeaux, cadeaux entreprise
 
@@ -403,6 +404,35 @@ export async function createShopBoxtalShipment(order: ShopOrder): Promise<Boxtal
 }
 
 // Retourne null si l'annulation est impossible (colis déjà pris en charge).
+/**
+ * Sur-mesure : le colis est déclaré à la main par l'admin — une pièce unique
+ * n'a ni fiche produit ni quantité dont déduire un poids.
+ */
+export async function createCustomBoxtalShipment(
+  order: CustomOrder,
+  pkg: { weight: number; length: number; width: number; height: number },
+): Promise<BoxtalResult> {
+  return createShipment({
+    externalId: order.id,
+    recipientName: order.shipping_name ?? order.company ?? order.name,
+    email: order.email,
+    phone: order.phone,
+    shipping_address: order.shipping_address,
+    // `custom_orders` n'a pas de second champ d'adresse ni de pays : le
+    // sur-mesure ne s'expédie qu'en France pour l'instant.
+    shipping_address2: null,
+    shipping_city: order.shipping_city,
+    shipping_postal_code: order.shipping_postal_code,
+    shipping_country: 'FR',
+    // Valeur déclarée (assurance transporteur) : le devis fait foi, l'acompte
+    // sert de repli sur une demande traitée sans devis complet.
+    totalAmount: order.total_amount ?? order.deposit_amount ?? 0,
+    pkg,
+    description: 'Piece sur-mesure imprimee en 3D',
+    mode: 'delivery',
+  })
+}
+
 export async function cancelBoxtalShipment(boxtalOrderId: string): Promise<void> {
   await boxtalFetch(`/shipping/v3.1/shipping-order/${boxtalOrderId}`, { method: 'DELETE' })
 }

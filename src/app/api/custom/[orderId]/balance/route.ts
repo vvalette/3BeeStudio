@@ -15,6 +15,8 @@ import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { Resend } from 'resend'
 import { computeBalance, type CustomOrder } from '@/types/custom-order'
+import { render } from 'react-email'
+import CustomBalance from '@/emails/CustomBalance'
 
 const schema = z.object({
   /** Montant en centimes. Omis → total estimé moins l'acompte. */
@@ -25,10 +27,6 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 /** Réclamer le solde n'a de sens qu'une fois l'acompte encaissé. */
 const PAYABLE_STATUSES = ['deposit_paid', 'in_production', 'shipped', 'delivered']
-
-function formatEuros(cents: number): string {
-  return `${(cents / 100).toFixed(2).replace('.', ',')} €`
-}
 
 export async function POST(
   req: Request,
@@ -118,21 +116,19 @@ export async function POST(
   }
 
   const from = process.env.RESEND_FROM_EMAIL!
+  const html = await render(CustomBalance({
+    order,
+    amount,
+    appUrl,
+    paymentUrl: session.url!,
+  }))
+
   const { error: emailError } = await resend.emails.send({
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `🎯 Votre projet est prêt — solde à régler #${orderId.slice(0, 8).toUpperCase()}`,
-    html: `
-      <p>Bonjour ${order.name},</p>
-      <p>Bonne nouvelle : votre projet sur-mesure est terminé. Il part dès le règlement du solde.</p>
-      <p><a href="${session.url}" style="background:#F59E0B;color:#1A1300;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:700;display:inline-block">Régler le solde →</a></p>
-      <p style="color:#888;font-size:12px">
-        Solde à régler : ${formatEuros(amount)}${order.deposit_amount ? `<br/>Acompte déjà versé : ${formatEuros(order.deposit_amount)}` : ''}${order.total_amount ? `<br/>Total : ${formatEuros(order.total_amount)}` : ''}
-      </p>
-      <p>Vous pouvez suivre votre commande ici : <a href="${appUrl}/custom/${orderId}">${appUrl}/custom/${orderId}</a></p>
-      <p>— L'équipe 3BeeStudio</p>
-    `,
+    subject: `Votre projet est prêt — solde à régler #${orderId.slice(0, 8).toUpperCase()}`,
+    html,
   })
 
   if (emailError) {

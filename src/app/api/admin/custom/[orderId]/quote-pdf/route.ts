@@ -12,9 +12,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
-import { buildQuotePdf, quoteFileName } from '@/lib/quote/pdf'
-import { nextQuoteNumber } from '@/lib/quote/number'
-import { fallbackQuoteItems, fallbackQuoteObject, quoteItemSchema } from '@/lib/quote/input'
+import { buildQuotePdf, quoteFileName } from '@/lib/documents/pdf'
+import { nextQuoteNumber } from '@/lib/documents/number'
+import { fallbackQuoteItems, fallbackQuoteObject, quoteItemSchema } from '@/lib/documents/input'
 import type { CustomOrder } from '@/types/custom-order'
 
 const previewSchema = z.object({
