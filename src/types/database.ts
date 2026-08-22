@@ -1,6 +1,7 @@
 import type { Database as GeneratedDatabase } from './database.generated'
 import type { ProductCustomField } from './shop-product'
 import type { ShopOrderItem } from './shop-order'
+import type { QuoteLineItem } from './custom-order'
 
 // Schéma DB typé pour les clients Supabase (src/lib/supabase.ts).
 //
@@ -13,6 +14,10 @@ type ModelRotation = { x: number; y: number; z: number }
 type ShopProductJsonColumns = {
   custom_fields: ProductCustomField[]
   model_rotation: ModelRotation | null
+}
+
+type CustomOrderJsonColumns = {
+  quote_items: QuoteLineItem[] | null
 }
 
 type ShopOrderJsonColumns = {
@@ -33,9 +38,10 @@ type PatchedTable<Name extends keyof GenTables, O> = {
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {
   public: Omit<GenPublic, 'Tables'> & {
-    Tables: Omit<GenTables, 'shop_products' | 'shop_orders'> & {
+    Tables: Omit<GenTables, 'shop_products' | 'shop_orders' | 'custom_orders'> & {
       shop_products: PatchedTable<'shop_products', ShopProductJsonColumns>
       shop_orders: PatchedTable<'shop_orders', ShopOrderJsonColumns>
+      custom_orders: PatchedTable<'custom_orders', CustomOrderJsonColumns>
     }
   }
 }

@@ -9,6 +9,7 @@ import { CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT } from '@/lib/status-ui'
 import { useAdminMutation } from './useAdminMutation'
 import AdminFeedback, { UnsavedDot } from './AdminFeedback'
 import useUnsavedWarning from './useUnsavedWarning'
+import AdminQuoteComposer from './AdminQuoteComposer'
 
 const MANUAL_STATUSES: CustomOrderStatus[] = [
   'pending_quote', 'quote_sent', 'deposit_paid', 'in_production', 'shipped', 'delivered', 'cancelled',
@@ -24,10 +25,6 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
   const [notesInput, setNotesInput]     = useState(order.admin_notes ?? '')
   const [trackingNum, setTrackingNum]   = useState(order.tracking_number ?? '')
   const [trackingUrl, setTrackingUrl]   = useState(order.tracking_url ?? '')
-  const [depositInput, setDepositInput] = useState(order.deposit_amount ? String(order.deposit_amount / 100) : '')
-  const [totalInput, setTotalInput]     = useState(order.total_amount ? String(order.total_amount / 100) : '')
-  const [quoteLoading, setQuoteLoading] = useState(false)
-  const [quoteError, setQuoteError]     = useState<string | null>(null)
   const [quoteSent, setQuoteSent]       = useState(false)
   const [balanceInput, setBalanceInput]     = useState(() => {
     const due = computeBalance(initialOrder)
@@ -50,35 +47,6 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
       successMessage,
     })
     if (updated) setOrder(updated)
-  }
-
-  async function sendQuote() {
-    const depositCents = Math.round(parseFloat(depositInput) * 100)
-    const totalCents   = totalInput ? Math.round(parseFloat(totalInput) * 100) : undefined
-
-    if (!depositCents || isNaN(depositCents)) {
-      setQuoteError('Montant de l\'acompte requis')
-      return
-    }
-
-    setQuoteLoading(true)
-    setQuoteError(null)
-    try {
-      const res = await fetch(`/api/custom/${order.id}/quote`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deposit_amount: depositCents, total_amount: totalCents }),
-      })
-      const json = await res.json() as { error?: string }
-      if (!res.ok) throw new Error(json.error ?? 'Erreur inattendue')
-      setQuoteSent(true)
-      setOrder((o) => ({ ...o, status: 'quote_sent' }))
-      router.refresh()
-    } catch (e) {
-      setQuoteError(e instanceof Error ? e.message : 'Erreur')
-    } finally {
-      setQuoteLoading(false)
-    }
   }
 
   async function sendBalance() {
@@ -221,84 +189,61 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
             </Card>
 
             {/* Devis & paiement */}
-            <Card title="Devis & paiement">
-              {quoteSent ? (
-                <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2 7l3.5 3.5L12 4" />
-                  </svg>
-                  Devis envoyé — lien de paiement transmis par email.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-ink-3">
-                        Acompte (€) *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="0.01"
-                        value={depositInput}
-                        onChange={(e) => setDepositInput(e.target.value)}
-                        placeholder="150"
-                        className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-ink-3">
-                        Total estimé (€)
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="0.01"
-                        value={totalInput}
-                        onChange={(e) => setTotalInput(e.target.value)}
-                        placeholder="350"
-                        className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  {quoteError && <p className="text-xs text-red-400">{quoteError}</p>}
-                  <button
-                    onClick={sendQuote}
-                    disabled={quoteLoading || !depositInput}
-                    className="flex h-[42px] cursor-pointer items-center gap-2 rounded-pill px-5 text-[13px] font-bold text-bg-0 transition-all hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ background: 'var(--btn-primary-bg)' }}
-                  >
-                    {quoteLoading ? (
-                      <>
-                        <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeDasharray="40" strokeDashoffset="10" strokeLinecap="round" />
-                        </svg>
-                        Envoi en cours…
-                      </>
-                    ) : (
-                      <>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M14 2L2 6.5l5 2L9 14l5-12z" />
-                        </svg>
-                        Envoyer le devis + lien de paiement
-                      </>
-                    )}
-                  </button>
-                  {order.payment_url && (
-                    <a
-                      href={order.payment_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-amber hover:underline"
-                    >
-                      <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 3h6v6M11 3L3 11" />
+            <Card
+              title="Devis & paiement"
+              right={order.quote_number
+                ? <span className="font-mono text-[11px] font-semibold text-amber">{order.quote_number}</span>
+                : undefined}
+            >
+              <div className="space-y-4">
+                {(quoteSent || order.quote_number) && (
+                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                    <p className="flex items-center gap-2 text-sm text-emerald-400">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 7l3.5 3.5L12 4" />
                       </svg>
-                      Voir le lien de paiement existant
-                    </a>
-                  )}
-                </div>
-              )}
+                      Devis envoyé{order.quote_issued_at
+                        ? ` le ${new Date(order.quote_issued_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`
+                        : ''} — PDF joint à l’email.
+                    </p>
+                    {order.quote_number && (
+                      <a
+                        href={`/api/admin/custom/${order.id}/quote-pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9.5 1.5H4a1 1 0 00-1 1v11a1 1 0 001 1h8a1 1 0 001-1V5l-3.5-3.5z" /><path d="M9.5 1.5V5H13" />
+                        </svg>
+                        Voir le devis (PDF)
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                <AdminQuoteComposer
+                  order={order}
+                  onSent={(patch) => {
+                    setQuoteSent(true)
+                    setOrder((o) => ({ ...o, ...patch }))
+                  }}
+                />
+
+                {order.payment_url && (
+                  <a
+                    href={order.payment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-amber hover:underline"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 3h6v6M11 3L3 11" />
+                    </svg>
+                    Voir le lien de paiement de l’acompte
+                  </a>
+                )}
+              </div>
             </Card>
 
             {/* Solde — réclamé quand la pièce est prête, avant de l'expédier */}
