@@ -44,6 +44,11 @@ export default async function SuiviMesurePage({
 
   const isJustSubmitted = submitted === 'true'
   const isJustPaid      = payment === 'success'
+  const isJustPaidBalance = payment === 'balance'
+
+  // Solde : demandé dès qu'un lien existe, soldé quand la date est posée. Pas de
+  // statut dédié — la timeline reste pilotée par la production et l'expédition.
+  const balanceDue  = o.balance_payment_url && !o.balance_paid_at
 
   // Libellés traduits (valeurs canoniques FR stockées → libellé localisé, repli sur la valeur brute)
   const statusLabel = (s: CustomOrderStatus) => t(`statuses.${s}`)
@@ -95,6 +100,14 @@ export default async function SuiviMesurePage({
               </span>
             </div>
           </header>
+        ) : isJustPaidBalance ? (
+          <header className="pt-4 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">{t('balancePaid.eyebrow')}</p>
+            <h1 className="mt-2 font-extrabold text-ink-0" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', letterSpacing: '-0.03em' }}>
+              {t('balancePaid.title')}
+            </h1>
+            <p className="mt-2 text-sm text-ink-2">{t('balancePaid.desc')}</p>
+          </header>
         ) : isJustPaid ? (
           <header className="pt-4 text-center">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">{t('paid.eyebrow')}</p>
@@ -127,6 +140,26 @@ export default async function SuiviMesurePage({
               style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
             >
               {t('action.pay')}
+            </a>
+          </section>
+        )}
+
+        {/* ── Régler le solde (pièce prête, avant expédition) ── */}
+        {balanceDue && (
+          <section className="overflow-hidden rounded-2xl border border-amber/40 bg-[rgba(245,158,11,0.06)] p-5">
+            <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-amber mb-3">{t('balanceAction.eyebrow')}</p>
+            <p className="text-sm font-semibold text-ink-0 mb-1">{t('balanceAction.title')}</p>
+            <p className="text-xs text-ink-2 mb-1">{t('balanceAction.desc')}</p>
+            <p className="text-xs text-ink-3 mb-4">
+              {o.balance_amount && <>{t('balanceAction.amount')} <span className="text-ink-1 font-mono">{formatPrice(o.balance_amount)}</span></>}
+              {o.deposit_amount && <> — {t('balanceAction.deposit')} <span className="text-ink-1 font-mono">{formatPrice(o.deposit_amount)}</span></>}
+            </p>
+            <a
+              href={o.balance_payment_url!}
+              className="flex h-[48px] w-full items-center justify-center gap-2 rounded-pill font-semibold text-[14px] text-[#1A1300] transition-all hover:brightness-105"
+              style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+            >
+              {t('balanceAction.pay')}
             </a>
           </section>
         )}

@@ -29,6 +29,8 @@ Trois flux de commande **complets et fonctionnels** :
 **Sur-mesure**
 - Formulaire multi-step `/custom` (type projet → description → budget/délai → contact → adresse)
 - Devis admin + acompte 50% via Stripe (créé manuellement depuis `/admin/custom/[orderId]`)
+- **Solde** réclamé depuis la même fiche quand la pièce est prête, avant expédition (2ᵉ Checkout Stripe, colonnes `balance_*`) — déclaré à la date d'encaissement du solde, ligne CSV séparée
+- Demande créable **à la main** depuis `/admin/sur-mesure/nouveau` (demandes reçues en DM)
 - Page suivi `/custom/[orderId]` avec timeline et CTA paiement acompte
 - Emails : confirmation client + notification admin interne
 - `/sur-mesure` redirige vers `/custom`

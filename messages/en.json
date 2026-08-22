@@ -687,6 +687,19 @@
       "total": "Estimated total:",
       "pay": "Pay my deposit →"
     },
+    "balanceAction": {
+      "eyebrow": "Action required",
+      "title": "Your project is ready",
+      "desc": "Pay the balance to trigger shipping.",
+      "amount": "Balance due:",
+      "deposit": "Deposit already paid:",
+      "pay": "Pay the balance →"
+    },
+    "balancePaid": {
+      "eyebrow": "Balance received",
+      "title": "Thank you, you're all set!",
+      "desc": "Your order ships very soon. You'll receive an email as soon as it does."
+    },
     "timeline": {
       "heading": "Progress",
       "inProgress": "in progress",

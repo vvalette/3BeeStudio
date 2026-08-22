@@ -26,6 +26,10 @@ export type Database = {
       custom_orders: {
         Row: {
           admin_notes: string | null
+          balance_amount: number | null
+          balance_paid_at: string | null
+          balance_payment_url: string | null
+          balance_session_id: string | null
           boxtal_order_id: string | null
           budget_range: string | null
           company: string | null
@@ -53,6 +57,10 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          balance_amount?: number | null
+          balance_paid_at?: string | null
+          balance_payment_url?: string | null
+          balance_session_id?: string | null
           boxtal_order_id?: string | null
           budget_range?: string | null
           company?: string | null
@@ -80,6 +88,10 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          balance_amount?: number | null
+          balance_paid_at?: string | null
+          balance_payment_url?: string | null
+          balance_session_id?: string | null
           boxtal_order_id?: string | null
           budget_range?: string | null
           company?: string | null

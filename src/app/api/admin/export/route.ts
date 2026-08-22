@@ -101,21 +101,31 @@ export async function GET(req: Request) {
   // « jusqu'au 31/03 » perdrait toutes les commandes de ce jour-là.
   const toExclusive = to ? new Date(`${to}T23:59:59.999Z`).toISOString() : null
 
-  function applyRange<T extends { gte: (c: string, v: string) => T; lte: (c: string, v: string) => T }>(q: T): T {
+  // `column` : la période porte sur la date d'encaissement, qui n'est pas la même
+  // colonne selon la ligne exportée — un solde sur-mesure se règle des semaines
+  // après la création de la demande, et compte pour SA période, pas celle-ci.
+  function applyRange<T extends { gte: (c: string, v: string) => T; lte: (c: string, v: string) => T }>(
+    q: T,
+    column = 'created_at',
+  ): T {
     let out = q
-    if (from) out = out.gte('created_at', new Date(`${from}T00:00:00.000Z`).toISOString())
-    if (toExclusive) out = out.lte('created_at', toExclusive)
+    if (from) out = out.gte(column, new Date(`${from}T00:00:00.000Z`).toISOString())
+    if (toExclusive) out = out.lte(column, toExclusive)
     return out
   }
 
-  const [nfc, custom, shop] = await Promise.all([
+  const [nfc, custom, customBalance, shop] = await Promise.all([
     applyRange(supabaseAdmin.from('orders').select('*')),
     applyRange(supabaseAdmin.from('custom_orders').select('*')),
+    applyRange(
+      supabaseAdmin.from('custom_orders').select('*').not('balance_paid_at', 'is', null),
+      'balance_paid_at',
+    ),
     applyRange(supabaseAdmin.from('shop_orders').select('*')),
   ])
 
-  if (nfc.error || custom.error || shop.error) {
-    const err = nfc.error ?? custom.error ?? shop.error
+  if (nfc.error || custom.error || customBalance.error || shop.error) {
+    const err = nfc.error ?? custom.error ?? customBalance.error ?? shop.error
     return NextResponse.json({ error: err?.message ?? 'Erreur export' }, { status: 500 })
   }
 
@@ -135,8 +145,9 @@ export async function GET(req: Request) {
       modeLivraison: 'livraison',
       suivi: o.tracking_number,
     })),
-    // Sur-mesure : seul l'acompte est encaissé au moment de la commande, le solde
-    // se règle à la livraison — c'est donc l'acompte qui compte pour la déclaration.
+    // Sur-mesure : deux encaissements distincts, donc deux lignes. L'acompte est
+    // daté de la commande, le solde de son propre règlement — c'est la date
+    // d'encaissement qui fait foi pour la déclaration de CA.
     ...((custom.data ?? []) as CustomOrder[]).map((o) => ({
       date: o.created_at,
       flux: 'Sur-mesure (acompte)',
@@ -153,6 +164,23 @@ export async function GET(req: Request) {
       modeLivraison: 'livraison',
       suivi: o.tracking_number,
     })),
+    ...((customBalance.data ?? []) as CustomOrder[])
+      .filter((o) => o.balance_amount)
+      .map((o) => ({
+        date: o.balance_paid_at!,
+        flux: 'Sur-mesure (solde)',
+        categorie: 'Services' as FiscalCategory,
+        ref: o.id.slice(0, 8).toUpperCase(),
+        client: o.company || o.name,
+        email: o.email,
+        statut: o.status,
+        total: o.balance_amount ?? 0,
+        port: null,
+        reduction: null,
+        coutEtiquette: null,
+        modeLivraison: 'livraison',
+        suivi: o.tracking_number,
+      })),
     ...((shop.data ?? []) as ShopOrder[]).map((o) => ({
       date: o.created_at,
       // Une commande mixte est classée en Marchandises : c'est le colis qui domine.

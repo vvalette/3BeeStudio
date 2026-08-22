@@ -29,11 +29,17 @@ export interface CustomOrder {
   status: CustomOrderStatus
   admin_notes: string | null
 
-  // Devis & paiement
+  // Devis & paiement — acompte
   deposit_amount: number | null
   total_amount: number | null
   payment_url: string | null
   stripe_checkout_session_id: string | null
+
+  // Solde — second encaissement, réclamé avant expédition
+  balance_amount: number | null
+  balance_payment_url: string | null
+  balance_session_id: string | null
+  balance_paid_at: string | null
 
   // Adresse
   shipping_name: string | null
@@ -93,3 +99,15 @@ export const DEADLINES = [
 // Clés i18n alignées sur l'ordre de BUDGET_RANGES / DEADLINES (valeur stockée = constante canonique FR)
 export const BUDGET_KEYS = ['under50', '50to200', '200to500', '500to1000', 'over1000'] as const
 export const DEADLINE_KEYS = ['urgent', 'month', 'quarter', 'flexible'] as const
+
+/**
+ * Reste à régler après l'acompte. `balance_amount` fait foi une fois la demande
+ * de solde émise (l'admin peut l'avoir ajusté) ; avant ça, c'est la différence
+ * entre le total estimé et l'acompte. `null` = rien à réclamer.
+ */
+export function computeBalance(order: Pick<CustomOrder, 'total_amount' | 'deposit_amount' | 'balance_amount'>): number | null {
+  if (order.balance_amount) return order.balance_amount
+  if (!order.total_amount || !order.deposit_amount) return null
+  const rest = order.total_amount - order.deposit_amount
+  return rest > 0 ? rest : null
+}

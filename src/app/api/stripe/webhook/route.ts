@@ -91,6 +91,27 @@ export async function POST(req: Request) {
         return NextResponse.json({ received: true })
       }
 
+      // Solde sur-mesure — second encaissement, après l'acompte. Ne touche pas au
+      // statut : c'est l'expédition qui fait avancer la timeline.
+      if (customOrderId && session.metadata?.type === 'custom_balance') {
+        if (session.payment_status === 'paid') {
+          const { error } = await supabaseAdmin
+            .from('custom_orders')
+            .update({ balance_paid_at: new Date().toISOString() })
+            .eq('id', customOrderId)
+            .is('balance_paid_at', null) // rejeu du webhook → aucune ligne touchée
+          if (error) {
+            console.error('[webhook] Erreur custom_orders solde:', error)
+            await sendCriticalAlert('Webhook Stripe — échec confirmation solde sur-mesure', {
+              customOrderId,
+              erreur: error.message,
+              consequence: 'Solde payé mais non enregistré — vérifier avant expédition',
+            })
+          } else console.info('[webhook]', JSON.stringify({ event: 'custom_balance_paid', customOrderId }))
+        }
+        return NextResponse.json({ received: true })
+      }
+
       if (!orderId) {
         console.error('[webhook] checkout.session.completed sans order_id dans metadata', session.id)
         return NextResponse.json({ received: true })
