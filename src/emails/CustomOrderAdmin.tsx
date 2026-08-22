@@ -1,125 +1,92 @@
-import {
-  Html, Head, Body, Container, Section, Text, Link, Hr,
-} from 'react-email'
-import type { CustomOrder } from '@/types/custom-order'
+import { Text, Link } from 'react-email'
+import { EmailLayout, Hero, Card, InfoTable, InfoRow, Button, InternalFooter, Divider } from './components'
+import { color, style } from './theme'
+import { PROJECT_TYPES, type CustomOrder } from '@/types/custom-order'
 
 interface Props {
   order: CustomOrder
   appUrl: string
 }
 
-const bg    = '#0A0A0B'
-const card  = '#111113'
-const amber = '#F59E0B'
-const ink0  = '#FAFAFA'
-const ink2  = '#8A8A90'
-const ink3  = '#54545A'
-const line  = 'rgba(255,255,255,0.08)'
+const PROJECT_LABELS: Record<string, string> = Object.fromEntries(
+  PROJECT_TYPES.map(({ value, label }) => [value, label]),
+)
 
 export default function CustomOrderAdmin({ order, appUrl }: Props) {
   const ref = `#${order.id.slice(0, 8).toUpperCase()}`
+  const received = new Date(order.created_at).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
 
   return (
-    <Html lang="fr">
-      <Head />
-      <Body style={{ background: bg, margin: 0, fontFamily: 'system-ui, sans-serif' }}>
-        <Container style={{ maxWidth: 560, margin: '0 auto', padding: '32px 16px' }}>
+    <EmailLayout
+      preview={`Nouvelle demande sur-mesure ${ref} — ${order.name}`}
+      tagline="Sur-mesure"
+      footer={<InternalFooter note="Répondre à cet email écrit directement au client." />}
+    >
+      <Hero
+        eyebrow="Nouvelle demande"
+        title={<>Demande {ref}</>}
+        lead={`Reçue le ${received}`}
+      />
 
-          <Section style={{ textAlign: 'center', marginBottom: 20 }}>
-            <Text style={{ display: 'inline-block', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 999, padding: '6px 16px', color: amber, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', margin: 0 }}>
-              🔔 Nouvelle demande sur-mesure
-            </Text>
-          </Section>
-
-          <Section style={{ textAlign: 'center', marginBottom: 24 }}>
-            <Text style={{ color: ink0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.025em', margin: '0 0 8px' }}>
-              Nouvelle demande {ref}
-            </Text>
-            <Text style={{ color: ink2, fontSize: 13, margin: 0 }}>
-              Reçue le {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </Section>
-
-          {/* Contact */}
-          <Section style={{ background: card, border: `1px solid ${line}`, borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
-            <Text style={{ color: ink3, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 12px' }}>Contact</Text>
-            <table width="100%" cellPadding={0} cellSpacing={0}>
-              <tbody>
-                <Row label="Nom" value={order.name} />
-                {order.company && <Row label="Société" value={order.company} />}
-                <Row label="Email" value={order.email} valueStyle={{ color: amber }} />
-                <Row label="Téléphone" value={order.phone} />
-              </tbody>
-            </table>
-          </Section>
-
-          {/* Projet */}
-          <Section style={{ background: card, border: `1px solid ${line}`, borderRadius: 16, padding: '20px 24px', marginBottom: 12 }}>
-            <Text style={{ color: ink3, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 12px' }}>Projet</Text>
-            <table width="100%" cellPadding={0} cellSpacing={0}>
-              <tbody>
-                <Row label="Type" value={order.project_type} />
-              </tbody>
-            </table>
-            {order.reference_file_url && (
-              <Text style={{ margin: '4px 0 0' }}>
-                <Link href={order.reference_file_url} style={{ color: amber, fontSize: 13, fontWeight: 600 }}>
-                  📎 Voir le fichier de référence
-                </Link>
-              </Text>
-            )}
-            {order.description && (
-              <>
-                <Hr style={{ borderColor: line, margin: '12px 0' }} />
-                <Text style={{ color: ink3, fontSize: 11, margin: '0 0 6px' }}>Description :</Text>
-                <Text style={{ color: ink2, fontSize: 13, lineHeight: '1.65', margin: 0, whiteSpace: 'pre-wrap' }}>
-                  {order.description}
-                </Text>
-              </>
-            )}
-          </Section>
-
-          {/* Adresse */}
-          {order.shipping_address && (
-            <Section style={{ background: card, border: `1px solid ${line}`, borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
-              <Text style={{ color: ink3, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 12px' }}>Livraison</Text>
-              <Text style={{ color: ink2, fontSize: 13, lineHeight: '1.65', margin: 0 }}>
-                {order.shipping_name}<br />
-                {order.shipping_address}<br />
-                {order.shipping_postal_code} {order.shipping_city}
-              </Text>
-            </Section>
+      <Card title="Contact">
+        <InfoTable>
+          <InfoRow label="Nom" value={order.name} />
+          {order.company && <InfoRow label="Société" value={order.company} />}
+          <InfoRow
+            label="Email"
+            value={<Link href={`mailto:${order.email}`} style={style.link}>{order.email}</Link>}
+            last={!order.phone}
+          />
+          {order.phone && (
+            <InfoRow
+              label="Téléphone"
+              value={<Link href={`tel:${order.phone}`} style={style.link}>{order.phone}</Link>}
+              last
+            />
           )}
+        </InfoTable>
+      </Card>
 
-          {/* CTA admin */}
-          <Section style={{ textAlign: 'center', marginBottom: 24 }}>
-            <Link
-              href={`${appUrl}/admin/custom/${order.id}`}
-              style={{ display: 'inline-block', background: 'linear-gradient(180deg,#FBBF24,#F59E0B)', color: '#1A1300', fontSize: 14, fontWeight: 700, borderRadius: 999, padding: '12px 28px', textDecoration: 'none' }}
-            >
-              Ouvrir dans l&apos;admin →
+      <Card title="Projet">
+        <InfoTable>
+          <InfoRow
+            label="Type"
+            value={PROJECT_LABELS[order.project_type] ?? order.project_type}
+            last
+          />
+        </InfoTable>
+        {order.reference_file_url && (
+          <Text style={{ margin: '12px 0 0' }}>
+            <Link href={order.reference_file_url} style={{ ...style.link, fontSize: 13 }}>
+              Voir le fichier de référence →
             </Link>
-          </Section>
-
-          <Hr style={{ borderColor: line, margin: '0 0 16px' }} />
-          <Text style={{ color: ink3, fontSize: 11, textAlign: 'center', margin: 0, fontFamily: 'monospace' }}>
-            3BeeStudio · Notification interne
           </Text>
-        </Container>
-      </Body>
-    </Html>
-  )
-}
+        )}
+        {order.description && (
+          <>
+            <Divider />
+            <Text style={{ color: color.ink1, fontSize: 13, lineHeight: '1.65', margin: 0, whiteSpace: 'pre-wrap' }}>
+              {order.description}
+            </Text>
+          </>
+        )}
+      </Card>
 
-function Row({ label, value, valueStyle }: { label: string; value: string; valueStyle?: React.CSSProperties }) {
-  return (
-    <tr>
-      <td style={{ paddingBottom: 8, paddingRight: 16, width: '35%' }}>
-        <Text style={{ color: ink3, fontSize: 12, margin: 0 }}>{label}</Text>
-      </td>
-      <td style={{ paddingBottom: 8 }}>
-        <Text style={{ color: ink0, fontSize: 13, fontWeight: 500, margin: 0, ...valueStyle }}>{value}</Text>
-      </td>
-    </tr>
+      {order.shipping_address && (
+        <Card title="Livraison">
+          <Text style={{ color: color.ink1, fontSize: 13, lineHeight: '1.65', margin: 0 }}>
+            {order.shipping_name}<br />
+            {order.shipping_address}<br />
+            {order.shipping_postal_code} {order.shipping_city}
+          </Text>
+        </Card>
+      )}
+
+      <Button href={`${appUrl}/admin/custom/${order.id}`} showUrl={false}>
+        Ouvrir dans l’admin →
+      </Button>
+    </EmailLayout>
   )
 }

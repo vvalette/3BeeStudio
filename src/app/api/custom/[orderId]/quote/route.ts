@@ -10,9 +10,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { Resend } from 'resend'
-import { buildQuotePdf, quoteFileName, quoteTotal } from '@/lib/quote/pdf'
-import { nextQuoteNumber, isQuoteNumberConflict } from '@/lib/quote/number'
-import { fallbackQuoteItems, fallbackQuoteObject, quoteItemSchema } from '@/lib/quote/input'
+import { buildQuotePdf, quoteFileName, quoteTotal, QUOTE_VALIDITY_DAYS } from '@/lib/documents/pdf'
+import { render } from 'react-email'
+import CustomQuote from '@/emails/CustomQuote'
+import { nextQuoteNumber, isQuoteNumberConflict } from '@/lib/documents/number'
+import { fallbackQuoteItems, fallbackQuoteObject, quoteItemSchema } from '@/lib/documents/input'
 import type { CustomOrder } from '@/types/custom-order'
 
 const schema = z.object({
@@ -153,25 +155,28 @@ export async function POST(
 
   // Email au client : devis en pièce jointe + lien de paiement
   const from = process.env.RESEND_FROM_EMAIL!
+  const html = await render(CustomQuote({
+    order,
+    quoteNumber: quoteNumber!,
+    object,
+    items,
+    total,
+    deposit: deposit_amount,
+    validUntil: new Date(issuedAt.getTime() + QUOTE_VALIDITY_DAYS * 24 * 3600 * 1000),
+    appUrl,
+    paymentUrl: session.url!,
+  }))
+
   const { error: emailError } = await resend.emails.send({
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `💛 Votre devis sur-mesure ${quoteNumber} — 3BeeStudio`,
+    subject: `Votre devis ${quoteNumber} — 3BeeStudio`,
     attachments: [{
       filename: quoteFileName(quoteNumber!, order.name),
       content: Buffer.from(pdf).toString('base64'),
     }],
-    html: `
-      <p>Bonjour ${order.name},</p>
-      <p>Votre devis <strong>${quoteNumber}</strong> est prêt — vous le trouverez en pièce jointe de cet email.</p>
-      <p>Pour valider votre commande, réglez l'acompte en cliquant sur le lien ci-dessous :</p>
-      <p><a href="${session.url}" style="background:#F59E0B;color:#1A1300;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:700;display:inline-block">Régler mon acompte →</a></p>
-      <p style="color:#888;font-size:12px">Montant de l'acompte : ${euros(deposit_amount)}<br/>Total du devis : ${euros(total)}</p>
-      <p>Une fois l'acompte réglé, nous lançons immédiatement la production.</p>
-      <p>Suivi de votre projet : <a href="${appUrl}/custom/${orderId}">${appUrl}/custom/${orderId}</a></p>
-      <p>— L'équipe 3BeeStudio</p>
-    `,
+    html,
   })
 
   if (emailError) {

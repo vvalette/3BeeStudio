@@ -36,10 +36,15 @@ export type Database = {
           created_at: string | null
           deadline: string | null
           deposit_amount: number | null
+          deposit_paid_at: string | null
           description: string
           email: string
           id: string
           name: string
+          package_height_cm: number | null
+          package_length_cm: number | null
+          package_weight_grams: number | null
+          package_width_cm: number | null
           payment_url: string | null
           phone: string
           project_type: string
@@ -50,6 +55,7 @@ export type Database = {
           reference_file_url: string | null
           shipping_address: string | null
           shipping_city: string | null
+          shipping_cost: number | null
           shipping_name: string | null
           shipping_postal_code: string | null
           status: string
@@ -71,10 +77,15 @@ export type Database = {
           created_at?: string | null
           deadline?: string | null
           deposit_amount?: number | null
+          deposit_paid_at?: string | null
           description: string
           email: string
           id?: string
           name: string
+          package_height_cm?: number | null
+          package_length_cm?: number | null
+          package_weight_grams?: number | null
+          package_width_cm?: number | null
           payment_url?: string | null
           phone: string
           project_type: string
@@ -85,6 +96,7 @@ export type Database = {
           reference_file_url?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_name?: string | null
           shipping_postal_code?: string | null
           status?: string
@@ -106,10 +118,15 @@ export type Database = {
           created_at?: string | null
           deadline?: string | null
           deposit_amount?: number | null
+          deposit_paid_at?: string | null
           description?: string
           email?: string
           id?: string
           name?: string
+          package_height_cm?: number | null
+          package_length_cm?: number | null
+          package_weight_grams?: number | null
+          package_width_cm?: number | null
           payment_url?: string | null
           phone?: string
           project_type?: string
@@ -120,6 +137,7 @@ export type Database = {
           reference_file_url?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_name?: string | null
           shipping_postal_code?: string | null
           status?: string
@@ -128,6 +146,66 @@ export type Database = {
           tracking_number?: string | null
           tracking_url?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          adjustments: Json
+          client_address: string | null
+          client_city: string | null
+          client_company: string | null
+          client_email: string
+          client_name: string
+          client_postal_code: string | null
+          created_at: string
+          id: string
+          issued_at: string
+          items: Json
+          number: string
+          object: string
+          order_id: string
+          paid_at: string | null
+          source: string
+          total_amount: number
+        }
+        Insert: {
+          adjustments?: Json
+          client_address?: string | null
+          client_city?: string | null
+          client_company?: string | null
+          client_email: string
+          client_name: string
+          client_postal_code?: string | null
+          created_at?: string
+          id?: string
+          issued_at?: string
+          items: Json
+          number: string
+          object: string
+          order_id: string
+          paid_at?: string | null
+          source: string
+          total_amount: number
+        }
+        Update: {
+          adjustments?: Json
+          client_address?: string | null
+          client_city?: string | null
+          client_company?: string | null
+          client_email?: string
+          client_name?: string
+          client_postal_code?: string | null
+          created_at?: string
+          id?: string
+          issued_at?: string
+          items?: Json
+          number?: string
+          object?: string
+          order_id?: string
+          paid_at?: string | null
+          source?: string
+          total_amount?: number
         }
         Relationships: []
       }

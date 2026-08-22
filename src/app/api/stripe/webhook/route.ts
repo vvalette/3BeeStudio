@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         if (session.payment_status === 'paid') {
           const { error } = await supabaseAdmin
             .from('custom_orders')
-            .update({ status: 'deposit_paid' })
+            .update({ status: 'deposit_paid', deposit_paid_at: new Date().toISOString() })
             .eq('id', customOrderId)
             .eq('status', 'quote_sent')
           if (error) {

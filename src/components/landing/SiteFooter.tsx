@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import Tooltip from '@/components/ui/Tooltip'
+import { GOOGLE_REVIEWS_URL } from '@/lib/links'
 
 /* ── Social SVG icons ── */
 function TikTokIcon() {
@@ -27,7 +28,7 @@ const socials = [
   { label: 'Instagram', href: 'https://www.instagram.com/3bee_studio_',                           Icon: InstagramIcon },
 ] as const
 
-const GOOGLE_REVIEWS_URL = 'https://share.google/n7zdz5ooxTw8sCwvE'
+
 
 function GoogleIcon() {
   return (

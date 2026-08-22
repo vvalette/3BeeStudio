@@ -160,7 +160,9 @@ export async function GET(req: Request) {
       total: o.deposit_amount ?? 0,
       port: null,
       reduction: null,
-      coutEtiquette: null,
+      // Porté par la ligne d'acompte : l'étiquette est une dépense unique, la
+      // compter deux fois gonflerait les frais d'expédition du mois.
+      coutEtiquette: o.shipping_cost,
       modeLivraison: 'livraison',
       suivi: o.tracking_number,
     })),

@@ -29,8 +29,10 @@ Trois flux de commande **complets et fonctionnels** :
 **Sur-mesure**
 - Formulaire multi-step `/custom` (type projet → description → budget/délai → contact → adresse)
 - Devis admin + acompte via Stripe depuis `/admin/custom/[orderId]` : composeur de lignes (objet, désignation, qté, PU), **PDF généré par l'app** (`src/lib/quote/pdf.ts`, maquette `docs/reference/devis-modele.pdf`) joint à l'email, numérotation `DEV-AAAA-NNN`. Le total du devis = somme des lignes, jamais un champ libre
+- **Encaissements horodatés** : `deposit_paid_at` et `balance_paid_at` posés par le webhook Stripe, lus par `paymentState()` — carte « Paiements » sur la fiche admin et sur la page de suivi client
 - **Solde** réclamé depuis la même fiche quand la pièce est prête, avant expédition (2ᵉ Checkout Stripe, colonnes `balance_*`) — déclaré à la date d'encaissement du solde, ligne CSV séparée
 - Demande créable **à la main** depuis `/admin/sur-mesure/nouveau` (demandes reçues en DM)
+- **Étiquette Boxtal** générée depuis la fiche : colis (poids + dimensions) déclaré à la main, coût relevé après création, passage en `shipped` par le webhook Boxtal
 - Page suivi `/custom/[orderId]` avec timeline et CTA paiement acompte
 - Emails : confirmation client + notification admin interne
 - `/sur-mesure` redirige vers `/custom`
@@ -45,6 +47,12 @@ Trois flux de commande **complets et fonctionnels** :
 - **Expédition Boxtal** : depuis `/admin/boutique/commande/[id]` → génération étiquette + suivi auto via webhook Boxtal (table `shop_orders.boxtal_order_id`). Retrait studio = pas d'expédition
 - Page suivi `/boutique/suivi/[orderId]`
 - Admin produits : `/admin/boutique` (CRUD, upload images + STL, gestion stock, EN) · Admin commandes : `/admin/boutique/commande/[id]` (`AdminShopOrderDetail`)
+
+**Facturation & documents**
+- `src/lib/documents/` : moteur PDF partagé — **devis** (`DEV-AAAA-NNN`) et **factures** (`FAC-AAAA-NNN`), même maquette (`docs/reference/devis-modele.pdf`)
+- Table `invoices` : numérotation **continue toutes sources confondues** (obligation comptable), instantané des lignes figé à l'émission, une seule facture par commande
+- La facture part **en pièce jointe de l'email d'expédition**, sur les 3 flux. Émission non bloquante : un échec ne retient pas l'email
+- À la livraison (webhook Boxtal `DELIVERED`), email « colis arrivé » + demande d'avis Google (`src/lib/links.ts`)
 
 **Admin** : nav dédiée — `/admin/commandes` (dashboard global NFC + sur-mesure + boutique, CA global, stats, tabs, filtres, tri, bulk delete), pages dédiées `/admin/nfc`, `/admin/sur-mesure`, `/admin/boutique`, `/admin/testimonials`
 
@@ -61,6 +69,7 @@ Pages **placeholder** (Phase 2) : `/portfolio`, `/contact`
   - CSS vars `--line`, `--line-2`, `--line-amber`, `--honey`, `--btn-primary-bg`
 - **Utilitaires CSS** : `.honey-text`, `.no-scrollbar`, `.fade-up`, `.hex-bg`
 - **Atomes** : `Eyebrow`, `HexLogo`, `StatusDot`, `ProductGlyph` dans `src/components/ui/`
+- **Emails** : charte partagée — jetons dans `src/emails/theme.ts`, briques dans `src/emails/components.tsx` (thème clair, aligné sur le site). Ne jamais redéfinir une palette dans un template, ni écrire du HTML inline dans une route : `src/emails/templates.test.ts` verrouille la règle (fond clair, pas de `rgba()`)
 
 ## Règles absolues
 1. **Next.js 15** avec App Router — jamais Pages Router

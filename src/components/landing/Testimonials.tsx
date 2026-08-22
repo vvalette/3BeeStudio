@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
+import { GOOGLE_REVIEWS_URL } from '@/lib/links'
 
 interface Testimonial {
   id: string
@@ -75,7 +76,7 @@ function TestimonialCard({ name, role, body, avatar_gradient, source, rating, av
         </div>
         {source === 'google' && (
           <a
-            href={source_url ?? 'https://share.google/n7zdz5ooxTw8sCwvE'}
+            href={source_url ?? GOOGLE_REVIEWS_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Voir l'avis sur Google"

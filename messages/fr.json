@@ -687,6 +687,17 @@
       "total": "Total estimé :",
       "pay": "Régler mon acompte →"
     },
+    "payments": {
+      "heading": "Paiements",
+      "deposit": "Acompte",
+      "balance": "Solde",
+      "total": "Total",
+      "received": "Reçu le {date}",
+      "receivedNoDate": "Reçu",
+      "pending": "En attente",
+      "settled": "Intégralement réglé",
+      "outstanding": "Reste à régler : {amount}"
+    },
     "balanceAction": {
       "eyebrow": "Action requise",
       "title": "Votre projet est prêt",

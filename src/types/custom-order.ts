@@ -40,6 +40,7 @@ export interface CustomOrder {
 
   // Devis & paiement — acompte
   deposit_amount: number | null
+  deposit_paid_at: string | null
   total_amount: number | null
   payment_url: string | null
   stripe_checkout_session_id: string | null
@@ -63,6 +64,13 @@ export interface CustomOrder {
   shipping_postal_code: string | null
 
   // Expédition
+  /** Colis déclaré à la création de l'étiquette — une pièce unique n'a pas de poids connu d'avance. */
+  package_weight_grams: number | null
+  package_length_cm: number | null
+  package_width_cm: number | null
+  package_height_cm: number | null
+  /** Coût de l'étiquette Boxtal, en centimes. Connu seulement après création. */
+  shipping_cost: number | null
   tracking_number: string | null
   tracking_url: string | null
   boxtal_order_id: string | null
@@ -125,4 +133,55 @@ export function computeBalance(order: Pick<CustomOrder, 'total_amount' | 'deposi
   if (!order.total_amount || !order.deposit_amount) return null
   const rest = order.total_amount - order.deposit_amount
   return rest > 0 ? rest : null
+}
+
+/** Statuts à partir desquels l'acompte est nécessairement encaissé. */
+const PAID_STATUSES: CustomOrderStatus[] = ['deposit_paid', 'in_production', 'shipped', 'delivered']
+
+export interface CustomPaymentState {
+  /** Date d'encaissement, `null` si inconnue (demandes d'avant la migration 035). */
+  depositPaidAt: string | null
+  depositPaid: boolean
+  balancePaidAt: string | null
+  balancePaid: boolean
+  /** Reste à encaisser, `null` si rien n'est dû. */
+  outstanding: number | null
+  /** Encaissé à ce jour. */
+  amountPaid: number
+  fullyPaid: boolean
+}
+
+/**
+ * État de paiement d'une demande sur-mesure, partagé par la fiche admin et la
+ * page de suivi client.
+ *
+ * L'acompte se déduit du statut autant que de la date : les demandes payées
+ * avant l'ajout de `deposit_paid_at` n'ont pas d'horodatage, mais leur statut
+ * dit bien que l'argent est arrivé.
+ */
+export function paymentState(
+  order: Pick<CustomOrder,
+    'status' | 'deposit_amount' | 'deposit_paid_at' | 'total_amount' | 'balance_amount' | 'balance_paid_at'>,
+): CustomPaymentState {
+  const depositPaid = !!order.deposit_paid_at || PAID_STATUSES.includes(order.status)
+  const balancePaid = !!order.balance_paid_at
+  const balanceDue = computeBalance(order)
+
+  const amountPaid =
+    (depositPaid ? order.deposit_amount ?? 0 : 0) +
+    (balancePaid ? order.balance_amount ?? balanceDue ?? 0 : 0)
+
+  // Soldé : le solde est encaissé, ou il n'y avait rien à réclamer après
+  // l'acompte (devis réglé en une fois).
+  const fullyPaid = balancePaid || (depositPaid && balanceDue === null && !!order.deposit_amount)
+
+  return {
+    depositPaidAt: order.deposit_paid_at,
+    depositPaid,
+    balancePaidAt: order.balance_paid_at,
+    balancePaid,
+    outstanding: fullyPaid ? null : balanceDue,
+    amountPaid,
+    fullyPaid,
+  }
 }

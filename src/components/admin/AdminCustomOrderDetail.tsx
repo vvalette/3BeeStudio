@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { CUSTOM_STATUS_LABELS, computeBalance, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
+import { CUSTOM_STATUS_LABELS, computeBalance, paymentState, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import { formatPrice } from '@/lib/utils'
 import { CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT } from '@/lib/status-ui'
 import { useAdminMutation } from './useAdminMutation'
 import AdminFeedback, { UnsavedDot } from './AdminFeedback'
 import useUnsavedWarning from './useUnsavedWarning'
 import AdminQuoteComposer from './AdminQuoteComposer'
+import AdminCustomShipping from './AdminCustomShipping'
 
 const MANUAL_STATUSES: CustomOrderStatus[] = [
   'pending_quote', 'quote_sent', 'deposit_paid', 'in_production', 'shipped', 'delivered', 'cancelled',
@@ -328,7 +329,12 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
             )}
 
             {/* Expédition */}
-            <Card title="Expédition">
+            <Card
+              title="Expédition"
+              right={order.boxtal_order_id
+                ? <span className="font-mono text-[10px] text-ink-3">{order.boxtal_order_id}</span>
+                : undefined}
+            >
               {order.shipping_address ? (
                 <div className="space-y-4">
                   <address className="text-[13px] not-italic leading-relaxed text-ink-1">
@@ -336,11 +342,21 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                     {order.shipping_address}<br />
                     {order.shipping_postal_code} {order.shipping_city}
                   </address>
-                  <div>
+
+                  <AdminCustomShipping
+                    order={order}
+                    onShipped={(patch) => setOrder((o) => ({ ...o, ...patch }))}
+                  />
+
+                  <div className="border-t border-[var(--line)] pt-4">
                     <div className="mb-2 flex items-center gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Numéro de suivi</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Suivi manuel</p>
                       {trackingDirty && <UnsavedDot />}
                     </div>
+                    <p className="mb-2 text-[11px] leading-relaxed text-ink-3">
+                      Pour une expédition faite hors Boxtal (dépôt en bureau de poste, remise en main propre) :
+                      le webhook remplit ces champs tout seul sinon.
+                    </p>
                     <div className="flex gap-2">
                       <input
                         value={trackingNum}
@@ -403,39 +419,56 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
               </div>
             </Card>
 
-            {/* Finances */}
-            {(order.deposit_amount || order.total_amount || order.balance_amount) && (
-              <Card title="Finances">
-                <div className="space-y-2 text-sm">
-                  {order.deposit_amount && (
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-ink-2">Acompte</span>
-                      <span className="font-mono text-ink-1">{formatPrice(order.deposit_amount)}</span>
-                    </div>
-                  )}
-                  {order.balance_amount && (
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-ink-2">
-                        Solde
-                        <span className={['ml-1.5 text-[11px]', order.balance_paid_at ? 'text-emerald-400' : 'text-ink-3'].join(' ')}>
-                          {order.balance_paid_at ? '· réglé' : '· en attente'}
-                        </span>
-                      </span>
-                      <span className="font-mono text-ink-1">{formatPrice(order.balance_amount)}</span>
-                    </div>
-                  )}
-                  {order.total_amount && (
-                    <>
-                      <div className="my-1 border-t border-dashed" style={{ borderColor: 'var(--line-amber)' }} />
-                      <div className="flex items-baseline justify-between">
-                        <span className="font-semibold text-amber">Total estimé</span>
-                        <span className="font-mono text-base font-bold text-amber">{formatPrice(order.total_amount)}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </Card>
-            )}
+            {/* Paiements — qui a payé quoi, et quand */}
+            {(order.deposit_amount || order.total_amount || order.balance_amount) && (() => {
+              const pay = paymentState(order)
+              return (
+                <Card
+                  title="Paiements"
+                  right={pay.fullyPaid
+                    ? <span className="rounded-pill bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Soldé</span>
+                    : pay.outstanding
+                      ? <span className="rounded-pill bg-amber/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">Reste {formatPrice(pay.outstanding)}</span>
+                      : undefined}
+                >
+                  <div className="space-y-3 text-sm">
+                    {order.deposit_amount && (
+                      <PaymentLine
+                        label="Acompte"
+                        amount={order.deposit_amount}
+                        received={pay.depositPaid}
+                        at={pay.depositPaidAt}
+                        pendingLabel="en attente de règlement"
+                      />
+                    )}
+
+                    {(order.balance_amount || pay.outstanding) && (
+                      <PaymentLine
+                        label="Solde"
+                        amount={order.balance_amount ?? pay.outstanding ?? 0}
+                        received={pay.balancePaid}
+                        at={pay.balancePaidAt}
+                        pendingLabel={order.balance_payment_url ? 'demande envoyée, en attente' : 'pas encore réclamé'}
+                      />
+                    )}
+
+                    {order.total_amount && (
+                      <>
+                        <div className="my-1 border-t border-dashed" style={{ borderColor: 'var(--line-amber)' }} />
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-ink-2">Encaissé</span>
+                          <span className="font-mono font-semibold text-ink-0">{formatPrice(pay.amountPaid)}</span>
+                        </div>
+                        <div className="flex items-baseline justify-between">
+                          <span className="font-semibold text-amber">Total du devis</span>
+                          <span className="font-mono text-base font-bold text-amber">{formatPrice(order.total_amount)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Card>
+              )
+            })()}
 
             {/* Notes internes */}
             <Card title="Notes internes" right={notesDirty ? <UnsavedDot /> : undefined}>
@@ -487,6 +520,40 @@ function Card({ title, right, children }: { title: string; right?: React.ReactNo
       </header>
       <div className="p-4 sm:p-5">{children}</div>
     </section>
+  )
+}
+
+/**
+ * Une échéance : montant, et surtout si l'argent est arrivé.
+ *
+ * La date peut manquer sur les demandes réglées avant la migration 035 — on
+ * affiche alors « reçu » sans date plutôt que d'inventer un horodatage.
+ */
+function PaymentLine({
+  label, amount, received, at, pendingLabel,
+}: {
+  label: string
+  amount: number
+  received: boolean
+  at: string | null
+  pendingLabel: string
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="min-w-0">
+        <span className="text-ink-2">{label}</span>
+        <span className={['ml-1.5 text-[11px]', received ? 'text-emerald-400' : 'text-ink-3'].join(' ')}>
+          {received
+            ? at
+              ? `· reçu le ${new Date(at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`
+              : '· reçu'
+            : `· ${pendingLabel}`}
+        </span>
+      </span>
+      <span className={['shrink-0 font-mono', received ? 'text-ink-1' : 'text-ink-3'].join(' ')}>
+        {formatPrice(amount)}
+      </span>
+    </div>
   )
 }
 
