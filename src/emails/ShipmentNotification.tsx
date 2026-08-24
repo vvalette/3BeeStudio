@@ -47,13 +47,13 @@ export default function ShipmentNotification({
   const isRelay = deliveryMode === 'relay'
 
   const t = {
-    preview:  isEn ? `Order #${orderRef} shipped — 3BeeStudio` : `Commande #${orderRef} expédiée — 3BeeStudio`,
+    preview:  isEn ? `Order #${orderRef} shipped — 3BeeStudio` : `Commande #${orderRef} expédiée · 3BeeStudio`,
     tagline:  isEn ? 'Shipping' : 'Expédition',
     eyebrow:  isEn ? 'On its way' : 'En route',
     title:    isEn ? 'Your order has shipped.' : 'Votre commande est expédiée.',
     intro:    isEn
       ? `Good news ${recipientName} — your parcel has left our studio.`
-      : `Bonne nouvelle ${recipientName} — votre colis a quitté nos studios.`,
+      : `Bonne nouvelle ${recipientName}, votre colis a quitté nos studios.`,
     tracking: isEn ? 'Tracking number' : 'Numéro de suivi',
     trackingHint: isEn
       ? 'It can take up to 24 h for the carrier to show the first scan.'
@@ -66,6 +66,10 @@ export default function ShipmentNotification({
     deliveryTitle: isEn ? 'Delivery address' : 'Adresse de livraison',
     cta:      isEn ? 'View my order →' : 'Voir ma commande →',
     refLabel: isEn ? 'Order reference' : 'Référence commande',
+    ecoLabel: isEn ? '♻️ Reused packaging' : '♻️ Emballage réemployé',
+    eco:      isEn
+      ? 'your parcel travels in a second-hand box, collected from our filament suppliers and other partners rather than bought new. It may show a few marks — the contents are new and well protected.'
+      : 'votre colis voyage dans un carton de seconde main, récupéré auprès de nos fournisseurs de filament et d’autres partenaires plutôt qu’acheté neuf. Il peut porter quelques marques, mais le contenu est neuf et bien protégé.',
   }
 
   return (
@@ -110,6 +114,12 @@ export default function ShipmentNotification({
       ) : null}
 
       <Button href={trackingUrl}>{t.cta}</Button>
+
+      {deliveryMode !== 'pickup' && (
+        <Note>
+          <strong style={{ color: color.positive }}>{t.ecoLabel}</strong>{isEn ? ': ' : ' : '}{t.eco}
+        </Note>
+      )}
 
       <Note>
         {t.refLabel} : <strong style={{ color: color.ink0, fontFamily: font.mono }}>#{orderRef}</strong>
