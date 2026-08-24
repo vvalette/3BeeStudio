@@ -991,6 +991,28 @@
         "description": "No parcel: your files are available to download as soon as payment clears, and the links are emailed to you as well.",
         "waiverLabel": "I agree that the download starts immediately after payment and I expressly waive my 14-day right of withdrawal on digital files (art. L221-28 3° of the French Consumer Code).",
         "waiverRequired": "You must accept the waiver of the right of withdrawal to order a digital file."
+      },
+      "promo": {
+        "label": "Promo code",
+        "placeholder": "Your code",
+        "apply": "Apply",
+        "applied": "Code {code} applied",
+        "remove": "Remove",
+        "line": "Code {code}",
+        "freeShippingLine": "Free delivery",
+        "newsletterKept": "Your −10% newsletter discount stays available for a future order.",
+        "reasons": {
+          "introuvable": "This code does not exist.",
+          "inactif": "This code is no longer valid.",
+          "pas_encore": "This code is not active yet.",
+          "expire": "This code has expired.",
+          "epuise": "This code has reached its usage limit.",
+          "deja_utilise": "You have already used this code.",
+          "minimum": "Your order does not reach the minimum amount.",
+          "panier_incompatible": "This code does not apply to the items in your cart.",
+          "rien_a_livrer": "This code offers free delivery: there is nothing to ship in your cart.",
+          "trop_de_tentatives": "Too many attempts. Please try again in a few minutes."
+        }
       }
     },
     "descriptionExpand": {

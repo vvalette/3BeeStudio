@@ -129,6 +129,15 @@ export default function AdminBoutiqueProducts({
           </div>
           <div className="flex shrink-0 items-center gap-2">
           <Link
+            href="/admin/boutique/promos"
+            className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-pill border border-[var(--line)] px-3 py-2 text-xs font-semibold text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 sm:px-4"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2.5 6.5v-2a1 1 0 011-1h9a1 1 0 011 1v2a1.5 1.5 0 000 3v2a1 1 0 01-1 1h-9a1 1 0 01-1-1v-2a1.5 1.5 0 000-3z" /><path d="M9.5 3.5v9" strokeDasharray="1.5 1.5" />
+            </svg>
+            Codes promo
+          </Link>
+          <Link
             href="/admin/boutique/audience"
             className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-pill border border-[var(--line)] px-3 py-2 text-xs font-semibold text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 sm:px-4"
           >

@@ -991,6 +991,28 @@
         "description": "Aucun colis : vos fichiers sont disponibles au téléchargement dès le paiement validé, et les liens vous sont aussi envoyés par email.",
         "waiverLabel": "J’accepte que le téléchargement démarre immédiatement après le paiement et je renonce expressément à mon droit de rétractation de 14 jours sur les fichiers numériques (art. L221-28 3° du Code de la consommation).",
         "waiverRequired": "Vous devez accepter le renoncement au droit de rétractation pour commander un fichier numérique."
+      },
+      "promo": {
+        "label": "Code promo",
+        "placeholder": "Votre code",
+        "apply": "Appliquer",
+        "applied": "Code {code} appliqué",
+        "remove": "Retirer",
+        "line": "Code {code}",
+        "freeShippingLine": "Livraison offerte",
+        "newsletterKept": "Votre remise newsletter −10 % reste disponible pour une prochaine commande.",
+        "reasons": {
+          "introuvable": "Ce code n’existe pas.",
+          "inactif": "Ce code n’est plus valable.",
+          "pas_encore": "Ce code n’est pas encore actif.",
+          "expire": "Ce code a expiré.",
+          "epuise": "Ce code a atteint son nombre maximum d’utilisations.",
+          "deja_utilise": "Vous avez déjà utilisé ce code.",
+          "minimum": "Le montant minimum de commande n’est pas atteint.",
+          "panier_incompatible": "Ce code ne s’applique pas aux articles de votre panier.",
+          "rien_a_livrer": "Ce code offre la livraison : votre panier ne contient rien à expédier.",
+          "trop_de_tentatives": "Trop d’essais. Réessayez dans quelques minutes."
+        }
       }
     },
     "descriptionExpand": {

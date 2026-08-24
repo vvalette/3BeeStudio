@@ -88,7 +88,7 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr', do
             </tr>
             <TotalRow label={t.subtotal} value={fmt(order.subtotal)} />
             {(order.discount_amount ?? 0) > 0 && (
-              <TotalRow label={t.discount} value={`− ${fmt(order.discount_amount!)}`} />
+              <TotalRow label={order.promo_code ? `Code ${order.promo_code}` : t.discount} value={`− ${fmt(order.discount_amount!)}`} />
             )}
             {order.delivery_mode !== 'digital' && (
               <TotalRow label={t.shipping} value={order.shipping === 0 ? t.free : fmt(order.shipping)} />

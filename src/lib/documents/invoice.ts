@@ -5,6 +5,7 @@ import { fallbackQuoteItems, fallbackQuoteObject, projectLabel } from './input'
 import { getShipping, type Order } from '@/types/order'
 import type { ShopOrder } from '@/types/shop-order'
 import type { CustomOrder, QuoteLineItem } from '@/types/custom-order'
+import { discountLabel } from '@/lib/promo'
 
 /**
  * Facturation, tous flux confondus.
@@ -81,7 +82,7 @@ function draftFromShop(order: ShopOrder): InvoiceDraft {
 
   const adjustments: DocumentAdjustment[] = []
   if (order.discount_amount > 0) {
-    adjustments.push({ label: 'Réduction newsletter', amount: -order.discount_amount })
+    adjustments.push({ label: discountLabel(order), amount: -order.discount_amount })
   }
   // Une commande de fichiers n'a pas de port, pas même à zéro.
   if (order.delivery_mode !== 'digital') {

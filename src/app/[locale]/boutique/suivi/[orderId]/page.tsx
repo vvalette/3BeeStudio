@@ -280,7 +280,8 @@ export default async function SuiviBoutiquePage({
             </div>
             {(order.discount_amount ?? 0) > 0 && (
               <div className="flex justify-between text-emerald-400">
-                <span>{t('newsletterDiscount')}</span><span>−{formatPrice(order.discount_amount)}</span>
+                <span>{order.promo_code ? `Code ${order.promo_code}` : t('newsletterDiscount')}</span>
+                <span>−{formatPrice(order.discount_amount)}</span>
               </div>
             )}
             <div className="flex justify-between text-ink-3">

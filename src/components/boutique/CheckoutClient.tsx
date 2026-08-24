@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
@@ -41,6 +41,14 @@ interface Props {
   forcedItems?: CartItem[]
 }
 
+/** Réponse de /api/boutique/promo, telle qu'affichée dans le récapitulatif. */
+type AppliedPromo = {
+  code:                string
+  discount:            number
+  free_shipping:       boolean
+  replaces_newsletter: boolean
+}
+
 export default function CheckoutClient({ forcedItems }: Props) {
   const t       = useTranslations('boutique.checkoutForm')
   const tCommon = useTranslations('common')
@@ -64,6 +72,10 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const [deliveryMode, setDeliveryMode]           = useState<DeliveryMode>('relay')
   const [relay, setRelay]                         = useState<SelectedRelay | null>(null)
   const [hasNewsletterDiscount, setHasDiscount]   = useState(false)
+  const [promoInput, setPromoInput]               = useState('')
+  const [promo, setPromo]                         = useState<AppliedPromo | null>(null)
+  const [promoError, setPromoError]               = useState<string | null>(null)
+  const [promoChecking, setPromoChecking]         = useState(false)
   const [digitalWaiver, setDigitalWaiver]         = useState(false)
   const [loading, setLoading]                     = useState(false)
   const [error, setError]                         = useState<string | null>(null)
@@ -87,16 +99,25 @@ export default function CheckoutClient({ forcedItems }: Props) {
     [tCommon]
   )
 
-  const { subtotal, discountAmount, shipping, total } = useMemo(() => {
-    const subtotal      = split.subtotal
-    const discountAmount = hasNewsletterDiscount ? Math.round(subtotal * 0.1) : 0
+  const { subtotal, newsletterDiscount, promoDiscount, shipping, total } = useMemo(() => {
+    const subtotal = split.subtotal
+    // Un code en pourcentage ou en montant remplace la remise newsletter — même
+    // règle que le serveur (`promoReplacesNewsletter`), sinon le récapitulatif
+    // annoncerait un prix que Stripe ne facturerait pas.
+    const newsletterApplies = hasNewsletterDiscount && !(promo !== null && promo.replaces_newsletter)
+    const newsletterDiscount = newsletterApplies ? Math.round(subtotal * 0.1) : 0
+    const promoDiscount = promo?.discount ?? 0
     // Port calculé sur la part physique seule (cf. splitCart) : sinon des fichiers
     // dans le panier feraient franchir le seuil de gratuité sans rien à expédier.
-    const shipping      = items.length === 0 || freeShippingEnabled || !split.hasPhysical
+    const baseShipping = items.length === 0 || freeShippingEnabled || !split.hasPhysical
       ? 0
       : calcShopShipping(split.physicalSubtotal, deliveryMode)
-    return { subtotal, discountAmount, shipping, total: subtotal - discountAmount + shipping }
-  }, [items, split, freeShippingEnabled, deliveryMode, hasNewsletterDiscount])
+    const shipping = promo?.free_shipping ? 0 : baseShipping
+    return {
+      subtotal, newsletterDiscount, promoDiscount, shipping,
+      total: subtotal - (newsletterDiscount + promoDiscount) + shipping,
+    }
+  }, [items, split, freeShippingEnabled, deliveryMode, hasNewsletterDiscount, promo])
 
   // L'offre relais ne dessert que la France : hors FR, on repasse en domicile
   // (sinon le checkout resterait bloqué sur un sélecteur sans résultat).
@@ -118,6 +139,55 @@ export default function CheckoutClient({ forcedItems }: Props) {
     }, 600)
     return () => clearTimeout(timer)
   }, [email])
+
+  const cartPayload = useMemo(
+    () => items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+    [items],
+  )
+
+  /**
+   * Interroge /api/boutique/promo. `silent` sert à la revalidation automatique :
+   * si le panier change et que le code ne s'applique plus, on le retire sans
+   * afficher d'erreur — le client n'a rien fait de mal.
+   */
+  const applyPromo = useCallback(async (rawCode: string, silent = false) => {
+    const code = rawCode.trim()
+    if (!code || cartPayload.length === 0) return
+
+    if (!silent) setPromoChecking(true)
+    const res = await fetch('/api/boutique/promo', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ code, email: email || undefined, items: cartPayload }),
+    }).catch(() => null)
+    const data = res ? await res.json().catch(() => null) : null
+    if (!silent) setPromoChecking(false)
+
+    if (!data?.valid) {
+      setPromo(null)
+      if (!silent) setPromoError(t(`promo.reasons.${data?.reason ?? 'introuvable'}` as Parameters<typeof t>[0]))
+      return
+    }
+
+    setPromoError(null)
+    setPromo({
+      code:                data.code,
+      discount:            data.discount,
+      free_shipping:       data.free_shipping,
+      replaces_newsletter: data.replaces_newsletter,
+    })
+    if (!silent) setPromoInput('')
+  }, [cartPayload, email, t])
+
+  // Le panier ou l'email a changé : la remise doit être recalculée, sinon le
+  // récapitulatif afficherait un montant que le serveur refusera au paiement.
+  useEffect(() => {
+    if (!promo) return
+    void applyPromo(promo.code, true)
+    // `promo.code` seul en dépendance : `promo` change à chaque revalidation,
+    // l'inclure entier relancerait l'effet en boucle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartPayload, email, promo?.code])
 
   // Garde-fou : si le panier se vide (hors buy-now), on n'affiche plus le form
   const empty = items.length === 0
@@ -154,6 +224,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
         name: `${firstName} ${lastName}`.trim(),
         phone: phone || undefined,
         locale,
+        ...(promo ? { promo_code: promo.code } : {}),
         delivery_mode: digitalOnly ? 'digital' : deliveryMode,
         ...(split.hasDigital ? { digital_waiver: digitalWaiver } : {}),
         ...(isRelay && relay ? {
@@ -178,7 +249,14 @@ export default function CheckoutClient({ forcedItems }: Props) {
 
     const data = await res.json().catch(() => ({ error: t('errorFallback') }))
     if (!res.ok) {
-      setError(data.error ?? t('errorFallback'))
+      // Le code a pu être épuisé entre l'aperçu et le paiement : on le retire du
+      // récapitulatif pour que le total affiché redevienne exact.
+      if (data.promo_reason) {
+        setPromo(null)
+        setPromoError(t(`promo.reasons.${data.promo_reason}` as Parameters<typeof t>[0]))
+      } else {
+        setError(data.error ?? t('errorFallback'))
+      }
       setLoading(false)
       return
     }
@@ -444,18 +522,66 @@ export default function CheckoutClient({ forcedItems }: Props) {
           ))}
         </ul>
 
-        {hasNewsletterDiscount && (
+        {hasNewsletterDiscount && newsletterDiscount > 0 && (
           <p className="mt-3 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 text-[12px] text-emerald-400">
             {t('newsletterDiscountBadge')}
           </p>
         )}
+
+        {/* Code promo */}
+        <div className="mt-3">
+          {promo ? (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2">
+              <span className="min-w-0 truncate text-[12px] text-emerald-400">
+                {t('promo.applied', { code: promo.code })}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setPromo(null); setPromoError(null) }}
+                className="shrink-0 cursor-pointer text-[11px] text-ink-3 underline transition-colors hover:text-ink-1"
+              >
+                {t('promo.remove')}
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                value={promoInput}
+                onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null) }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void applyPromo(promoInput) } }}
+                placeholder={t('promo.placeholder')}
+                aria-label={t('promo.label')}
+                autoComplete="off"
+                maxLength={40}
+                className="min-w-0 flex-1 rounded-lg border border-[var(--line)] bg-bg-0 px-3 py-2 font-mono text-[13px] tracking-wider text-ink-0 placeholder:font-sans placeholder:tracking-normal placeholder:text-ink-3 transition-colors focus:border-amber focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void applyPromo(promoInput)}
+                disabled={promoChecking || promoInput.trim().length === 0}
+                className="shrink-0 cursor-pointer rounded-lg border border-[var(--line)] px-3 py-2 text-[12px] font-semibold text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-amber disabled:opacity-40"
+              >
+                {promoChecking ? '…' : t('promo.apply')}
+              </button>
+            </div>
+          )}
+          {promoError && <p className="mt-1.5 text-[11px] text-red-400">{promoError}</p>}
+          {promo?.replaces_newsletter && hasNewsletterDiscount && (
+            <p className="mt-1.5 text-[11px] text-ink-3">{t('promo.newsletterKept')}</p>
+          )}
+        </div>
         <div className="mt-4 space-y-1.5 border-t border-[var(--line)] pt-4 text-[13px]">
           <div className="flex justify-between text-ink-2">
             <span>{t('subtotal')}</span><span>{formatPrice(subtotal)}</span>
           </div>
-          {discountAmount > 0 && (
+          {newsletterDiscount > 0 && (
             <div className="flex justify-between text-emerald-400">
-              <span>{t('newsletterDiscount')}</span><span>−{formatPrice(discountAmount)}</span>
+              <span>{t('newsletterDiscount')}</span><span>−{formatPrice(newsletterDiscount)}</span>
+            </div>
+          )}
+          {promoDiscount > 0 && promo && (
+            <div className="flex justify-between text-emerald-400">
+              <span>{t('promo.line', { code: promo.code })}</span><span>−{formatPrice(promoDiscount)}</span>
             </div>
           )}
           {/* Pas de ligne livraison sans colis : afficher « Offerte » laisserait
@@ -463,7 +589,9 @@ export default function CheckoutClient({ forcedItems }: Props) {
           {!digitalOnly && (
             <div className="flex justify-between text-ink-2">
               <span>{isRelay ? t('relay.summaryLabel') : t('shipping')}</span>
-              <span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
+              <span className={promo?.free_shipping ? 'text-emerald-400' : undefined}>
+                {shipping === 0 ? t('shippingFree') : formatPrice(shipping)}
+              </span>
             </div>
           )}
           {shipping > 0 && (

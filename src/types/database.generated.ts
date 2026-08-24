@@ -317,6 +317,95 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_uses: {
+        Row: {
+          amount: number
+          created_at: string
+          email: string
+          id: string
+          promo_code_id: string
+          shop_order_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          email: string
+          id?: string
+          promo_code_id: string
+          shop_order_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          email?: string
+          id?: string
+          promo_code_id?: string
+          shop_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          applies_to: string
+          code: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          max_uses: number | null
+          min_subtotal: number
+          note: string | null
+          once_per_email: boolean
+          starts_at: string | null
+          type: string
+          updated_at: string
+          uses: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          applies_to?: string
+          code: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_subtotal?: number
+          note?: string | null
+          once_per_email?: boolean
+          starts_at?: string | null
+          type: string
+          updated_at?: string
+          uses?: number
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          applies_to?: string
+          code?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_subtotal?: number
+          note?: string | null
+          once_per_email?: boolean
+          starts_at?: string | null
+          type?: string
+          updated_at?: string
+          uses?: number
+          value?: number
+        }
+        Relationships: []
+      }
       shop_categories: {
         Row: {
           created_at: string
@@ -419,6 +508,7 @@ export type Database = {
           pickup_point_name: string | null
           pickup_point_postal_code: string | null
           pickup_point_street: string | null
+          promo_code: string | null
           shipping: number
           shipping_address: string | null
           shipping_address2: string | null
@@ -455,6 +545,7 @@ export type Database = {
           pickup_point_name?: string | null
           pickup_point_postal_code?: string | null
           pickup_point_street?: string | null
+          promo_code?: string | null
           shipping?: number
           shipping_address?: string | null
           shipping_address2?: string | null
@@ -491,6 +582,7 @@ export type Database = {
           pickup_point_name?: string | null
           pickup_point_postal_code?: string | null
           pickup_point_street?: string | null
+          promo_code?: string | null
           shipping?: number
           shipping_address?: string | null
           shipping_address2?: string | null
@@ -770,6 +862,19 @@ export type Database = {
         Args: { p_event?: string; p_product_id: string; p_visitor_hash: string }
         Returns: undefined
       }
+      redeem_promo_code: {
+        Args: {
+          p_amount?: number
+          p_code: string
+          p_email: string
+          p_order_id: string
+        }
+        Returns: {
+          ok: boolean
+          reason: string
+        }[]
+      }
+      release_promo_code: { Args: { p_order_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
