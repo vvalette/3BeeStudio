@@ -28,9 +28,12 @@ export type AudienceProduct = Pick<
   'id' | 'name' | 'slug' | 'images' | 'active' | 'product_type' | 'price' | 'sale_price'
 >
 
+/** Les deux catalogues de la boutique, séparés comme sur l'écran Produits. */
+export type AudienceTab = 'physical' | 'digital'
+
 export type AudienceWindows = Record<
   AudienceWindow,
-  { stats: Record<string, ProductStats>; series: DayPoint[] }
+  { stats: Record<string, ProductStats>; series: Record<AudienceTab, DayPoint[]> }
 >
 
 type SortKey = 'views' | 'conversion' | 'orders' | 'carts' | 'trend'
@@ -65,12 +68,17 @@ export default function AdminProductAudience({
   measuring: boolean
 }) {
   const [window, setWindow] = useState<AudienceWindow>(30)
-  const [sort, setSort] = useState<SortKey>('views')
+  const [tab, setTab]       = useState<AudienceTab>('physical')
+  const [sort, setSort]     = useState<SortKey>('views')
 
-  const { stats, series } = windows[window]
+  const { stats } = windows[window]
+  const series    = windows[window].series[tab]
+
+  const physical = useMemo(() => products.filter((p) => p.product_type !== 'digital'), [products])
+  const digital  = useMemo(() => products.filter((p) => p.product_type === 'digital'), [products])
 
   const rows = useMemo(() => {
-    const list = products.map((product) => ({
+    const list = (tab === 'digital' ? digital : physical).map((product) => ({
       product,
       s: stats[product.id] ?? emptyStats(window),
     }))
@@ -83,7 +91,7 @@ export default function AdminProductAudience({
         default:           return b.s.views - a.s.views
       }
     })
-  }, [products, stats, sort, window])
+  }, [physical, digital, tab, stats, sort, window])
 
   const total = useMemo(
     () => series.reduce(
@@ -127,6 +135,25 @@ export default function AdminProductAudience({
               ].join(' ')}
             >
               {days} jours
+            </button>
+          ))}
+        </div>
+
+        {/* Objets / Fichiers — mêmes onglets que l'écran Produits, pour retrouver
+            le même découpage d'un écran à l'autre. */}
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--bg-2)', border: '1px solid var(--line)' }}>
+          {([
+            { key: 'physical' as AudienceTab, label: 'Objets',   count: physical.length, icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h12l-1 8H3L2 4z" /><path d="M5 4l1-2h4l1 2" /></svg> },
+            { key: 'digital'  as AudienceTab, label: 'Fichiers', count: digital.length,  icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v8M8 10L5 7M8 10l3-3M2.5 13h11" /></svg> },
+          ]).map(({ key, label, count, icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={['flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all', tab === key ? 'bg-bg-0 text-ink-0 shadow-sm' : 'text-ink-3 hover:text-ink-1'].join(' ')}
+            >
+              <span style={{ color: tab === key ? 'var(--amber)' : 'currentColor' }}>{icon}</span>
+              {label}
+              <span className={['rounded-pill px-2 py-0.5 font-mono text-[11px]', tab === key ? 'bg-amber/10 text-amber' : 'bg-bg-3 text-ink-3'].join(' ')}>{count}</span>
             </button>
           ))}
         </div>
@@ -179,9 +206,9 @@ export default function AdminProductAudience({
 
         {/* Détail par produit */}
         <div className="space-y-2">
-          {products.length === 0 && (
+          {rows.length === 0 && (
             <p className="rounded-xl border border-dashed border-[var(--line)] py-12 text-center text-sm text-ink-3">
-              Aucun produit au catalogue.
+              {tab === 'digital' ? 'Aucun fichier au catalogue.' : 'Aucun objet au catalogue.'}
             </p>
           )}
           {rows.map(({ product, s }) => (
@@ -242,9 +269,6 @@ function ProductRow({ product, s, window }: { product: AudienceProduct; s: Produ
               </Link>
               {!product.active && (
                 <span className="shrink-0 rounded-pill border border-zinc-500/20 bg-zinc-500/10 px-2 py-0.5 text-[10px] text-zinc-400">Inactif</span>
-              )}
-              {product.product_type === 'digital' && (
-                <span className="shrink-0 rounded-pill border border-cyan-400/25 bg-cyan-400/5 px-2 py-0.5 font-mono text-[10px] text-cyan-400">fichier</span>
               )}
             </div>
             <p className="truncate text-[12px] text-ink-3">

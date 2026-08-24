@@ -57,11 +57,23 @@ export default async function AdminAudiencePage() {
 
   const orders = (ordersData ?? []) as OrderForStats[]
 
+  // Objets et fichiers ne se lisent pas ensemble : un fichier n'a ni stock ni
+  // port, et son entonnoir n'a pas la même forme. L'écran les sépare en deux
+  // onglets, donc la courbe et les totaux sont calculés pour chacun.
+  const digitalIds = new Set(
+    (products ?? []).filter((p) => p.product_type === 'digital').map((p) => p.id),
+  )
+  const dailyPhysical = daily.filter((row) => !digitalIds.has(row.product_id))
+  const dailyDigital  = daily.filter((row) => digitalIds.has(row.product_id))
+
   // Les trois fenêtres sont calculées côté serveur puis envoyées ensemble :
-  // basculer 7 j ↔ 90 j dans l'écran ne déclenche aucune requête.
+  // basculer 7 j ↔ 90 j ou objets ↔ fichiers ne déclenche aucune requête.
   const buildWindow = (days: AudienceWindow) => ({
     stats:  Object.fromEntries(buildProductStats({ daily, orders, totals, days, today })),
-    series: buildDailySeries(daily, days, today),
+    series: {
+      physical: buildDailySeries(dailyPhysical, days, today),
+      digital:  buildDailySeries(dailyDigital, days, today),
+    },
   })
 
   const windows: AudienceWindows = {
