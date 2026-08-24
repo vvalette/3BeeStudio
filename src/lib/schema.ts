@@ -53,9 +53,13 @@ export function nfcProductSchema(name: string, description: string) {
     offers: {
       '@type': 'AggregateOffer',
       priceCurrency: 'EUR',
-      // Prix au porte-clé (dégressif selon le volume) — cf. getUnitPrice()
+      // Prix au porte-clé, dégressif par palier de quantité : voir getUnitPrice()
+      // dans src/types/order.ts. `offerCount` = le nombre de paliers, soit bien
+      // le nombre d'offres agrégées ici ; Search Console le réclame sur tout
+      // AggregateOffer. À tenir à jour si un palier bouge.
       lowPrice: '1.70',
       highPrice: '2.90',
+      offerCount: 6,
       availability: 'https://schema.org/InStock',
       seller: { '@id': BUSINESS_ID },
       areaServed: { '@type': 'Country', name: 'France' },

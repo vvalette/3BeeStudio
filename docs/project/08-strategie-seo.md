@@ -128,6 +128,20 @@ Implémenté le 15 juin 2026. Permet les *rich results* Google.
 
 **Vérifié :** `tsc` clean · `next build` OK (35/35) → les builders schema et la FAQ s'exécutent au rendu serveur sans erreur. Validité *rich results* à confirmer post-déploiement via le [test de résultats enrichis Google](https://search.google.com/test/rich-results).
 
+### Alertes Search Console « Extraits de produits » (24 août 2026)
+
+Google a signalé 3 problèmes **non critiques** sur le `Product` de `/nfc` : `offerCount` manquant, `review` manquant, `aggregateRating` manquant.
+
+| Champ | Décision | Pourquoi |
+|---|---|---|
+| `offerCount` | ✅ **Ajouté** (`offerCount: 6`) | Un `AggregateOffer` agrège ici les 6 paliers de prix dégressif de `getUnitPrice()`. Donnée factuelle, à tenir à jour si un palier bouge. |
+| `review` | ❌ **Volontairement absent** | Un `review` doit porter sur **ce produit** et son texte doit être **visible sur la page**. Les témoignages en base sont des avis sur le studio, repris de Google, et `/nfc` n'en affiche aucun. |
+| `aggregateRating` | ❌ **Volontairement absent** | Même raison. Poser une note inventée ou empruntée aux avis du studio, c'est du *spammy structured markup* : risque d'action manuelle, qui coûte bien plus cher qu'un champ facultatif manquant. |
+
+**Ce qu'il faudrait pour les avoir un jour, honnêtement :** des avis clients first-party **par produit**, collectés après livraison, stockés et **affichés sur la fiche** ; le balisage `review` + `aggregateRating` se déduit alors des vraies notes. C'est une fonctionnalité à part entière (formulaire d'avis, modération, affichage), pas un correctif de balise. À noter : l'email « colis arrivé » envoie aujourd'hui vers les avis **Google**, qui ne peuvent pas être rebalisés sur notre propre site.
+
+> 💡 Angle plus rentable que ces trois champs : **les fiches produit boutique (`/boutique/[slug]`) n'ont aucun balisage `Product`**, alors que ce sont les vraies pages produit (prix, stock, images, disponibilité). C'est là que les *rich results* produit auraient le plus d'effet. Non fait à ce jour.
+
 > ⚠️ **Écart prix doc/code découvert** (à arbitrer par toi, hors SEO) : `docs/project/03-produit-nfc.md` affiche un palier « 10–49 → 2,50 € », mais le code (`src/types/order.ts`) applique « 10–24 → 2,60 € » et « 25–49 → 2,40 € ». Les autres paliers concordent. Le code fait foi côté client ; à harmoniser dans la doc (ou ajuster le code) selon ton intention réelle.
 
 ---
