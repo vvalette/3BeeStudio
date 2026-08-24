@@ -27,7 +27,15 @@ async function releaseExpiredCheckout(session: Stripe.Checkout.Session) {
       .eq('email', promoEmail)
   }
 
-  console.info('[webhook]', JSON.stringify({ event: 'checkout_expired', shopOrderId, orderId, promoReleased: !!promoEmail }))
+  // Panier abandonné : le code promo doit être rendu, sinon un code à usage
+  // unique serait brûlé par quelqu'un qui n'a jamais payé.
+  let codeReleased = 0
+  if (shopOrderId) {
+    const { data } = await supabaseAdmin.rpc('release_promo_code', { p_order_id: shopOrderId })
+    codeReleased = data ?? 0
+  }
+
+  console.info('[webhook]', JSON.stringify({ event: 'checkout_expired', shopOrderId, orderId, promoReleased: !!promoEmail, codeReleased }))
 }
 
 export async function POST(req: Request) {

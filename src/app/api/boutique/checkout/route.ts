@@ -4,6 +4,8 @@ import { stripe } from '@/lib/stripe'
 import { calcShopShipping, mergeCartQuantities, computeNewsletterDiscount } from '@/types/shop-product'
 import type { ShopProduct } from '@/types/shop-product'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { checkPromo, normalizeCode, promoReplacesNewsletter } from '@/lib/promo'
+import type { PromoCode } from '@/types/promo'
 import { sendCriticalAlert } from '@/lib/alert'
 import { z } from 'zod'
 
@@ -34,6 +36,8 @@ const schema = z.object({
   pickup_point_city:        z.string().max(80).optional(),
   pickup_point_postal_code: z.string().max(10).optional(),
   locale:        z.enum(['fr', 'en']).default('fr'),
+  // Le client envoie le CODE, jamais un montant : la remise est recalculée ici.
+  promo_code:    z.string().min(1).max(40).optional(),
   // Adresse — requise uniquement pour la livraison à domicile
   shipping_name:        z.string().min(2).optional(),
   shipping_address:     z.string().min(5).optional(),
@@ -198,7 +202,7 @@ export async function POST(req: Request) {
   const isRelay   = deliveryMode === 'relay'
   const isDigital = deliveryMode === 'digital'
   // Port sur la part physique uniquement.
-  const shipping  = globalFreeShipping ? 0 : calcShopShipping(physicalSubtotal, deliveryMode)
+  const baseShipping = globalFreeShipping ? 0 : calcShopShipping(physicalSubtotal, deliveryMode)
 
   // Vérifie la promo newsletter (-10% sur le sous-total, frais de port inchangés)
   const { data: newsletterSub } = await supabaseAdmin
@@ -208,9 +212,49 @@ export async function POST(req: Request) {
     .eq('promo_used', false)
     .maybeSingle()
 
-  const hasNewsletterDiscount = newsletterSub !== null
-  const discountAmount        = hasNewsletterDiscount ? computeNewsletterDiscount(subtotal) : 0
-  const total                 = subtotal - discountAmount + shipping
+  // ── Code promo ────────────────────────────────────────────────────────────
+  // Revalidé intégralement ici : l'aperçu de /api/boutique/promo n'engage rien,
+  // et le panier a pu changer entre-temps.
+  let appliedPromo: PromoCode | null = null
+  let promoDiscount = 0
+  let promoFreeShipping = false
+
+  if (d.promo_code) {
+    const { data: promoRow } = await supabaseAdmin
+      .from('promo_codes')
+      .select('*')
+      .eq('code', normalizeCode(d.promo_code))
+      .maybeSingle()
+
+    const outcome = checkPromo(promoRow as PromoCode | null, {
+      subtotal,
+      physicalSubtotal,
+      digitalSubtotal: subtotal - physicalSubtotal,
+      hasPhysical,
+    })
+
+    // Refus explicite plutôt que remise silencieusement ignorée : un client qui a
+    // saisi un code doit savoir qu'il ne s'applique pas, avant de payer.
+    if (!outcome.ok)
+      return NextResponse.json(
+        { error: 'Ce code promo ne peut pas être appliqué', promo_reason: outcome.reason },
+        { status: 400 },
+      )
+
+    appliedPromo      = promoRow as PromoCode
+    promoDiscount     = outcome.discount
+    promoFreeShipping = outcome.freeShipping
+  }
+
+  // Un code en pourcentage ou en montant remplace la remise newsletter (jamais
+  // deux remises sur le même sous-total) ; « livraison offerte » se cumule.
+  const useNewsletter = newsletterSub !== null
+    && !(appliedPromo !== null && promoReplacesNewsletter(appliedPromo))
+
+  const newsletterDiscount = useNewsletter ? computeNewsletterDiscount(subtotal) : 0
+  const discountAmount     = newsletterDiscount + promoDiscount
+  const shipping           = promoFreeShipping ? 0 : baseShipping
+  const total              = subtotal - discountAmount + shipping
 
   // Crée la commande en base
   const { data: order, error: dbError } = await supabaseAdmin
@@ -222,6 +266,7 @@ export async function POST(req: Request) {
       items:                orderItems,
       subtotal,
       discount_amount:      discountAmount,
+      promo_code:           appliedPromo?.code ?? null,
       shipping,
       total_amount:         total,
       status:               'pending_payment',
@@ -254,22 +299,61 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
   }
 
-  // Consomme la promo dès la création de la session (engagement de paiement)
-  if (hasNewsletterDiscount && newsletterSub) {
+  // Consommation du code promo : c'est la base qui tranche, elle seule peut le
+  // faire sans course entre deux paiements simultanés sur le dernier usage.
+  if (appliedPromo) {
+    const { data: redeemed, error: redeemError } = await supabaseAdmin.rpc('redeem_promo_code', {
+      p_code:     appliedPromo.code,
+      p_email:    d.email,
+      p_order_id: order.id,
+      p_amount:   promoDiscount,
+    })
+
+    const result = redeemed?.[0]
+    if (redeemError || !result?.ok) {
+      // Le code vient d'être épuisé (ou déjà utilisé par cet email) : la commande
+      // n'existe que depuis quelques millisecondes et aucune session Stripe n'a
+      // été créée — on la retire plutôt que de laisser une commande au mauvais prix.
+      await supabaseAdmin.from('shop_orders').delete().eq('id', order.id).eq('status', 'pending_payment')
+      return NextResponse.json(
+        { error: 'Ce code promo ne peut pas être appliqué', promo_reason: result?.reason ?? 'introuvable' },
+        { status: 409 },
+      )
+    }
+  }
+
+  // Consommée APRÈS le code promo, et pas avant : si la consommation du code
+  // échoue on abandonne la commande, et le client aurait alors perdu ses −10 %
+  // sans rien obtenir en échange (cas d'un code livraison gratuite, cumulable,
+  // épuisé entre l'aperçu et le paiement).
+  if (useNewsletter && newsletterSub) {
     await supabaseAdmin
       .from('newsletter_subscriptions')
       .update({ promo_used: true })
       .eq('id', newsletterSub.id)
   }
 
-  // Coupon Stripe one-shot si réduction newsletter applicable
+  // Coupon Stripe one-shot — au plus un par session (Stripe n'en accepte pas deux).
+  // « Livraison offerte » n'en crée aucun : il agit sur shipping_options.
   let stripeDiscounts: { coupon: string }[] = []
-  if (hasNewsletterDiscount) {
+  if (useNewsletter) {
     const coupon = await stripe.coupons.create({
       percent_off: 10,
       duration: 'once',
       name: 'Newsletter −10%',
       metadata: { source: 'newsletter', email: d.email, shop_order_id: order.id },
+    })
+    stripeDiscounts = [{ coupon: coupon.id }]
+  } else if (appliedPromo && promoDiscount > 0) {
+    // `amount_off` et pas `percent_off` même pour un pourcentage : Stripe
+    // arrondirait de son côté, et le montant débité pourrait différer d'un
+    // centime du total enregistré en base (donc de la facture).
+    const coupon = await stripe.coupons.create({
+      amount_off: promoDiscount,
+      currency:   'eur',
+      duration:   'once',
+      name:       `Code ${appliedPromo.code}`,
+      metadata:   { source: 'promo_code', code: appliedPromo.code, shop_order_id: order.id },
     })
     stripeDiscounts = [{ coupon: coupon.id }]
   }
@@ -361,7 +445,8 @@ export async function POST(req: Request) {
     metadata: {
       shop_order_id: order.id,
       type:          'shop_order',
-      ...(hasNewsletterDiscount ? { newsletter_promo_email: d.email } : {}),
+      ...(useNewsletter ? { newsletter_promo_email: d.email } : {}),
+      ...(appliedPromo ? { promo_code: appliedPromo.code } : {}),
     },
   })
 

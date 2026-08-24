@@ -41,6 +41,7 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `/admin/commandes/[id]` | ✅ Détail NFC + changement statut + Boxtal + notes |
 | `/admin/custom/[orderId]` | ✅ Détail sur-mesure + changement statut + envoi devis Stripe + notes |
 | `/admin/boutique/audience` | ✅ Consultations des fiches produit : entonnoir vues → paniers → ventes, fenêtres 7/30/90 j |
+| `/admin/boutique/promos` | ✅ Codes promo : %, montant fixe, livraison gratuite + conditions et plafonds |
 | `/boutique` | 🚧 Placeholder Phase 2 (overlay "bientôt disponible" sur la landing) |
 | `/portfolio` | 🚧 Placeholder Phase 2 |
 | `/contact` | 🚧 Placeholder Phase 2 |
@@ -66,6 +67,9 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `POST /api/admin/boutique/orders/[id]/ship` | Génère étiquette Boxtal (boutique) |
 | `POST /api/boxtal/webhook` | Suivi auto Boxtal → met à jour `orders` ET `shop_orders` |
 | `POST /api/boutique/view` | Compte une consultation de fiche produit (beacon, robots et admin exclus) |
+| `POST /api/boutique/promo` | Valide un code promo et renvoie la remise (aperçu checkout, ne consomme rien) |
+| `GET/POST /api/admin/boutique/promos` | Liste et création des codes promo (auth cookie) |
+| `PATCH/DELETE /api/admin/boutique/promos/[id]` | Modification, désactivation ou suppression d'un code |
 | `GET /api/cron/analytics-retention` | Purge audience : empreintes 45 j, statistiques 13 mois (lundi 4 h) |
 | `GET /api/test-email` | ⚠️ Diagnostic — supprimer avant prod |
 
@@ -92,6 +96,7 @@ Tous les headers email utilisent du **texte** (`🐝 3BeeStudio`) — pas d'imag
 
 ## Admin — fonctionnalités
 
+- **Codes promo** (`/admin/boutique/promos`) : trois types (pourcentage, montant fixe, livraison gratuite), conditions (minimum d'achat, objets/fichiers, plafond d'usages, une fois par client, dates), compteur d'utilisations et coût réel par code. Un code déjà utilisé est désactivé et non supprimé, pour garder l'historique lisible
 - **Audience boutique** (`/admin/boutique/audience`) : vues, visiteurs, ajouts panier et taux de conversion par produit, fenêtres 7/30/90 j, tendance vs période précédente. Répond à « ce produit ne se vend pas : est-il invisible, ou décevant ? » — deux corrections opposées. Repère de vues 30 j aussi sur chaque ligne de `/admin/boutique`
 - **Dashboard combiné** : stats globales (commandes, CA, en production, étiquettes) cumulant NFC + sur-mesure
 - **Période** : filtre semaine / mois / année / tout

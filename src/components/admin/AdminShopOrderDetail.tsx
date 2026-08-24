@@ -11,6 +11,7 @@ import { useConfirm } from '@/components/ui/ConfirmModal'
 import { useAdminMutation } from './useAdminMutation'
 import AdminFeedback, { UnsavedDot } from './AdminFeedback'
 import useUnsavedWarning from './useUnsavedWarning'
+import { discountLabel } from '@/lib/promo'
 
 // Statuts du déroulé normal, pilotés par l'admin.
 const MANUAL_STATUSES: ShopOrderStatus[] = ['pending_payment', 'confirmed', 'processing']
@@ -550,7 +551,7 @@ export default function AdminShopOrderDetail({
                 </div>
                 {(order.discount_amount ?? 0) > 0 && (
                   <div className="flex items-baseline justify-between">
-                    <span className="text-emerald-400">Réduction newsletter</span>
+                    <span className="text-emerald-400">{discountLabel(order)}</span>
                     <span className="font-mono font-semibold text-emerald-400">−{formatPrice(order.discount_amount)}</span>
                   </div>
                 )}

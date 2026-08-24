@@ -43,7 +43,10 @@ export interface ShopOrder {
 
   // Montants (centimes)
   subtotal: number
+  /** Remise appliquée : promo newsletter OU code promo (jamais les deux sur le sous-total). */
   discount_amount: number
+  /** Code promo utilisé, figé sur la commande. `null` = remise newsletter ou aucune. */
+  promo_code: string | null
   shipping: number
   total_amount: number
 

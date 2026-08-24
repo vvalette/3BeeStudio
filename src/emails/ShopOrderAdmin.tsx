@@ -3,6 +3,7 @@ import { EmailLayout, Hero, Card, InfoTable, InfoRow, Button, Pill, TotalRow, In
 import { color, font, style } from './theme'
 import { formatPrice } from '@/lib/utils'
 import type { ShopOrder } from '@/types/shop-order'
+import { discountLabel } from '@/lib/promo'
 
 interface Props {
   order: ShopOrder
@@ -102,7 +103,7 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
             </tr>
             <TotalRow label="Sous-total" value={formatPrice(order.subtotal)} />
             {order.discount_amount > 0 && (
-              <TotalRow label="Réduction newsletter" value={`− ${formatPrice(order.discount_amount)}`} />
+              <TotalRow label={discountLabel(order)} value={`− ${formatPrice(order.discount_amount)}`} />
             )}
             {/* Pas de ligne « Livraison : Offerte » sur une vente de fichiers :
                 il n'y a pas de port, pas même à zéro. */}
