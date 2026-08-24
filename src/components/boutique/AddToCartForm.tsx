@@ -7,6 +7,7 @@ import type { PublicShopProduct } from '@/types/shop-product'
 import { effectivePrice } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
+import { trackProductEvent } from './ProductViewTracker'
 
 export default function AddToCartForm({ product }: { product: PublicShopProduct }) {
   const router = useRouter()
@@ -46,11 +47,17 @@ export default function AddToCartForm({ product }: { product: PublicShopProduct 
       ...(product.product_type === 'digital' ? { is_digital: true } : {}),
       custom_field_values: hasCustomFields ? { ...fieldValues } : undefined,
     }, quantity)
+    // Deuxième étage de l'entonnoir admin : une fiche très vue qui ne déclenche
+    // aucun ajout au panier ne se diagnostique pas avec les seules ventes.
+    trackProductEvent(product.id, 'cart')
     open()
   }
 
   function handleBuyNow() {
     if (!validateFields()) return
+    // « Acheter maintenant » saute le panier mais marque la même intention :
+    // sans ça l'entonnoir sous-compterait les fiches sans personnalisation.
+    trackProductEvent(product.id, 'cart')
     router.push(`/boutique/commande?product=${product.id}&qty=${quantity}`)
   }
 

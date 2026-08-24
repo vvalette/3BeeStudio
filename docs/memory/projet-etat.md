@@ -40,6 +40,7 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `/admin/commandes` | ✅ Dashboard combiné NFC + sur-mesure (stats, tabs, filtres, tri, bulk delete) |
 | `/admin/commandes/[id]` | ✅ Détail NFC + changement statut + Boxtal + notes |
 | `/admin/custom/[orderId]` | ✅ Détail sur-mesure + changement statut + envoi devis Stripe + notes |
+| `/admin/boutique/audience` | ✅ Consultations des fiches produit : entonnoir vues → paniers → ventes, fenêtres 7/30/90 j |
 | `/boutique` | 🚧 Placeholder Phase 2 (overlay "bientôt disponible" sur la landing) |
 | `/portfolio` | 🚧 Placeholder Phase 2 |
 | `/contact` | 🚧 Placeholder Phase 2 |
@@ -64,6 +65,8 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `PATCH /api/admin/boutique/orders/[id]` | Met à jour statut/suivi/notes boutique (auth cookie) |
 | `POST /api/admin/boutique/orders/[id]/ship` | Génère étiquette Boxtal (boutique) |
 | `POST /api/boxtal/webhook` | Suivi auto Boxtal → met à jour `orders` ET `shop_orders` |
+| `POST /api/boutique/view` | Compte une consultation de fiche produit (beacon, robots et admin exclus) |
+| `GET /api/cron/analytics-retention` | Purge audience : empreintes 45 j, statistiques 13 mois (lundi 4 h) |
 | `GET /api/test-email` | ⚠️ Diagnostic — supprimer avant prod |
 
 ## Infrastructure
@@ -89,6 +92,7 @@ Tous les headers email utilisent du **texte** (`🐝 3BeeStudio`) — pas d'imag
 
 ## Admin — fonctionnalités
 
+- **Audience boutique** (`/admin/boutique/audience`) : vues, visiteurs, ajouts panier et taux de conversion par produit, fenêtres 7/30/90 j, tendance vs période précédente. Répond à « ce produit ne se vend pas : est-il invisible, ou décevant ? » — deux corrections opposées. Repère de vues 30 j aussi sur chaque ligne de `/admin/boutique`
 - **Dashboard combiné** : stats globales (commandes, CA, en production, étiquettes) cumulant NFC + sur-mesure
 - **Période** : filtre semaine / mois / année / tout
 - **Tabs** : section NFC distincte | section Sur-mesure distincte

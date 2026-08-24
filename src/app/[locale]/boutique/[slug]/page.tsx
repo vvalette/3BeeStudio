@@ -12,6 +12,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import AddToCartForm from '@/components/boutique/AddToCartForm'
 import BoutiqueProductMedia from '@/components/boutique/BoutiqueProductMedia'
 import DescriptionExpand from '@/components/boutique/DescriptionExpand'
+import ProductViewTracker from '@/components/boutique/ProductViewTracker'
 
 // ISR long + revalidation à la demande via revalidateShop() (src/lib/revalidate.ts)
 export const revalidate = 3600
@@ -87,6 +88,8 @@ export default async function ProductPage({
 
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-6 pb-16">
+      {/* Compteur d'audience — invisible, ne rend rien (voir /admin/boutique/audience) */}
+      <ProductViewTracker productId={product.id} />
       <div className="mx-auto max-w-5xl">
 
         {/* Breadcrumb */}
