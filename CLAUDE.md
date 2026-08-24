@@ -47,6 +47,7 @@ Trois flux de commande **complets et fonctionnels** :
 - **Expédition Boxtal** : depuis `/admin/boutique/commande/[id]` → génération étiquette + suivi auto via webhook Boxtal (table `shop_orders.boxtal_order_id`). Retrait studio = pas d'expédition
 - Page suivi `/boutique/suivi/[orderId]`
 - Admin produits : `/admin/boutique` (CRUD, upload images + STL, gestion stock, EN) · Admin commandes : `/admin/boutique/commande/[id]` (`AdminShopOrderDetail`)
+- **Audience** `/admin/boutique/audience` : consultations par fiche produit (entonnoir vues → paniers → ventes, fenêtres 7/30/90 j). Comptage par beacon depuis la fiche (elle est en ISR : le rendu serveur ne verrait qu'une visite par heure), agrégat quotidien dans `shop_product_stats_daily`. Sans cookie ni traceur — empreinte visiteur salée qui tourne chaque nuit, purge 45 j / 13 mois par cron
 
 **Facturation & documents**
 - `src/lib/documents/` : moteur PDF partagé — **devis** (`DEV-AAAA-NNN`) et **factures** (`FAC-AAAA-NNN`), même maquette (`docs/reference/devis-modele.pdf`)

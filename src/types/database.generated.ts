@@ -509,6 +509,64 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_product_stats_daily: {
+        Row: {
+          carts: number
+          day: string
+          product_id: string
+          uniques: number
+          views: number
+        }
+        Insert: {
+          carts?: number
+          day: string
+          product_id: string
+          uniques?: number
+          views?: number
+        }
+        Update: {
+          carts?: number
+          day?: string
+          product_id?: string
+          uniques?: number
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_product_stats_daily_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "shop_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_product_view_hits: {
+        Row: {
+          day: string
+          product_id: string
+          visitor_hash: string
+        }
+        Insert: {
+          day: string
+          product_id: string
+          visitor_hash: string
+        }
+        Update: {
+          day?: string
+          product_id?: string
+          visitor_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_product_view_hits_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "shop_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_products: {
         Row: {
           active: boolean
@@ -664,7 +722,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      shop_product_stats_totals: {
+        Row: {
+          carts: number | null
+          first_day: string | null
+          last_day: string | null
+          product_id: string | null
+          uniques: number | null
+          views: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_product_stats_daily_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "shop_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       claim_download: {
@@ -682,6 +758,17 @@ export type Database = {
           new_stock: number
           oversold: boolean
         }[]
+      }
+      purge_product_stats: {
+        Args: never
+        Returns: {
+          deleted_hits: number
+          deleted_stats: number
+        }[]
+      }
+      record_product_event: {
+        Args: { p_event?: string; p_product_id: string; p_visitor_hash: string }
+        Returns: undefined
       }
     }
     Enums: {

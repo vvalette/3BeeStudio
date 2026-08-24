@@ -28,10 +28,13 @@ export default function AdminBoutiqueProducts({
   products: initialProducts,
   orderStats,
   freeShipping: initialFreeShipping,
+  views30,
 }: {
   products: ShopProduct[]
   orderStats: OrderStat[]
   freeShipping: boolean
+  /** Vues des 30 derniers jours par produit — repère, détail sur /admin/boutique/audience. */
+  views30: Record<string, number>
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -124,6 +127,16 @@ export default function AdminBoutiqueProducts({
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-amber">3BeeStudio · Admin</p>
             <h1 className="mt-1.5 text-xl font-extrabold text-ink-0 sm:text-2xl" style={{ letterSpacing: '-0.02em' }}>Produits</h1>
           </div>
+          <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/admin/boutique/audience"
+            className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-pill border border-[var(--line)] px-3 py-2 text-xs font-semibold text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-ink-0 sm:px-4"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1.5 8s2.4-4 6.5-4 6.5 4 6.5 4-2.4 4-6.5 4S1.5 8 1.5 8z" /><circle cx="8" cy="8" r="1.8" />
+            </svg>
+            Audience
+          </Link>
           <Link
             href="/admin/boutique/nouveau"
             className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-pill bg-amber px-3 py-2 text-xs font-bold text-bg-0 hover:opacity-90 transition-opacity sm:px-4"
@@ -131,6 +144,7 @@ export default function AdminBoutiqueProducts({
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M8 2v12M2 8h12" /></svg>
             Nouveau produit
           </Link>
+          </div>
         </div>
 
         <AdminFeedback error={mutationError} success={success} onDismiss={clear} />
@@ -270,6 +284,9 @@ export default function AdminBoutiqueProducts({
                   </p>
                 </div>
 
+                {/* Consultations — 30 derniers jours */}
+                <ViewsBadge views={views30[product.id] ?? 0} />
+
                 {/* Stock éditable */}
                 {product.product_type === 'digital'
                   ? <DigitalFileTag product={product} />
@@ -365,6 +382,32 @@ function DigitalFileTag({ product }: { product: ShopProduct }) {
         </svg>
         {size}
       </span>
+    </Tooltip>
+  )
+}
+
+/**
+ * Repère d'audience sur la ligne produit : « personne ne la voit » et « on la voit
+ * mais on n'achète pas » demandent deux corrections opposées, et seule la seconde
+ * se règle sur la fiche. Le détail (entonnoir, tendance) vit sur l'écran Audience.
+ */
+function ViewsBadge({ views }: { views: number }) {
+  return (
+    <Tooltip content={views === 0 ? 'Aucune vue sur 30 jours' : `${views} vue${views > 1 ? 's' : ''} sur 30 jours — voir l\u2019audience`}>
+      <Link
+        href="/admin/boutique/audience"
+        className={[
+          'hidden shrink-0 cursor-pointer items-center gap-1 rounded-pill border px-2.5 py-0.5 font-mono text-[11px] transition-colors sm:flex',
+          views > 0
+            ? 'border-[var(--line)] text-ink-2 hover:border-[var(--line-amber)] hover:text-amber'
+            : 'border-[var(--line)] text-ink-3 hover:text-ink-1',
+        ].join(' ')}
+      >
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1.5 8s2.4-4 6.5-4 6.5 4 6.5 4-2.4 4-6.5 4S1.5 8 1.5 8z" /><circle cx="8" cy="8" r="1.8" />
+        </svg>
+        {views}
+      </Link>
     </Tooltip>
   )
 }
