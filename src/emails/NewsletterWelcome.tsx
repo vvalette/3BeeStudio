@@ -13,13 +13,13 @@ export default function NewsletterWelcome({ appUrl, locale = 'fr' }: Props) {
   const t = {
     preview: isEn
       ? 'Welcome to 3BeeStudio — and a gift for you'
-      : 'Bienvenue chez 3BeeStudio — un cadeau vous attend',
+      : 'Bienvenue chez 3BeeStudio, un cadeau vous attend',
     tagline: isEn ? 'Honey Drops' : 'Honey Drops',
     eyebrow: isEn ? 'Subscription confirmed' : 'Inscription confirmée',
     title:   isEn ? 'Your subscription is confirmed.' : 'Votre inscription est confirmée.',
     intro:   isEn
       ? 'You’ll now receive our monthly drops directly in your inbox: new releases, limited series, exclusive deals — always before anyone else.'
-      : 'Vous recevrez désormais nos drops mensuels directement dans votre boîte mail : nouveautés, séries limitées, offres exclusives — toujours en avant-première.',
+      : 'Vous recevrez désormais nos drops mensuels directement dans votre boîte mail : nouveautés, séries limitées, offres exclusives, toujours en avant-première.',
     promoLabel: isEn ? 'Your welcome gift' : 'Votre cadeau de bienvenue',
     promoSub:   isEn
       ? 'off your first NFC keychain, custom or shop order'

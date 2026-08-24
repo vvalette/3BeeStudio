@@ -30,26 +30,26 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
 
   return (
     <EmailLayout
-      preview={`${isDigitalOnly ? 'Vente de fichiers' : 'Commande boutique'} ${ref} — ${order.name}`}
+      preview={`${isDigitalOnly ? 'Vente de fichiers' : 'Commande boutique'} ${ref} · ${order.name}`}
       tagline="Boutique"
       footer={<InternalFooter note="Répondre à cet email écrit directement au client." />}
     >
       <Hero
         eyebrow={isDigitalOnly ? 'Vente de fichiers' : 'Nouvelle commande'}
         title={<>{formatPrice(order.total_amount)} · {totalQty} {unit}{totalQty > 1 ? 's' : ''}</>}
-        lead={`Commande ${ref} — ${placed}`}
+        lead={`Commande ${ref} · ${placed}`}
       />
 
       {/* Mode de livraison — l'info qui décide de l'action à mener */}
       <Section style={{ textAlign: 'center', marginBottom: 20 }}>
         <Pill tone={isDigitalOnly ? 'cyan' : isPickup ? 'info' : 'positive'}>
           {isDigitalOnly
-            ? 'Téléchargement — rien à faire'
+            ? 'Téléchargement : rien à faire'
             : isPickup
-              ? 'Retrait au studio — pas d’expédition'
+              ? 'Retrait au studio : pas d’expédition'
               : isRelay
-                ? 'Point relais — étiquette à générer'
-                : 'Livraison à domicile — étiquette à générer'}
+                ? 'Point relais : étiquette à générer'
+                : 'Livraison à domicile : étiquette à générer'}
         </Pill>
         {isMixed && (
           <Text style={{ color: color.ink3, fontSize: 11, margin: '8px 0 0' }}>

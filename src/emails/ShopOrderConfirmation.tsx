@@ -26,13 +26,13 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr', do
     }).format(cents / 100)
 
   const t = {
-    preview:   isEn ? `Order #${ref} confirmed — 3BeeStudio` : `Commande #${ref} confirmée — 3BeeStudio`,
+    preview:   isEn ? `Order #${ref} confirmed — 3BeeStudio` : `Commande #${ref} confirmée · 3BeeStudio`,
     tagline:   isEn ? 'Shop' : 'Boutique',
     eyebrow:   isEn ? 'Payment received' : 'Paiement reçu',
     title:     isEn ? 'Your order is confirmed.' : 'Votre commande est confirmée.',
     intro:     isEn
       ? `Thank you ${order.name} — we've received your payment. Your order is being prepared in our studio.`
-      : `Merci ${order.name} — nous avons bien reçu votre paiement. Votre commande est en préparation dans nos studios.`,
+      : `Merci ${order.name}, nous avons bien reçu votre paiement. Votre commande est en préparation dans nos studios.`,
     summary:   isEn ? 'Order summary' : 'Récapitulatif',
     qty:       isEn ? 'Qty' : 'Qté',
     subtotal:  isEn ? 'Subtotal' : 'Sous-total',
@@ -53,7 +53,7 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr', do
     digital:      isEn ? 'Your files' : 'Vos fichiers',
     digitalIntro: isEn
       ? 'Your download is ready — open your order page to get your files.'
-      : 'Votre téléchargement est prêt — ouvrez votre page de commande pour récupérer vos fichiers.',
+      : 'Votre téléchargement est prêt : ouvrez votre page de commande pour récupérer vos fichiers.',
     digitalBtn:  isEn ? 'Download my files →' : 'Télécharger mes fichiers →',
     digitalNote: isEn
       ? 'Links are valid for 30 days, 10 downloads per file. Keep this email.'

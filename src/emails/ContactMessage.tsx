@@ -12,7 +12,7 @@ interface Props {
 export default function ContactMessage({ name, email, subject, message }: Props) {
   return (
     <EmailLayout
-      preview={`Message de ${name} — ${subject}`}
+      preview={`Message de ${name} : ${subject}`}
       tagline="Formulaire de contact"
       footer={<InternalFooter note="Répondre à cet email écrit directement à l’expéditeur." />}
     >

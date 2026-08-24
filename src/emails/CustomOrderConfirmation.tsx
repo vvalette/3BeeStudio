@@ -18,7 +18,7 @@ export default function CustomOrderConfirmation({ order, appUrl }: Props) {
 
   return (
     <EmailLayout
-      preview={`Demande sur-mesure ${ref} bien reçue — devis sous 48h ouvrées`}
+      preview={`Demande sur-mesure ${ref} bien reçue, devis sous 48h ouvrées`}
       tagline="Sur-mesure"
     >
       <Hero

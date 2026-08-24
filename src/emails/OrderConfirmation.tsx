@@ -22,7 +22,7 @@ export default function OrderConfirmation({
 
   return (
     <EmailLayout
-      preview={`Commande confirmée — ${quantity} porte-clés NFC pour ${company}`}
+      preview={`Commande confirmée : ${quantity} porte-clés NFC pour ${company}`}
       tagline="Porte-clés NFC"
     >
       <Hero
@@ -30,7 +30,7 @@ export default function OrderConfirmation({
         title={<>Votre commande est confirmée.</>}
         lead={
           <>
-            Merci <strong style={{ color: color.ink0 }}>{company}</strong> — nous avons bien reçu votre
+            Merci <strong style={{ color: color.ink0 }}>{company}</strong>, nous avons bien reçu votre
             paiement. Vos porte-clés vont être imprimés en 3D et programmés à la main dans nos studios.
           </>
         }
