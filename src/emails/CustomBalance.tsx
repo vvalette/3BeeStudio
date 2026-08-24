@@ -25,7 +25,7 @@ export default function CustomBalance({ order, amount, appUrl, paymentUrl }: Pro
 
   return (
     <EmailLayout
-      preview={`Votre projet est prêt — solde de ${euros(amount)} à régler avant expédition`}
+      preview={`Votre projet est prêt : solde de ${euros(amount)} à régler avant expédition`}
       tagline="Sur-mesure"
     >
       <Hero

@@ -20,7 +20,7 @@ export default function CustomOrderAdmin({ order, appUrl }: Props) {
 
   return (
     <EmailLayout
-      preview={`Nouvelle demande sur-mesure ${ref} — ${order.name}`}
+      preview={`Nouvelle demande sur-mesure ${ref} · ${order.name}`}
       tagline="Sur-mesure"
       footer={<InternalFooter note="Répondre à cet email écrit directement au client." />}
     >

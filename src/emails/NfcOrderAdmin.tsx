@@ -17,14 +17,14 @@ export default function NfcOrderAdmin({ order, appUrl }: Props) {
 
   return (
     <EmailLayout
-      preview={`Commande NFC ${ref} payée — ${order.company}, ${order.quantity} pcs`}
+      preview={`Commande NFC ${ref} payée · ${order.company}, ${order.quantity} pcs`}
       tagline="Porte-clés NFC"
       footer={<InternalFooter note="Répondre à cet email écrit directement au client." />}
     >
       <Hero
         eyebrow="Commande payée"
         title={<>{formatPrice(order.total_amount)} · {order.quantity} porte-clés</>}
-        lead={`Commande ${ref} — ${placed}`}
+        lead={`Commande ${ref} · ${placed}`}
       />
 
       <Card title="Client">

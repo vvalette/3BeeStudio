@@ -16,6 +16,7 @@ import {
 } from '@/lib/status-ui'
 import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
 import Select from '@/components/ui/Select'
+import Tooltip from '@/components/ui/Tooltip'
 import {
   NFC_FILTERS, CUSTOM_FILTERS, SHOP_FILTERS, PERIODS, SORT_OPTIONS,
   NFC_SECTION, CUSTOM_SECTION, SHOP_SECTION, DIGITAL_SECTION, DIGITAL_FILTERS,
@@ -663,6 +664,8 @@ function NfcList({
               </div>
             </Link>
 
+            <CopyTracking url={order.tracking_url} number={order.tracking_number} />
+
             {/* Bouton suppression individuelle */}
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
@@ -745,6 +748,8 @@ function CustomList({
                 <span className="text-[10px] text-ink-3">{created.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', ...(created.getFullYear() !== currentYear ? { year: 'numeric' } : {}) })}</span>
               </div>
             </Link>
+
+            <CopyTracking url={order.tracking_url} number={order.tracking_number} />
 
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
@@ -829,6 +834,8 @@ function ShopList({
                 <span className="text-[10px] text-ink-3">{created.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', ...(created.getFullYear() !== currentYear ? { year: 'numeric' } : {}) })}</span>
               </div>
             </Link>
+
+            <CopyTracking url={order.tracking_url} number={order.tracking_number} />
 
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(order.id) }}
@@ -938,6 +945,66 @@ function DigitalList({
           </div>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Copie le suivi transporteur directement depuis la liste.
+ *
+ * C'est l'info qu'on redonne le plus souvent à un client qui relance, et elle
+ * n'était atteignable qu'en ouvrant la fiche. `tracking_url` est le lien renvoyé
+ * par Boxtal ; tant que le transporteur ne l'a pas encore fourni, on se rabat sur
+ * le numéro seul, collable sur le site du transporteur.
+ */
+function CopyTracking({ url, number }: { url: string | null; number: string | null }) {
+  const [state, setState] = useState<'idle' | 'done' | 'error'>('idle')
+
+  const text = url ?? number
+  if (!text) return null
+
+  const label = url ? 'Copier le lien de suivi transporteur' : 'Copier le numéro de suivi'
+
+  async function copy(e: React.MouseEvent) {
+    // La ligne entière est un <Link> : sans ça, le clic ouvre la fiche.
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(text as string)
+      setState('done')
+    } catch {
+      setState('error')
+    }
+    setTimeout(() => setState('idle'), 1500)
+  }
+
+  return (
+    <div className="flex items-center">
+      <Tooltip content={state === 'done' ? 'Copié' : state === 'error' ? 'Copie impossible' : label} side="left">
+        <button
+          onClick={copy}
+          aria-label={label}
+          className={[
+            'flex cursor-pointer items-center px-2.5 transition-colors sm:px-3',
+            state === 'done' ? 'text-emerald-400' : state === 'error' ? 'text-red-400' : 'text-ink-3 hover:text-amber',
+          ].join(' ')}
+        >
+          {state === 'done' ? (
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 7.5l3.5 3.5L12 4" />
+            </svg>
+          ) : state === 'error' ? (
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4l6 6M10 4l-6 6" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="5" width="7" height="7" rx="1.2" />
+              <path d="M9 5V3.2A1.2 1.2 0 007.8 2H3.2A1.2 1.2 0 002 3.2v4.6A1.2 1.2 0 003.2 9H5" />
+            </svg>
+          )}
+        </button>
+      </Tooltip>
     </div>
   )
 }

@@ -37,7 +37,7 @@ export default function OrderDelivered({
   const t = {
     preview: isEn
       ? `Your order #${orderRef} has been delivered — how did we do?`
-      : `Votre commande #${orderRef} est arrivée — ça vous a plu ?`,
+      : `Votre commande #${orderRef} est arrivée. Ça vous a plu ?`,
     tagline: isEn ? 'Delivered' : 'Livraison',
     eyebrow: isEn ? 'Delivered' : 'Colis livré',
     title:   isEn ? 'Your parcel has arrived.' : 'Votre colis est arrivé.',
@@ -52,7 +52,7 @@ export default function OrderDelivered({
     problemTitle: isEn ? 'Something wrong?' : 'Un souci ?',
     problemBody:  isEn
       ? 'Damaged parcel, wrong item, a detail that isn’t right — reply to this email and we’ll sort it out. No form, no ticket number.'
-      : 'Colis abîmé, pièce qui ne correspond pas, détail qui cloche — répondez à cet email et on règle ça. Pas de formulaire, pas de numéro de ticket.',
+      : 'Colis abîmé, pièce qui ne correspond pas, détail qui cloche : répondez à cet email et on règle ça. Pas de formulaire, pas de numéro de ticket.',
     orderLabel: isEn ? 'Order' : 'Commande',
     trackLink:  isEn ? 'view order' : 'voir la commande',
   }
@@ -76,7 +76,7 @@ export default function OrderDelivered({
       </Card>
 
       <Note>
-        {t.orderLabel} <strong style={{ color: color.ink0, fontFamily: font.mono }}>#{orderRef}</strong> —{' '}
+        {t.orderLabel} <strong style={{ color: color.ink0, fontFamily: font.mono }}>#{orderRef}</strong> ·{' '}
         <Link href={trackingUrl} style={{ color: color.amberDeep, fontWeight: 600 }}>{t.trackLink}</Link>
       </Note>
     </EmailLayout>

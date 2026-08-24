@@ -57,7 +57,7 @@ export async function sendOrderConfirmation(order: Order): Promise<void> {
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `✅ Commande confirmée #${order.id.slice(0, 8).toUpperCase()} — 3BeeStudio`,
+    subject: `✅ Commande confirmée #${order.id.slice(0, 8).toUpperCase()} · 3BeeStudio`,
     html,
   })
 
@@ -79,7 +79,7 @@ export async function sendCustomOrderConfirmation(order: CustomOrder): Promise<v
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `📋 Demande sur-mesure reçue ${order.id.slice(0, 8).toUpperCase()} — 3BeeStudio`,
+    subject: `📋 Demande sur-mesure reçue ${order.id.slice(0, 8).toUpperCase()} · 3BeeStudio`,
     html,
   })
 
@@ -97,7 +97,7 @@ export async function sendCustomOrderAdminNotification(order: CustomOrder): Prom
     from,
     replyTo: order.email,
     to: getAdminEmails(),
-    subject: `🔔 Nouvelle demande sur-mesure #${order.id.slice(0, 8).toUpperCase()} — ${order.name}`,
+    subject: `🔔 Nouvelle demande sur-mesure #${order.id.slice(0, 8).toUpperCase()} · ${order.name}`,
     html,
   })
 
@@ -121,7 +121,7 @@ export async function sendOrderAdminNotification(order: Order): Promise<void> {
     from,
     replyTo: order.email, // répondre au mail = répondre directement au client
     to: getAdminEmails(),
-    subject: `💰 Nouvelle commande NFC #${order.id.slice(0, 8).toUpperCase()} — ${order.company} (${order.quantity} pcs)`,
+    subject: `💰 Nouvelle commande NFC #${order.id.slice(0, 8).toUpperCase()} · ${order.company} (${order.quantity} pcs)`,
     html,
   })
 
@@ -161,8 +161,8 @@ export async function sendShopOrderAdminNotification(order: ShopOrder): Promise<
   // Une vente de fichiers ne demande aucun travail : l'objet doit le dire dès la
   // boîte de réception, sinon elle se lit comme une commande à préparer.
   const subject = order.delivery_mode === 'digital'
-    ? `⬇️ Vente de fichiers #${ref} — ${order.name} (rien à faire)`
-    : `🛒 Nouvelle commande boutique #${ref} — ${order.name} (${
+    ? `⬇️ Vente de fichiers #${ref} · ${order.name} (rien à faire)`
+    : `🛒 Nouvelle commande boutique #${ref} · ${order.name} (${
         order.delivery_mode === 'pickup' ? 'retrait studio' : 'livraison'
       })`
 
@@ -230,10 +230,10 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
   const html = await render(ShopOrderConfirmation({ order, appUrl, locale, downloads }))
 
   const subject = order.has_digital && !order.has_physical
-    ? (isEn ? `⬇️ Your files are ready #${ref} — 3BeeStudio` : `⬇️ Vos fichiers sont prêts #${ref} — 3BeeStudio`)
+    ? (isEn ? `⬇️ Your files are ready #${ref} — 3BeeStudio` : `⬇️ Vos fichiers sont prêts #${ref} · 3BeeStudio`)
     : isEn
       ? `✅ Shop order #${ref} confirmed — 3BeeStudio`
-      : `✅ Commande boutique #${ref} confirmée — 3BeeStudio`
+      : `✅ Commande boutique #${ref} confirmée · 3BeeStudio`
 
   const { data, error } = await resend.emails.send({
     from,
@@ -322,7 +322,7 @@ export async function sendShopShipmentNotification(order: ShopOrder): Promise<vo
     to: order.email,
     subject: isEn
       ? `📦 Order #${ref} shipped — 3BeeStudio`
-      : `📦 Commande #${ref} expédiée — 3BeeStudio`,
+      : `📦 Commande #${ref} expédiée · 3BeeStudio`,
     attachments: await invoiceAttachment('shop', order),
     html,
   })
@@ -357,7 +357,7 @@ export async function sendNfcShipmentNotification(order: Order): Promise<void> {
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `📦 Commande #${ref} expédiée — 3BeeStudio`,
+    subject: `📦 Commande #${ref} expédiée · 3BeeStudio`,
     attachments: await invoiceAttachment('nfc', order),
     html,
   })
@@ -392,7 +392,7 @@ export async function sendCustomShipmentNotification(order: CustomOrder): Promis
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `📦 Projet sur-mesure #${ref} expédié — 3BeeStudio`,
+    subject: `📦 Projet sur-mesure #${ref} expédié · 3BeeStudio`,
     attachments: await invoiceAttachment('custom', order),
     html,
   })
@@ -434,7 +434,7 @@ export async function sendDeliveredNotification(input: {
     to: input.email,
     subject: isEn
       ? `Your order #${input.orderRef} has arrived — 3BeeStudio`
-      : `Votre commande #${input.orderRef} est arrivée — 3BeeStudio`,
+      : `Votre commande #${input.orderRef} est arrivée · 3BeeStudio`,
     html,
   })
 
@@ -489,7 +489,7 @@ export async function sendContactMessage(input: {
     from,
     replyTo: input.email, // répondre au mail = répondre directement au client
     to: getAdminEmails(),
-    subject: `✉️ Contact — ${input.subject}`,
+    subject: `✉️ Contact : ${input.subject}`,
     html,
   })
 
@@ -506,7 +506,7 @@ export async function sendNewsletterWelcome(email: string, locale = 'fr'): Promi
 
   const subject = isEn
     ? '🐝 Welcome to the hive — your first look awaits'
-    : '🐝 Bienvenue dans la ruche — votre avant-première vous attend'
+    : '🐝 Bienvenue dans la ruche, votre avant-première vous attend'
 
   const { data, error } = await resend.emails.send({
     from,

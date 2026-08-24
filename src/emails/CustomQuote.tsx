@@ -38,7 +38,7 @@ export default function CustomQuote({
 
   return (
     <EmailLayout
-      preview={`Devis ${quoteNumber} — ${euros(total)}, acompte de ${euros(deposit)} pour lancer la production`}
+      preview={`Devis ${quoteNumber} · ${euros(total)}, acompte de ${euros(deposit)} pour lancer la production`}
       tagline="Sur-mesure"
     >
       <Hero
