@@ -47,12 +47,12 @@ export default function OrderDelivered({
     reviewTitle: isEn ? 'Add a Google review?' : 'Ajouter un avis Google ?',
     reviewBody:  isEn
       ? 'We’re a one-person studio: a review weighs more for us than any ad. Two minutes of your time, and it helps the next person decide.'
-      : 'On est un studio à une personne : un avis pèse plus lourd que n’importe quelle publicité. Deux minutes de votre temps, et ça aide le prochain à se décider.',
+      : 'Un avis Google pèse plus lourd pour nous que n’importe quelle publicité. Deux minutes de votre temps, ça nous aiderait beaucoup. Merci d’avance !',
     reviewBtn:   isEn ? 'Leave a Google review →' : 'Laisser un avis Google →',
     problemTitle: isEn ? 'Something wrong?' : 'Un souci ?',
     problemBody:  isEn
       ? 'Damaged parcel, wrong item, a detail that isn’t right — reply to this email and we’ll sort it out. No form, no ticket number.'
-      : 'Colis abîmé, pièce qui ne correspond pas, détail qui cloche : répondez à cet email et on règle ça. Pas de formulaire, pas de numéro de ticket.',
+      : 'Colis abîmé, pièce qui ne correspond pas, détail qui cloche : répondez à cet email et on règle ça.',
     orderLabel: isEn ? 'Order' : 'Commande',
     trackLink:  isEn ? 'view order' : 'voir la commande',
   }
