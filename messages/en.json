@@ -193,7 +193,9 @@
   },
   "testimonials": {
     "eyebrow": "Testimonials",
-    "heading": "They trust us."
+    "heading": "They trust us.",
+    "prev": "Previous testimonials",
+    "next": "Next testimonials"
   },
   "newsletter": {
     "eyebrow": "Honey Drop",
