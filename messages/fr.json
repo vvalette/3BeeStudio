@@ -193,7 +193,9 @@
   },
   "testimonials": {
     "eyebrow": "Témoignages",
-    "heading": "Ils nous font confiance."
+    "heading": "Ils nous font confiance.",
+    "prev": "Témoignages précédents",
+    "next": "Témoignages suivants"
   },
   "newsletter": {
     "eyebrow": "Honey Drop",
