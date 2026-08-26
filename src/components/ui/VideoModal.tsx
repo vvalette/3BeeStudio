@@ -97,6 +97,7 @@ export default function VideoModal({ open, onClose, src }: VideoModalProps) {
               src={src}
               controls
               autoPlay
+              playsInline
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
