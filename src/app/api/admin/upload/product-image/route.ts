@@ -35,7 +35,14 @@ export async function POST(req: Request) {
 
   const { error } = await supabaseAdmin.storage
     .from('product-images')
-    .upload(filename, file, { contentType: file.type, upsert: false })
+    .upload(filename, file, {
+      contentType: file.type,
+      upsert: false,
+      // Le nom du fichier est unique et jamais réécrit : l'image est immuable.
+      // Sans ça Supabase renvoie max-age=3600 et l'optimiseur Vercel refacture
+      // une transformation par variante et par heure.
+      cacheControl: '31536000',
+    })
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 })

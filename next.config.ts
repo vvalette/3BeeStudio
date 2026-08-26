@@ -8,6 +8,17 @@ const nextConfig: NextConfig = {
   // sans conflit avec le serveur `next dev` qui utilise .next en parallèle.
   distDir: process.env.NEXT_BUILD_DIR ?? '.next',
   images: {
+    // Vercel facture une transformation (et une écriture de cache) à chaque MISS et à
+    // chaque STALE, pas une seule fois par image. Pour une image distante le TTL retenu
+    // est max(Cache-Control amont, minimumCacheTTL) : Supabase Storage renvoie
+    // max-age=3600, donc chaque variante repartait en transformation toutes les heures.
+    // 31 jours = le plafond du cache CDN Vercel. Aucun risque de servir du périmé : les
+    // uploads produits ont un nom unique (Date.now()-random, upsert: false), remplacer
+    // une image crée une nouvelle URL donc une nouvelle clé de cache.
+    minimumCacheTTL: 2678400,
+    // Chaque largeur distincte est une transformation distincte. Audience mobile-first :
+    // 3840 ne servait qu'aux écrans 4K, pour les transformations les plus lourdes.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     remotePatterns: [
       {
         protocol: 'https',
