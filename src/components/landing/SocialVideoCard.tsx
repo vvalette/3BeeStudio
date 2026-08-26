@@ -44,6 +44,11 @@ export default function SocialVideoCard({ embedUrl, externalUrl, handle, label, 
               alt={label}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
+              // L'URL oEmbed TikTok est signée et tourne à chaque revalidation (12 h) :
+              // nouvelle URL = nouvelle clé de cache = transformation refacturée à chaque
+              // fois, pour une vignette déjà compressée par le CDN TikTok. On la sert telle
+              // quelle : zéro transformation, zéro écriture de cache.
+              unoptimized
               sizes="210px"
             />
           ) : (
