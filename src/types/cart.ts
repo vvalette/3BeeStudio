@@ -1,3 +1,5 @@
+import type { SelectedColor } from './shop-product'
+
 export interface CartItem {
   product_id: string
   name: string
@@ -13,5 +15,12 @@ export interface CartItem {
    * Optionnel : les paniers déjà en localStorage n'ont pas ce champ (défaut physique).
    */
   is_digital?: boolean
+  /**
+   * Coloris choisi sur la fiche produit. Deux coloris d'un même produit = deux
+   * lignes de panier (cf. `cartLineKey`), chacune avec sa quantité.
+   * `hex` n'est là que pour la pastille affichée dans le panier ; le serveur
+   * revalide `key` contre la palette du produit au checkout.
+   */
+  color?: SelectedColor & { hex?: string }
   custom_field_values?: Record<string, string>
 }

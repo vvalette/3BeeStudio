@@ -11,6 +11,7 @@ export default function CheckoutLoader() {
   const searchParams = useSearchParams()
   const productId = searchParams.get('product')
   const qty = searchParams.get('qty')
+  const color = searchParams.get('color')
 
   const [loading, setLoading] = useState(!!productId)
   const [forcedItems, setForcedItems] = useState<CartItem[] | undefined>(undefined)
@@ -20,6 +21,7 @@ export default function CheckoutLoader() {
     let alive = true
     const params = new URLSearchParams({ id: productId })
     if (qty) params.set('qty', qty)
+    if (color) params.set('color', color)
 
     fetch(`/api/boutique/product?${params}`)
       .then((res) => (res.ok ? res.json() : null))
@@ -31,7 +33,7 @@ export default function CheckoutLoader() {
       .catch(() => { if (alive) setLoading(false) })
 
     return () => { alive = false }
-  }, [productId, qty])
+  }, [productId, qty, color])
 
   if (loading) {
     return (

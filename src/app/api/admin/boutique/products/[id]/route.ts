@@ -15,6 +15,15 @@ const customFieldSchema = z.object({
   required: z.boolean(),
 })
 
+// Coloris proposés à l'achat. `hex` sert uniquement à la pastille du sélecteur —
+// format vérifié ici pour qu'une saisie invalide n'affiche pas une pastille vide.
+const colorSchema = z.object({
+  key:      z.string().min(1).max(50),
+  label:    z.string().min(1).max(40),
+  label_en: z.string().max(40).optional(),
+  hex:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Couleur hexadécimale attendue (#RRGGBB)'),
+})
+
 const patchSchema = z.object({
   name:            z.string().min(2).max(120).optional(),
   slug:            z.string().optional(),
@@ -31,6 +40,7 @@ const patchSchema = z.object({
   weight_grams:    z.number().int().positive().optional(),
   stl_url:         z.string().url().nullable().optional(),
   custom_fields:   z.array(customFieldSchema).optional(),
+  colors:          z.array(colorSchema).max(12).optional(),
   category:        z.string().max(80).nullable().optional(),
   featured:        z.boolean().optional(),
   model_rotation:  z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable().optional(),
@@ -91,6 +101,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (d.weight_grams !== undefined)   updates.weight_grams   = d.weight_grams
   if (d.stl_url !== undefined)        updates.stl_url        = d.stl_url
   if (d.custom_fields !== undefined)  updates.custom_fields  = d.custom_fields
+  if (d.colors !== undefined)         updates.colors         = d.colors
   if (d.category !== undefined)       updates.category       = d.category
   if (d.featured !== undefined)       updates.featured       = d.featured
   if (d.model_rotation !== undefined) updates.model_rotation = d.model_rotation

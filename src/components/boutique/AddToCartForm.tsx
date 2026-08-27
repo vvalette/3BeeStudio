@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { PublicShopProduct } from '@/types/shop-product'
-import { effectivePrice } from '@/types/shop-product'
+import { colorLabel, effectivePrice } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
 import { trackProductEvent } from './ProductViewTracker'
@@ -17,6 +17,13 @@ export default function AddToCartForm({ product }: { product: PublicShopProduct 
   const [quantity, setQuantity] = useState(1)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
+
+  const colors = product.colors ?? []
+  // Premier coloris présélectionné : la pièce est imprimée dans une couleur de
+  // toute façon, un état « aucun choix » ne ferait qu'ajouter une erreur à
+  // franchir. Le libellé retenu reste affiché en clair au-dessus des pastilles.
+  const [colorKey, setColorKey] = useState(colors[0]?.key ?? null)
+  const selectedColor = colors.find((c) => c.key === colorKey) ?? colors[0] ?? null
 
   const maxQty = product.stock !== null ? product.stock : 99
   const effPrice = effectivePrice(product)
@@ -45,6 +52,11 @@ export default function AddToCartForm({ product }: { product: PublicShopProduct 
       // Portée jusqu'au panier : c'est ce drapeau qui exclut la ligne du calcul
       // de port et dispense la commande d'adresse de livraison.
       ...(product.product_type === 'digital' ? { is_digital: true } : {}),
+      // Le libellé voyage avec la ligne pour l'affichage du panier ; c'est `key`
+      // que le checkout revalide contre la palette du produit.
+      ...(selectedColor
+        ? { color: { key: selectedColor.key, label: selectedColor.label, hex: selectedColor.hex } }
+        : {}),
       custom_field_values: hasCustomFields ? { ...fieldValues } : undefined,
     }, quantity)
     // Deuxième étage de l'entonnoir admin : une fiche très vue qui ne déclenche
@@ -58,11 +70,48 @@ export default function AddToCartForm({ product }: { product: PublicShopProduct 
     // « Acheter maintenant » saute le panier mais marque la même intention :
     // sans ça l'entonnoir sous-compterait les fiches sans personnalisation.
     trackProductEvent(product.id, 'cart')
-    router.push(`/boutique/commande?product=${product.id}&qty=${quantity}`)
+    const params = new URLSearchParams({ product: product.id, qty: String(quantity) })
+    if (selectedColor) params.set('color', selectedColor.key)
+    router.push(`/boutique/commande?${params}`)
   }
 
   return (
     <div className="space-y-4">
+      {/* Coloris */}
+      {colors.length > 0 && (
+        <div className="space-y-2.5 rounded-xl border border-[var(--line)] bg-bg-1 p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">{t('color')}</p>
+            {selectedColor && (
+              <p className="text-[13px] font-medium text-ink-0">{colorLabel(selectedColor, locale)}</p>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            {colors.map((c) => {
+              const selected = c.key === selectedColor?.key
+              const label = colorLabel(c, locale)
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => setColorKey(c.key)}
+                  aria-pressed={selected}
+                  aria-label={label}
+                  title={label}
+                  className={[
+                    'relative h-9 w-9 cursor-pointer rounded-full border transition-all',
+                    selected
+                      ? 'border-amber ring-2 ring-amber ring-offset-2 ring-offset-bg-1'
+                      : 'border-[var(--line-2)] hover:border-amber/60',
+                  ].join(' ')}
+                  style={{ backgroundColor: c.hex }}
+                />
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Champs personnalisés */}
       {hasCustomFields && (
         <div className="space-y-3 rounded-xl border border-[var(--line)] bg-bg-1 p-4">

@@ -35,6 +35,9 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr', do
       : `Merci ${order.name}, nous avons bien reçu votre paiement. Votre commande est en préparation dans nos studios.`,
     summary:   isEn ? 'Order summary' : 'Récapitulatif',
     qty:       isEn ? 'Qty' : 'Qté',
+    // Le libellé du coloris est figé en français sur la commande, comme le nom
+    // du produit : seul l'intitulé de la ligne suit la langue du client.
+    color:     isEn ? 'Colour' : 'Coloris',
     subtotal:  isEn ? 'Subtotal' : 'Sous-total',
     discount:  isEn ? 'Newsletter discount (−10%)' : 'Réduction newsletter (−10%)',
     shipping:  isEn ? 'Shipping' : 'Livraison',
@@ -72,6 +75,11 @@ export default function ShopOrderConfirmation({ order, appUrl, locale = 'fr', do
               <tr key={i}>
                 <td style={{ paddingBottom: 12, paddingRight: 12, verticalAlign: 'top' }}>
                   <Text style={{ color: color.ink0, fontSize: 13, fontWeight: 700, margin: 0 }}>{item.product_name}</Text>
+                  {item.color && (
+                    <Text style={{ color: color.ink2, fontSize: 12, margin: '3px 0 0' }}>
+                      {t.color} : {item.color.label}
+                    </Text>
+                  )}
                   <Text style={{ color: color.ink3, fontSize: 11, fontFamily: font.mono, margin: '3px 0 0' }}>
                     {t.qty} {item.quantity} × {fmt(item.unit_price)}
                   </Text>

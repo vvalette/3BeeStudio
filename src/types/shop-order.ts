@@ -1,3 +1,5 @@
+import type { SelectedColor } from './shop-product'
+
 export type ShopOrderStatus =
   | 'pending_payment'
   | 'confirmed'
@@ -25,6 +27,12 @@ export interface ShopOrderItem {
   weight_grams?: number // poids unitaire du produit au moment de la commande
   /** Snapshot : le produit peut changer de type après la commande. */
   is_digital?: boolean
+  /**
+   * Coloris commandé, figé au paiement : la palette du produit peut changer
+   * ensuite, la commande doit rester lisible telle qu'elle a été passée.
+   * Libellé FR, comme `product_name`.
+   */
+  color?: SelectedColor
   custom_field_values?: Array<{ key: string; label: string; value: string }>
 }
 

@@ -894,6 +894,7 @@
       "digitalBadge": "Digital download"
     },
     "addToCart": {
+      "color": "Colour",
       "quantity": "Quantity",
       "lowStock": "Only {count} left",
       "addToCartBtn": "Add to cart",

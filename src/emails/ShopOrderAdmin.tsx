@@ -85,6 +85,11 @@ export default function ShopOrderAdmin({ order, appUrl }: Props) {
                   <Text style={{ color: color.ink0, fontSize: 13, fontWeight: 600, margin: 0 }}>
                     {item.quantity} × {item.product_name}
                   </Text>
+                  {item.color && (
+                    <Text style={{ color: color.amberDeep, fontSize: 11, fontWeight: 700, margin: '2px 0 0' }}>
+                      Coloris : {item.color.label}
+                    </Text>
+                  )}
                   {(item.custom_field_values ?? []).map((f) => (
                     <Text key={f.key} style={{ color: color.ink3, fontSize: 11, margin: '2px 0 0' }}>
                       {f.label} : {f.value}

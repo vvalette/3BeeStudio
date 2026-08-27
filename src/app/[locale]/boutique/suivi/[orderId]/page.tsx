@@ -269,7 +269,10 @@ export default async function SuiviBoutiquePage({
           <div className="space-y-2">
             {order.items.map((item, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
-                <span className="text-ink-1">{item.quantity}× {item.product_name}</span>
+                <span className="text-ink-1">
+                  {item.quantity}× {item.product_name}
+                  {item.color && <span className="text-ink-3"> · {item.color.label}</span>}
+                </span>
                 <span className="font-mono text-ink-2">{formatPrice(item.unit_price * item.quantity)}</span>
               </div>
             ))}

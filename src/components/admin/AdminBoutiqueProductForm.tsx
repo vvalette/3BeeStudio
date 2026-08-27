@@ -11,6 +11,7 @@ import StlUpload from './product-form/StlUpload'
 import DigitalProductSection from './product-form/DigitalProductSection'
 import LocalizedContentSection from './product-form/LocalizedContentSection'
 import ModelRotationSection from './product-form/ModelRotationSection'
+import ColorsSection from './product-form/ColorsSection'
 import CustomFieldsSection from './product-form/CustomFieldsSection'
 import CategoryFeaturedSection from './product-form/CategoryFeaturedSection'
 import {
@@ -204,6 +205,11 @@ export default function AdminBoutiqueProductForm({ product, initialCategories = 
               rotation={form.modelRotation}
               onChange={(r) => set('modelRotation', r)}
             />
+          )}
+
+          {/* Coloris — un fichier n'a pas de couleur, c'est l'acheteur qui imprime */}
+          {!isDigitalProduct && (
+            <ColorsSection colors={form.colors} onChange={(c) => set('colors', c)} />
           )}
 
           {/* Champs personnalisés */}

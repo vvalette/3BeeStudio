@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import type { ShopProduct } from '@/types/shop-product'
-import { effectivePrice } from '@/types/shop-product'
+import { effectivePrice, findProductColor } from '@/types/shop-product'
 import type { CartItem } from '@/types/cart'
 
 // Résout un produit « Acheter maintenant » (?product=&qty= du checkout) en CartItem.
@@ -11,12 +11,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
   const qty = searchParams.get('qty')
+  const color = searchParams.get('color')
 
   if (!id) return NextResponse.json({ error: 'missing id' }, { status: 400 })
 
   const { data } = await supabase
     .from('shop_products')
-    .select('id, name, slug, price, sale_price, images, stock, product_type')
+    .select('id, name, slug, price, sale_price, images, stock, product_type, colors')
     .eq('id', id)
     .eq('active', true)
     .single()
@@ -25,6 +26,12 @@ export async function GET(request: Request) {
 
   const p = data as ShopProduct
   const quantity = Math.max(1, Math.min(parseInt(qty ?? '1', 10) || 1, p.stock ?? 99))
+
+  // Le coloris arrive en clé d'URL : on le relit dans la palette du produit
+  // plutôt que de faire confiance au libellé, qui pourrait être forgé.
+  // Palette non vide sans clé reconnue → premier coloris, celui que la fiche
+  // présélectionne déjà.
+  const selected = findProductColor(p.colors, color) ?? p.colors?.[0] ?? null
 
   const item: CartItem = {
     product_id:     p.id,
@@ -40,6 +47,7 @@ export async function GET(request: Request) {
     // port et n'affichait pas la case de renoncement — le serveur rejetait ensuite
     // la commande en 400.
     ...(p.product_type === 'digital' ? { is_digital: true } : {}),
+    ...(selected ? { color: { key: selected.key, label: selected.label, hex: selected.hex } } : {}),
   }
 
   return NextResponse.json({ item })

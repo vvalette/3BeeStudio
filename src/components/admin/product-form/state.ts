@@ -1,4 +1,4 @@
-import type { ShopProduct, ProductCustomField, ProductType } from '@/types/shop-product'
+import type { ShopProduct, ProductColor, ProductCustomField, ProductType } from '@/types/shop-product'
 import { generateSlug } from '@/types/shop-product'
 
 // État consolidé du formulaire produit admin + conversion vers le payload API.
@@ -19,6 +19,8 @@ export interface ProductFormState {
   stock: string
   weightGrams: string
   customFields: ProductCustomField[]
+  /** Coloris proposés à l'achat — vide = pas de sélecteur sur la fiche. */
+  colors: ProductColor[]
   category: string
   featured: boolean
   modelRotation: { x: number; y: number; z: number }
@@ -48,6 +50,7 @@ export function buildInitialState(product?: ShopProduct): ProductFormState {
     stock:          product?.stock !== null && product?.stock !== undefined ? String(product.stock) : '',
     weightGrams:    product ? String(product.weight_grams) : '',
     customFields:   product?.custom_fields ?? [],
+    colors:         product?.colors ?? [],
     category:       product?.category ?? '',
     featured:       product?.featured ?? false,
     modelRotation:  product?.model_rotation ?? { x: 0, y: 0, z: 0 },
@@ -104,6 +107,8 @@ export function buildProductPayload(f: ProductFormState):
       weight_grams: digital ? 1 : (parseInt(f.weightGrams, 10) || 100),
       active: f.active,
       custom_fields: f.customFields,
+      // Un fichier n'a pas de couleur : c'est l'acheteur qui choisit sa bobine.
+      colors: digital ? [] : f.colors,
       category: f.category || null,
       featured: f.featured,
       model_rotation: f.modelRotation,

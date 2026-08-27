@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
-import { calcShopShipping, mergeCartQuantities, computeNewsletterDiscount } from '@/types/shop-product'
-import type { ShopProduct } from '@/types/shop-product'
+import { calcShopShipping, mergeCartQuantities, computeNewsletterDiscount, findProductColor } from '@/types/shop-product'
+import type { MergedCartLine, SelectedColor, ShopProduct } from '@/types/shop-product'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { checkPromo, normalizeCode, promoReplacesNewsletter } from '@/lib/promo'
 import type { PromoCode } from '@/types/promo'
@@ -13,6 +13,9 @@ const schema = z.object({
   items: z.array(z.object({
     product_id:          z.string().uuid(),
     quantity:            z.number().int().min(1).max(100),
+    // Clé du coloris choisi, revalidée contre la palette du produit plus bas :
+    // le client n'envoie jamais le libellé, encore moins un coloris inexistant.
+    color:               z.string().max(50).optional(),
     custom_field_values: z.record(z.string().max(200)).optional(),
   })).min(1).max(20),
   email:         z.string().email(),
@@ -79,14 +82,24 @@ export async function POST(req: Request) {
 
   const d = parsed.data
 
-  // Fusionne les quantités d'un même produit (sécurité) — conserve les custom_field_values du 1er item
-  const qtyByProduct = mergeCartQuantities(d.items)
+  // Fusionne les quantités d'une même ligne (sécurité) — une ligne = un produit
+  // ET un coloris. Conserve les custom_field_values du 1er item de la ligne.
+  const mergedLines = Array.from(mergeCartQuantities(d.items).values())
+
+  // Deux coloris du même objet partagent le produit : un seul stock, un seul
+  // prix, une seule ligne Stripe — mais deux lignes de commande à préparer.
+  const linesByProduct = new Map<string, MergedCartLine[]>()
+  for (const line of mergedLines) {
+    const existing = linesByProduct.get(line.product_id)
+    if (existing) existing.push(line)
+    else linesByProduct.set(line.product_id, [line])
+  }
 
   // Récupère tous les produits en une requête (service_role — bypass RLS)
   const { data: productsRaw, error: productsError } = await supabaseAdmin
     .from('shop_products')
     .select('*')
-    .in('id', Array.from(qtyByProduct.keys()))
+    .in('id', Array.from(linesByProduct.keys()))
     .eq('active', true)
 
   if (productsError)
@@ -95,7 +108,7 @@ export async function POST(req: Request) {
   const products = (productsRaw ?? []) as ShopProduct[]
 
   // Vérifie que tous les produits demandés existent et sont disponibles
-  if (products.length !== qtyByProduct.size)
+  if (products.length !== linesByProduct.size)
     return NextResponse.json({ error: 'Un ou plusieurs produits sont introuvables ou indisponibles' }, { status: 404 })
 
   // Récupère le paramètre livraison offerte globale
@@ -113,6 +126,8 @@ export async function POST(req: Request) {
   const orderItems: {
     product_id: string; product_name: string; quantity: number
     unit_price: number; weight_grams?: number; is_digital?: boolean
+    color?: SelectedColor
+    custom_field_values?: { key: string; label: string; value: string }[]
   }[] = []
   let subtotal = 0
   // Sous-total physique tenu à part : le port se calcule sur lui seul, et le seuil
@@ -121,8 +136,10 @@ export async function POST(req: Request) {
   let digitalCount = 0
 
   for (const product of products) {
-    const entry     = qtyByProduct.get(product.id)!
-    const quantity  = entry.quantity
+    const lines     = linesByProduct.get(product.id)!
+    // Stock, prix et ligne Stripe raisonnent sur le total du produit, tous
+    // coloris confondus : c'est la même pièce qui sort du même stock.
+    const quantity  = lines.reduce((n, l) => n + l.quantity, 0)
     const unitPrice = product.sale_price ?? product.price
     const digital   = product.product_type === 'digital'
 
@@ -161,23 +178,40 @@ export async function POST(req: Request) {
     if (digital) digitalCount += quantity
     else physicalSubtotal += unitPrice * quantity
 
-    // Enrichit les custom_field_values avec les libellés définis sur le produit
-    const rawCfv = entry.custom_field_values
-    const enrichedCfv = rawCfv && product.custom_fields?.length
-      ? product.custom_fields
-          .filter((f) => rawCfv[f.key] !== undefined)
-          .map((f) => ({ key: f.key, label: f.label, value: rawCfv[f.key] }))
-      : undefined
+    for (const line of lines) {
+      // Coloris relu dans la palette du produit : le panier ne décide pas de ce
+      // qui sera imprimé. Un panier resté en localStorage avant l'ajout des
+      // coloris n'en porte aucun, on refuse plutôt que d'imprimer au hasard.
+      const color = product.colors?.length
+        ? findProductColor(product.colors, line.color)
+        : null
 
-    orderItems.push({
-      product_id:   product.id,
-      product_name: product.name,
-      quantity,
-      unit_price:   unitPrice,
-      weight_grams: product.weight_grams,
-      ...(digital ? { is_digital: true } : {}),
-      ...(enrichedCfv?.length ? { custom_field_values: enrichedCfv } : {}),
-    })
+      if (product.colors?.length && !color)
+        return NextResponse.json(
+          { error: `Choisissez un coloris pour « ${product.name} » : rouvrez la fiche produit pour le sélectionner.` },
+          { status: 400 },
+        )
+
+      // Enrichit les custom_field_values avec les libellés définis sur le produit
+      const rawCfv = line.custom_field_values
+      const enrichedCfv = rawCfv && product.custom_fields?.length
+        ? product.custom_fields
+            .filter((f) => rawCfv[f.key] !== undefined)
+            .map((f) => ({ key: f.key, label: f.label, value: rawCfv[f.key] }))
+        : undefined
+
+      orderItems.push({
+        product_id:   product.id,
+        product_name: product.name,
+        quantity:     line.quantity,
+        unit_price:   unitPrice,
+        weight_grams: product.weight_grams,
+        ...(digital ? { is_digital: true } : {}),
+        // Figé sur la commande : la palette du produit peut changer ensuite.
+        ...(color ? { color: { key: color.key, label: color.label } } : {}),
+        ...(enrichedCfv?.length ? { custom_field_values: enrichedCfv } : {}),
+      })
+    }
   }
 
   const hasDigital  = digitalCount > 0

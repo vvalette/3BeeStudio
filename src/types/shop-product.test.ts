@@ -4,6 +4,9 @@ import {
   resolveDeliveryMode,
   calcShopShipping,
   mergeCartQuantities,
+  cartLineKey,
+  findProductColor,
+  colorLabel,
   computeNewsletterDiscount,
   discountPercent,
   effectivePrice,
@@ -66,6 +69,60 @@ describe('mergeCartQuantities', () => {
 
   it('returns an empty map for an empty cart', () => {
     expect(mergeCartQuantities([]).size).toBe(0)
+  })
+
+  it('sépare deux coloris du même produit en deux lignes', () => {
+    const merged = mergeCartQuantities([
+      { product_id: 'a', quantity: 2, color: 'noir' },
+      { product_id: 'a', quantity: 1, color: 'blanc' },
+      { product_id: 'a', quantity: 3, color: 'noir' },
+    ])
+    expect(merged.size).toBe(2)
+    expect(merged.get(cartLineKey('a', 'noir'))?.quantity).toBe(5)
+    expect(merged.get(cartLineKey('a', 'blanc'))?.quantity).toBe(1)
+  })
+
+  it('ne mélange pas une ligne coloris et une ligne sans coloris', () => {
+    const merged = mergeCartQuantities([
+      { product_id: 'a', quantity: 1 },
+      { product_id: 'a', quantity: 1, color: 'noir' },
+    ])
+    expect(merged.size).toBe(2)
+    expect(merged.get('a')?.quantity).toBe(1)
+  })
+})
+
+describe('cartLineKey', () => {
+  it('garde l’id nu sans coloris (paniers et commandes existants inchangés)', () => {
+    expect(cartLineKey('abc')).toBe('abc')
+    expect(cartLineKey('abc', null)).toBe('abc')
+  })
+
+  it('distingue deux coloris du même produit', () => {
+    expect(cartLineKey('abc', 'noir')).not.toBe(cartLineKey('abc', 'blanc'))
+  })
+})
+
+describe('findProductColor', () => {
+  const palette = [
+    { key: 'noir', label: 'Noir', label_en: 'Black', hex: '#1A1A1C' },
+    { key: 'blanc', label: 'Blanc', hex: '#F2F1EC' },
+  ]
+
+  it('retrouve un coloris par sa clé', () => {
+    expect(findProductColor(palette, 'blanc')?.label).toBe('Blanc')
+  })
+
+  it('renvoie null sur une clé absente, vide ou une palette manquante', () => {
+    expect(findProductColor(palette, 'turquoise')).toBeNull()
+    expect(findProductColor(palette, undefined)).toBeNull()
+    expect(findProductColor(undefined, 'noir')).toBeNull()
+  })
+
+  it('retombe sur le libellé FR quand l’anglais manque', () => {
+    expect(colorLabel(palette[0], 'en')).toBe('Black')
+    expect(colorLabel(palette[1], 'en')).toBe('Blanc')
+    expect(colorLabel(palette[0], 'fr')).toBe('Noir')
   })
 })
 

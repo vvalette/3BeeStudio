@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import type { CartItem } from '@/types/cart'
-import { calcShopShipping, splitCart } from '@/types/shop-product'
+import { calcShopShipping, cartLineKey, splitCart } from '@/types/shop-product'
 
 const STORAGE_KEY = '3bee_cart_v1'
 
@@ -21,12 +21,23 @@ interface CartContextValue {
   open: () => void
   close: () => void
   addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void
-  setQuantity: (productId: string, quantity: number) => void
-  removeItem: (productId: string) => void
+  /** `lineKey` = `cartLineKey(product_id, color?.key)` : deux coloris = deux lignes. */
+  setQuantity: (lineKey: string, quantity: number) => void
+  removeItem: (lineKey: string) => void
   clear: () => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
+
+/**
+ * Identité d'une ligne de panier. Le même produit dans deux coloris fait deux
+ * lignes : elles s'ajoutent, se règlent et se retirent séparément.
+ *
+ * Le stock, lui, reste commun au produit — le total par produit est revérifié
+ * au checkout, seul juge du stock réel.
+ */
+const keyOf = (item: Pick<CartItem, 'product_id' | 'color'>) =>
+  cartLineKey(item.product_id, item.color?.key)
 
 export function useCart() {
   const ctx = useContext(CartContext)
@@ -75,11 +86,12 @@ export default function CartProvider({ children }: { children: React.ReactNode }
   }
 
   const addItem = useCallback((item: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    const key = keyOf(item)
     setItems((prev) => {
-      const existing = prev.find((i) => i.product_id === item.product_id)
+      const existing = prev.find((i) => keyOf(i) === key)
       if (existing) {
         return prev.map((i) =>
-          i.product_id === item.product_id
+          keyOf(i) === key
             ? { ...i, quantity: clampQty(i.quantity + quantity, i.max_stock) }
             : i,
         )
@@ -88,14 +100,14 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     })
   }, [])
 
-  const setQuantity = useCallback((productId: string, quantity: number) => {
+  const setQuantity = useCallback((lineKey: string, quantity: number) => {
     setItems((prev) =>
-      prev.map((i) => (i.product_id === productId ? { ...i, quantity: clampQty(quantity, i.max_stock) } : i)),
+      prev.map((i) => (keyOf(i) === lineKey ? { ...i, quantity: clampQty(quantity, i.max_stock) } : i)),
     )
   }, [])
 
-  const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.product_id !== productId))
+  const removeItem = useCallback((lineKey: string) => {
+    setItems((prev) => prev.filter((i) => keyOf(i) !== lineKey))
   }, [])
 
   const clear = useCallback(() => setItems([]), [])
