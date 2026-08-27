@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import type { CartItem } from '@/types/cart'
 import { calcShopShipping, cartLineKey, splitCart } from '@/types/shop-product'
+import { reconcileCart, type CartSyncProduct } from '@/lib/cart-sync'
 
 const STORAGE_KEY = '3bee_cart_v1'
 
@@ -61,6 +62,43 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     }
     setHydrated(true)
   }, [])
+
+  /**
+   * Resynchronise le panier restauré du localStorage sur l'état réel des produits.
+   *
+   * Une ligne fige le prix à l'ajout et ne bouge plus : un panier laissé de côté
+   * quelques semaines affichait l'ancien prix jusque dans le récapitulatif du
+   * checkout, alors que /api/boutique/checkout relit les prix en base. Le client
+   * voyait un total et Stripe en facturait un autre.
+   *
+   * Une seule passe, après hydratation : ce qui est ajouté ensuite vient de la
+   * fiche produit, donc déjà à jour.
+   */
+  useEffect(() => {
+    if (!hydrated) return
+    const ids = Array.from(new Set(items.map((i) => i.product_id)))
+    if (ids.length === 0) return
+
+    let cancelled = false
+    fetch('/api/boutique/cart/sync', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ ids }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { products?: CartSyncProduct[] } | null) => {
+        if (cancelled || !d?.products) return
+        // Réseau coupé ou route en erreur : on garde le panier tel quel plutôt
+        // que de le vider. Le checkout, lui, refusera les lignes périmées.
+        setItems((prev) => reconcileCart(prev, d.products!))
+      })
+      .catch(() => null)
+
+    return () => { cancelled = true }
+    // `items` volontairement hors dépendances : la resynchro ne tourne qu'au
+    // retour du localStorage, pas à chaque ajout au panier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated])
 
   // Fetch setting livraison offerte globale
   useEffect(() => {
