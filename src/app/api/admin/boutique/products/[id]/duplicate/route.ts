@@ -82,6 +82,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       weight_grams:      source.weight_grams,
       stl_url:           source.stl_url,
       custom_fields:     source.custom_fields,
+      colors:            source.colors ?? [],
       category:          source.category,
       featured:          false, // la mise en avant se décide fiche par fiche
       model_rotation:    source.model_rotation ?? { x: 0, y: 0, z: 0 },

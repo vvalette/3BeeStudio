@@ -822,6 +822,7 @@ function ShopList({
                   {order.items.slice(0, 2).map((item, i) => (
                     <span key={i} className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
                       {item.quantity}× {item.product_name}
+                      {item.color && <span className="text-amber"> · {item.color.label}</span>}
                     </span>
                   ))}
                   {order.items.length > 2 && <span className="text-[10px] text-ink-3">+{order.items.length - 2}</span>}

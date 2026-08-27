@@ -40,6 +40,7 @@ Trois flux de commande **complets et fonctionnels** :
 **Boutique (objets de série)**
 - Catalogue `/boutique` + fiche produit `/boutique/[slug]` (markdown, viewer 3D STL/3MF, contenu FR/EN)
 - Panier + checkout Stripe `/boutique/commande`, paiement intégral + frais de port calculés
+- **Coloris** (`shop_products.colors`, jsonb `[{key,label,label_en,hex}]`) : palette éditable par fiche dans l'admin, pastilles sur la fiche produit, premier coloris présélectionné. Le choix suit la ligne jusqu'à la commande (`shop_orders.items[].color`), les emails, la fiche admin et la facture. Une ligne = un produit **et** un coloris (`cartLineKey`) ; le stock reste commun au produit. Pas encore de photo par coloris
 - **Mode de livraison** : livraison à domicile OU **retrait studio** (0 € de port, sans adresse) — sélecteur dans le checkout
 - **Codes promo** `/admin/boutique/promos` : pourcentage, montant fixe ou **livraison gratuite** (impossible en coupon Stripe, le port est calculé côté app → table maison `promo_codes`). Conditions : minimum d'achat, objets/fichiers, plafond d'usages, une fois par client, fenêtre de dates. Saisie au checkout, revalidée côté serveur ; consommation atomique par la RPC `redeem_promo_code`, rendue si la session Stripe expire. **Non cumulable** avec la remise newsletter (sauf livraison gratuite, qui porte sur le port)
 - **Réduction newsletter −10%** : appliquée auto au checkout boutique si l'email est abonné et `promo_used = false` (coupon Stripe one-shot, colonne `discount_amount`) — partagée avec le flux NFC

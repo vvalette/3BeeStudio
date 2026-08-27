@@ -6,6 +6,30 @@ export interface ProductCustomField {
 }
 
 /**
+ * Coloris proposé sur une fiche produit (colonne `shop_products.colors`).
+ *
+ * Un objet imprimé à la demande sort dans la couleur de la bobine chargée : une
+ * fiche par couleur fragmenterait le stock et le référencement pour une pièce
+ * identique. Le choix se fait donc à l'achat et se fige sur la ligne de commande.
+ *
+ * `hex` n'est qu'une pastille d'affichage, pas une valeur de production : c'est
+ * `key` qui identifie le coloris de bout en bout (panier, checkout, commande).
+ */
+export interface ProductColor {
+  key: string
+  label: string
+  label_en?: string
+  /** Pastille affichée dans le sélecteur, ex. `#1A1A1C`. */
+  hex: string
+}
+
+/** Coloris figé sur une ligne de panier ou de commande. */
+export interface SelectedColor {
+  key: string
+  label: string
+}
+
+/**
  * 'physical' = objet imprimé et expédié · 'digital' = fichier STL téléchargeable.
  * Un même objet vendu dans les deux formats = deux produits (cf. « Dupliquer »).
  */
@@ -37,6 +61,8 @@ export interface ShopProduct {
    */
   stl_url: string | null
   custom_fields: ProductCustomField[]
+  /** Coloris proposés au client. Vide = pas de choix de couleur sur la fiche. */
+  colors: ProductColor[]
   category: string | null
   featured: boolean
   model_rotation: { x: number; y: number; z: number } | null
@@ -163,18 +189,56 @@ export function discountPercent(product: Pick<ShopProduct, 'price' | 'sale_price
 export interface CartLineInput {
   product_id: string
   quantity: number
+  /** `key` du coloris choisi — absent quand le produit n'en propose pas. */
+  color?: string
   custom_field_values?: Record<string, string>
 }
 
-// Fusionne les quantités d'un même produit envoyées dans le panier (sécurité côté API) —
-// conserve les custom_field_values de la première occurrence rencontrée pour chaque produit.
+export interface MergedCartLine {
+  product_id: string
+  quantity: number
+  color?: string
+  custom_field_values?: Record<string, string>
+}
+
+/**
+ * Identité d'une ligne de panier : un même produit dans deux coloris fait deux
+ * lignes distinctes, avec leurs quantités propres.
+ *
+ * Sans coloris la clé reste l'`id` du produit tel quel : les paniers déjà en
+ * localStorage et les commandes existantes gardent exactement la même clé.
+ */
+export function cartLineKey(productId: string, color?: string | null): string {
+  return color ? `${productId}|${color}` : productId
+}
+
+/** Retrouve un coloris par sa clé — `null` si le produit ne le propose pas (ou plus). */
+export function findProductColor(
+  colors: ProductColor[] | null | undefined,
+  key: string | null | undefined,
+): ProductColor | null {
+  if (!key) return null
+  return colors?.find((c) => c.key === key) ?? null
+}
+
+/** Libellé d'un coloris dans la langue du visiteur (retombe sur le FR). */
+export function colorLabel(color: Pick<ProductColor, 'label' | 'label_en'>, locale: string): string {
+  return locale === 'en' && color.label_en ? color.label_en : color.label
+}
+
+// Fusionne les quantités d'une même ligne envoyées dans le panier (sécurité côté API) —
+// une ligne = un produit ET un coloris. Conserve les custom_field_values de la
+// première occurrence rencontrée pour chaque ligne.
 export function mergeCartQuantities(
   items: CartLineInput[],
-): Map<string, { quantity: number; custom_field_values?: Record<string, string> }> {
-  const merged = new Map<string, { quantity: number; custom_field_values?: Record<string, string> }>()
+): Map<string, MergedCartLine> {
+  const merged = new Map<string, MergedCartLine>()
   for (const it of items) {
-    const existing = merged.get(it.product_id)
-    merged.set(it.product_id, {
+    const key = cartLineKey(it.product_id, it.color)
+    const existing = merged.get(key)
+    merged.set(key, {
+      product_id:          it.product_id,
+      color:               it.color,
       quantity:            (existing?.quantity ?? 0) + it.quantity,
       custom_field_values: existing?.custom_field_values ?? it.custom_field_values,
     })

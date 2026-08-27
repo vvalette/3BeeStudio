@@ -894,6 +894,7 @@
       "digitalBadge": "Digital download"
     },
     "addToCart": {
+      "color": "Colour",
       "quantity": "Quantity",
       "lowStock": "Only {count} left",
       "addToCartBtn": "Add to cart",
@@ -911,6 +912,8 @@
       "subtotal": "Subtotal",
       "shipping": "Shipping",
       "shippingFree": "Free",
+      "shippingFrom": "From {price}",
+      "shippingHint": "Pickup-point rate — home delivery or studio pickup selected at the next step.",
       "total": "Total",
       "checkoutBtn": "Checkout →"
     },

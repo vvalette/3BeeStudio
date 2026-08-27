@@ -13,6 +13,15 @@ const customFieldSchema = z.object({
   required: z.boolean(),
 })
 
+// Coloris proposés à l'achat. `hex` sert uniquement à la pastille du sélecteur —
+// format vérifié ici pour qu'une saisie invalide n'affiche pas une pastille vide.
+const colorSchema = z.object({
+  key:      z.string().min(1).max(50),
+  label:    z.string().min(1).max(40),
+  label_en: z.string().max(40).optional(),
+  hex:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Couleur hexadécimale attendue (#RRGGBB)'),
+})
+
 const createSchema = z.object({
   name:            z.string().min(2).max(120),
   slug:            z.string().optional(),
@@ -29,6 +38,7 @@ const createSchema = z.object({
   weight_grams:    z.number().int().positive().default(100),
   stl_url:         z.string().url().nullable().optional(),
   custom_fields:   z.array(customFieldSchema).default([]),
+  colors:          z.array(colorSchema).max(12).default([]),
   category:        z.string().max(80).nullable().optional(),
   featured:        z.boolean().default(false),
   model_rotation:  z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable().optional(),
@@ -97,6 +107,7 @@ export async function POST(req: Request) {
       weight_grams:      d.weight_grams,
       stl_url:           d.stl_url ?? null,
       custom_fields:     d.custom_fields,
+      colors:            d.colors,
       category:          d.category ?? null,
       featured:          d.featured,
       model_rotation:    d.model_rotation ?? { x: 0, y: 0, z: 0 },

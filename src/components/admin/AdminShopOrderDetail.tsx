@@ -295,6 +295,12 @@ export default function AdminShopOrderDetail({
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="text-ink-1">
                         <span className="font-mono text-ink-3">{item.quantity}×</span> {item.product_name}
+                        {/* Coloris à imprimer : l'info la plus utile de la fiche */}
+                        {item.color && (
+                          <span className="ml-2 inline-flex items-center rounded-pill border border-[var(--line-amber)] bg-amber/10 px-2 py-0.5 text-[11px] font-semibold text-amber">
+                            {item.color.label}
+                          </span>
+                        )}
                       </span>
                       <span className="font-mono text-ink-2">{formatPrice(item.unit_price * item.quantity)}</span>
                     </div>

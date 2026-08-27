@@ -75,7 +75,12 @@ function draftFromNfc(order: Order): InvoiceDraft {
 function draftFromShop(order: ShopOrder): InvoiceDraft {
   const items: QuoteLineItem[] = (order.items ?? []).map((item) => ({
     label: item.product_name,
-    detail: (item.custom_field_values ?? []).map((f) => `${f.label} : ${f.value}`).join('\n') || undefined,
+    // Le coloris distingue deux lignes du même produit sur la facture : sans lui
+    // elles seraient rigoureusement identiques.
+    detail: [
+      ...(item.color ? [`Coloris : ${item.color.label}`] : []),
+      ...(item.custom_field_values ?? []).map((f) => `${f.label} : ${f.value}`),
+    ].join('\n') || undefined,
     quantity: item.quantity,
     unit_price: item.unit_price,
   }))

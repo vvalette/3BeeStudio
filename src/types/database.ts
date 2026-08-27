@@ -1,5 +1,5 @@
 import type { Database as GeneratedDatabase } from './database.generated'
-import type { ProductCustomField } from './shop-product'
+import type { ProductColor, ProductCustomField } from './shop-product'
 import type { ShopOrderItem } from './shop-order'
 import type { QuoteLineItem } from './custom-order'
 import type { DocumentAdjustment } from '@/lib/documents/pdf'
@@ -14,6 +14,7 @@ type ModelRotation = { x: number; y: number; z: number }
 
 type ShopProductJsonColumns = {
   custom_fields: ProductCustomField[]
+  colors: ProductColor[]
   model_rotation: ModelRotation | null
 }
 

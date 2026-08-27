@@ -3,14 +3,15 @@
 import { useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from '@/i18n/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useCart } from './CartProvider'
 import { formatPrice } from '@/lib/utils'
-import { SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
+import { cartLineKey, colorLabel, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 
 export default function CartDrawer() {
   const router = useRouter()
   const t = useTranslations('boutique.cart')
+  const locale = useLocale()
   const { items, isOpen, close, subtotal, shipping, total, setQuantity, removeItem, freeShippingEnabled } = useCart()
 
   // Bloque le scroll du body quand ouvert
@@ -106,8 +107,10 @@ export default function CartDrawer() {
             {/* Liste articles */}
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <ul className="space-y-4">
-                {items.map((item) => (
-                  <li key={item.product_id} className="flex gap-3">
+                {items.map((item) => {
+                  const lineKey = cartLineKey(item.product_id, item.color?.key)
+                  return (
+                  <li key={lineKey} className="flex gap-3">
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--line)] bg-bg-2">
                       {item.image ? (
                         <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
@@ -120,9 +123,20 @@ export default function CartDrawer() {
 
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-[14px] font-medium leading-tight text-ink-0">{item.name}</p>
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-medium leading-tight text-ink-0">{item.name}</p>
+                          {item.color && (
+                            <p className="mt-1 flex items-center gap-1.5 text-[12px] text-ink-2">
+                              <span
+                                className="h-3 w-3 shrink-0 rounded-full border border-[var(--line-2)]"
+                                style={{ backgroundColor: item.color.hex ?? 'transparent' }}
+                              />
+                              {colorLabel(item.color, locale)}
+                            </p>
+                          )}
+                        </div>
                         <button
-                          onClick={() => removeItem(item.product_id)}
+                          onClick={() => removeItem(lineKey)}
                           aria-label={t('removeLabel')}
                           className="shrink-0 cursor-pointer text-ink-3 transition-colors hover:text-red-400"
                         >
@@ -134,14 +148,14 @@ export default function CartDrawer() {
                         {/* Quantité */}
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => setQuantity(item.product_id, item.quantity - 1)}
+                            onClick={() => setQuantity(lineKey, item.quantity - 1)}
                             className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-[var(--line)] text-ink-1 transition-colors hover:bg-bg-2"
                           >
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 8h10" /></svg>
                           </button>
                           <span className="w-6 text-center font-mono text-[14px] text-ink-0">{item.quantity}</span>
                           <button
-                            onClick={() => setQuantity(item.product_id, item.quantity + 1)}
+                            onClick={() => setQuantity(lineKey, item.quantity + 1)}
                             disabled={item.max_stock !== null && item.quantity >= item.max_stock}
                             className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-[var(--line)] text-ink-1 transition-colors hover:bg-bg-2 disabled:opacity-30"
                           >
@@ -157,7 +171,8 @@ export default function CartDrawer() {
                       </div>
                     </div>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             </div>
 
@@ -168,8 +183,14 @@ export default function CartDrawer() {
                   <span>{t('subtotal')}</span><span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-ink-2">
-                  <span>{t('shipping')}</span><span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
+                  <span>{t('shipping')}</span>
+                  <span>{shipping === 0 ? t('shippingFree') : t('shippingFrom', { price: formatPrice(shipping) })}</span>
                 </div>
+                {/* Le tarif affiché est celui du point relais : le mode se choisit
+                    à l'étape suivante, et le domicile coûte plus cher. */}
+                {shipping > 0 && (
+                  <p className="text-[11px] leading-snug text-ink-3">{t('shippingHint')}</p>
+                )}
                 <div className="flex justify-between border-t border-[var(--line)] pt-1.5 font-bold text-ink-0">
                   <span>{t('total')}</span><span className="text-amber">{formatPrice(total)}</span>
                 </div>

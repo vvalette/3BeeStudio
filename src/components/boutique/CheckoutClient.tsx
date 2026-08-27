@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Link } from '@/i18n/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import type { CartItem } from '@/types/cart'
-import { calcShopShipping, splitCart, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
+import { calcShopShipping, cartLineKey, colorLabel, splitCart, SHOP_FREE_SHIPPING_THRESHOLD } from '@/types/shop-product'
 import type { DeliveryMode } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from './CartProvider'
@@ -218,6 +218,9 @@ export default function CheckoutClient({ forcedItems }: Props) {
         items: items.map((i) => ({
           product_id: i.product_id,
           quantity:   i.quantity,
+          // Seule la clé part au serveur : le libellé et la pastille du panier ne
+          // font pas foi, ils sont relus dans la palette du produit.
+          ...(i.color ? { color: i.color.key } : {}),
           ...(i.custom_field_values ? { custom_field_values: i.custom_field_values } : {}),
         })),
         email,
@@ -496,7 +499,7 @@ export default function CheckoutClient({ forcedItems }: Props) {
         </h2>
         <ul className="space-y-3">
           {items.map((item) => (
-            <li key={item.product_id} className="flex gap-3">
+            <li key={cartLineKey(item.product_id, item.color?.key)} className="flex gap-3">
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[var(--line)] bg-bg-2">
                 {item.image ? (
                   <Image src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
@@ -510,7 +513,12 @@ export default function CheckoutClient({ forcedItems }: Props) {
                 </span>
               </div>
               <div className="flex flex-1 items-center justify-between gap-2">
-                <span className="text-[13px] text-ink-1 leading-tight">{item.name}</span>
+                <span className="text-[13px] text-ink-1 leading-tight">
+                  {item.name}
+                  {item.color && (
+                    <span className="mt-0.5 block text-[12px] text-ink-3">{colorLabel(item.color, locale)}</span>
+                  )}
+                </span>
                 <div className="flex flex-col items-end">
                   <span className="font-mono text-[13px] text-ink-0">{formatPrice(item.price * item.quantity)}</span>
                   {item.original_price !== null && (
