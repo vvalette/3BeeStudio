@@ -124,8 +124,14 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     })))
     // Le port ne porte que sur la part physique — un fichier ne s'expédie pas et
     // ne doit pas faire franchir le seuil de gratuité.
+    //
+    // Estimation au tarif POINT RELAIS, le moins cher et le mode proposé par
+    // défaut au checkout : afficher les 6,90 € du domicile dans le panier
+    // annonçait un port que la plupart des clients ne paient pas, et fait
+    // abandonner avant même de voir le choix. Le panier l'annonce donc en
+    // « à partir de », le montant exact se fige au choix du mode.
     const shipping = split.hasPhysical
-      ? (freeShippingEnabled ? 0 : calcShopShipping(split.physicalSubtotal))
+      ? (freeShippingEnabled ? 0 : calcShopShipping(split.physicalSubtotal, 'relay'))
       : 0
     return {
       count,

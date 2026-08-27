@@ -912,6 +912,8 @@
       "subtotal": "Sous-total",
       "shipping": "Livraison",
       "shippingFree": "Offerte",
+      "shippingFrom": "À partir de {price}",
+      "shippingHint": "Tarif point relais. Domicile ou retrait studio au choix à l'étape suivante.",
       "total": "Total",
       "checkoutBtn": "Commander →"
     },

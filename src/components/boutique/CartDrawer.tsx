@@ -183,8 +183,14 @@ export default function CartDrawer() {
                   <span>{t('subtotal')}</span><span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-ink-2">
-                  <span>{t('shipping')}</span><span>{shipping === 0 ? t('shippingFree') : formatPrice(shipping)}</span>
+                  <span>{t('shipping')}</span>
+                  <span>{shipping === 0 ? t('shippingFree') : t('shippingFrom', { price: formatPrice(shipping) })}</span>
                 </div>
+                {/* Le tarif affiché est celui du point relais : le mode se choisit
+                    à l'étape suivante, et le domicile coûte plus cher. */}
+                {shipping > 0 && (
+                  <p className="text-[11px] leading-snug text-ink-3">{t('shippingHint')}</p>
+                )}
                 <div className="flex justify-between border-t border-[var(--line)] pt-1.5 font-bold text-ink-0">
                   <span>{t('total')}</span><span className="text-amber">{formatPrice(total)}</span>
                 </div>
