@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { sendNfcOrderEmails } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { confirmShopOrder } from '@/lib/confirm-shop-order'
+import { snapshotAbandonedCart } from '@/lib/abandoned-cart'
 import type { Order } from '@/types/order'
 import Stripe from 'stripe'
 
@@ -15,6 +16,11 @@ async function releaseExpiredCheckout(session: Stripe.Checkout.Session) {
   const promoEmail = session.metadata?.newsletter_promo_email
 
   if (shopOrderId) {
+    // Instantané AVANT la suppression : c'est le dernier endroit où le panier
+    // existe encore. Le localStorage du client ne suffit pas (il a pu commencer
+    // sur mobile et lire ses mails sur ordinateur), et une session Stripe
+    // expirée ne rejoue pas ses lignes.
+    await snapshotAbandonedCart(shopOrderId)
     await supabaseAdmin.from('shop_orders').delete().eq('id', shopOrderId).eq('status', 'pending_payment')
   } else if (orderId) {
     await supabaseAdmin.from('orders').delete().eq('id', orderId).eq('status', 'pending_payment')

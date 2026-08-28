@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { reconcileCart, type CartSyncProduct } from './cart-sync'
+import { reconcileCart, cartItemsFromSnapshot, type CartSyncProduct } from './cart-sync'
 import type { CartItem } from '@/types/cart'
+import type { ShopOrderItem } from '@/types/shop-order'
 
 const product = (over: Partial<CartSyncProduct> = {}): CartSyncProduct => ({
   id:           '11111111-1111-1111-1111-111111111111',
@@ -95,5 +96,62 @@ describe('reconcileCart', () => {
   it('retourne le tableau d’origine quand rien n’a changé', () => {
     const items = [line()]
     expect(reconcileCart(items, [product()])).toBe(items)
+  })
+})
+
+describe('cartItemsFromSnapshot', () => {
+  const line: ShopOrderItem = {
+    product_id: 'p1',
+    product_name: 'Vase Hexagone',
+    quantity: 2,
+    unit_price: 2400,
+  }
+
+  it('reprend les lignes d\'une commande abandonnée', () => {
+    const [item] = cartItemsFromSnapshot([line])
+    expect(item.product_id).toBe('p1')
+    expect(item.name).toBe('Vase Hexagone')
+    expect(item.quantity).toBe(2)
+  })
+
+  it('convertit les champs personnalisés du tableau vers le dictionnaire du panier', () => {
+    const [item] = cartItemsFromSnapshot([{
+      ...line,
+      custom_field_values: [{ key: 'gravure', label: 'Gravure', value: 'Marie' }],
+    }])
+    expect(item.custom_field_values).toEqual({ gravure: 'Marie' })
+  })
+
+  it('conserve le coloris et le drapeau numérique', () => {
+    const [item] = cartItemsFromSnapshot([{
+      ...line,
+      is_digital: true,
+      color: { key: 'amber', label: 'Ambre' },
+    }])
+    expect(item.is_digital).toBe(true)
+    expect(item.color).toEqual({ key: 'amber', label: 'Ambre' })
+  })
+
+  it('laisse la réconciliation imposer le prix courant, jamais celui de l\'abandon', () => {
+    // Le prix a monté depuis l'abandon : c'est le prix du jour qui doit sortir,
+    // sinon le récapitulatif afficherait un total que Stripe ne facturerait pas.
+    const products: CartSyncProduct[] = [{
+      id: 'p1', name: 'Vase Hexagone', slug: 'vase-hexagone',
+      price: 2900, sale_price: null, images: ['/vase.jpg'],
+      stock: 5, product_type: 'physical', colors: null,
+    }]
+    const [item] = reconcileCart(cartItemsFromSnapshot([line]), products)
+    expect(item.price).toBe(2900)
+    expect(item.slug).toBe('vase-hexagone')
+    expect(item.max_stock).toBe(5)
+  })
+
+  it('retire du panier repris un article devenu indisponible', () => {
+    const products: CartSyncProduct[] = [{
+      id: 'p1', name: 'Vase Hexagone', slug: 'vase-hexagone',
+      price: 2400, sale_price: null, images: [], stock: 0,
+      product_type: 'physical', colors: null,
+    }]
+    expect(reconcileCart(cartItemsFromSnapshot([line]), products)).toHaveLength(0)
   })
 })

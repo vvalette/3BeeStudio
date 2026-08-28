@@ -20,8 +20,14 @@ const schema = z.object({
   })).min(1).max(20),
   email:         z.string().email(),
   name:          z.string().min(2),
-  phone:         z.string().min(8),
+  phone:         z.string().min(8).optional(),
   delivery_mode: z.enum(['delivery', 'pickup', 'relay', 'digital']).default('delivery'),
+
+  /**
+   * Jeton du panier abandonné repris depuis l'email de relance. Sert uniquement
+   * à attribuer la commande à cette relance une fois le paiement confirmé.
+   */
+  recovery_token: z.string().min(10).max(200).optional(),
 
   /**
    * Renoncement explicite au droit de rétractation (art. L221-28 3° du Code de la
@@ -62,6 +68,14 @@ const schema = z.object({
   // On bloque ici plutôt que de laisser une commande payée inexpédiable.
   (d) => d.delivery_mode !== 'relay' || !!d.pickup_point_code,
   { message: 'Point relais requis pour la livraison en point relais' },
+).refine(
+  // Le téléphone sert au transporteur (avis de passage, SMS du point relais) et au
+  // retrait studio (convenir d'un créneau). Sur une commande 100 % fichiers il ne
+  // sert à rien : l'exiger coûtait des paniers et collectait une donnée sans
+  // finalité. La cohérence entre ce mode et le contenu réel du panier est
+  // revérifiée plus bas, après lecture des produits.
+  (d) => d.delivery_mode === 'digital' || !!d.phone,
+  { message: 'Téléphone requis pour une commande à livrer ou à retirer', path: ['phone'] },
 )
 
 export async function POST(req: Request) {
@@ -296,7 +310,8 @@ export async function POST(req: Request) {
     .insert({
       email:                d.email,
       name:                 d.name,
-      phone:                d.phone,
+      phone:                d.phone ?? null,
+      recovery_token:       d.recovery_token ?? null,
       items:                orderItems,
       subtotal,
       discount_amount:      discountAmount,

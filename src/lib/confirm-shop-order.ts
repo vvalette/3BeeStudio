@@ -47,6 +47,20 @@ export async function confirmShopOrder(
 
   let shopOrder = updatedShop as ShopOrder
 
+  // Commande repartie d'une relance de panier : on ferme le panier d'origine.
+  // C'est la seule mesure honnête du chiffre récupéré — sans ce marquage, un
+  // client revenu grâce à l'email est indiscernable d'un client revenu seul.
+  // Non bloquant : une attribution manquée ne doit pas retenir une commande payée.
+  if (shopOrder.recovery_token) {
+    const { error: recoverError } = await supabaseAdmin
+      .from('abandoned_carts')
+      .update({ recovered_at: new Date().toISOString() })
+      .eq('token', shopOrder.recovery_token)
+      .is('recovered_at', null)
+    if (recoverError) console.error('[confirm-shop-order] Attribution relance échouée:', recoverError.message)
+    else console.info('[confirm-shop-order]', JSON.stringify({ event: 'cart_recovered', shopOrderId }))
+  }
+
   // Ouvre les droits de téléchargement AVANT les emails : la confirmation contient
   // les liens, ils doivent exister au moment où elle part.
   // Idempotent (index unique order_id/product_id) — un rejeu ne remet pas les

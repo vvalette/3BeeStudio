@@ -36,9 +36,24 @@ const COUNTRY_CODES = [
 
 const MODES = ['relay', 'delivery', 'pickup'] as const
 
+/** Coordonnées déjà connues, reprises d'un panier abandonné. */
+export interface CheckoutPrefill {
+  firstName: string
+  lastName:  string
+  email:     string
+}
+
 interface Props {
   // En mode « Acheter maintenant », les articles sont imposés et le panier est ignoré
   forcedItems?: CartItem[]
+  /**
+   * Redemander à un client des coordonnées qu'il vient de saisir est exactement
+   * la friction que la relance cherche à lever. Le téléphone n'en fait pas
+   * partie : l'instantané du panier ne le conserve pas.
+   */
+  prefill?: CheckoutPrefill
+  /** Jeton du panier repris, figé sur la commande pour attribuer la relance. */
+  recoveryToken?: string
 }
 
 /** Réponse de /api/boutique/promo, telle qu'affichée dans le récapitulatif. */
@@ -49,7 +64,7 @@ type AppliedPromo = {
   replaces_newsletter: boolean
 }
 
-export default function CheckoutClient({ forcedItems }: Props) {
+export default function CheckoutClient({ forcedItems, prefill, recoveryToken }: Props) {
   const t       = useTranslations('boutique.checkoutForm')
   const tCommon = useTranslations('common')
   const locale  = useLocale()
@@ -58,9 +73,9 @@ export default function CheckoutClient({ forcedItems }: Props) {
   const items = forcedItems ?? cart.items
   const { freeShippingEnabled } = cart
 
-  const [firstName, setFirstName]                     = useState('')
-  const [lastName, setLastName]                       = useState('')
-  const [email, setEmail]                             = useState('')
+  const [firstName, setFirstName]                     = useState(prefill?.firstName ?? '')
+  const [lastName, setLastName]                       = useState(prefill?.lastName ?? '')
+  const [email, setEmail]                             = useState(prefill?.email ?? '')
   const [phone, setPhone]                             = useState('')
   const [shippingFirstName, setShippingFirstName]     = useState('')
   const [shippingLastName, setShippingLastName]       = useState('')
@@ -225,8 +240,12 @@ export default function CheckoutClient({ forcedItems }: Props) {
         })),
         email,
         name: `${firstName} ${lastName}`.trim(),
-        phone: phone || undefined,
+        // Aucun téléphone sur une commande 100 % fichiers : il n'y a ni colis à
+        // remettre ni créneau de retrait à convenir, donc aucune finalité à le
+        // collecter. Le serveur ne l'exige plus dans ce cas.
+        ...(digitalOnly ? {} : { phone: phone || undefined }),
         locale,
+        ...(recoveryToken ? { recovery_token: recoveryToken } : {}),
         ...(promo ? { promo_code: promo.code } : {}),
         delivery_mode: digitalOnly ? 'digital' : deliveryMode,
         ...(split.hasDigital ? { digital_waiver: digitalWaiver } : {}),
@@ -387,10 +406,14 @@ export default function CheckoutClient({ forcedItems }: Props) {
             <label className={labelClass}>{t('emailLabel')}</label>
             <input className={inputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('emailPlaceholder')} required autoComplete="off" />
           </div>
-          <div>
-            <label className={labelClass}>{t('phoneLabelRequired')}</label>
-            <PhoneInput value={phone} onChange={setPhone} required />
-          </div>
+          {/* Masqué sur un panier 100 % fichiers : rien à livrer, rien à
+              programmer, donc rien à demander. */}
+          {!digitalOnly && (
+            <div>
+              <label className={labelClass}>{t('phoneLabelRequired')}</label>
+              <PhoneInput value={phone} onChange={setPhone} required />
+            </div>
+          )}
         </fieldset>
 
         {/* Adresse — masquée en retrait studio et sur un panier 100 % numérique */}

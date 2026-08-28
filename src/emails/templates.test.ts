@@ -8,6 +8,7 @@ import CustomOrderAdmin from './CustomOrderAdmin'
 import CustomQuote from './CustomQuote'
 import CustomBalance from './CustomBalance'
 import ShopOrderConfirmation from './ShopOrderConfirmation'
+import AbandonedCart from './AbandonedCart'
 import ShopOrderAdmin from './ShopOrderAdmin'
 import ShipmentNotification from './ShipmentNotification'
 import OrderDelivered from './OrderDelivered'
@@ -70,6 +71,8 @@ const templates: Array<[string, Promise<string>]> = [
   ['shop-confirmation', render(ShopOrderConfirmation({ order: shopOrder, appUrl }))],
   ['shop-confirmation-en', render(ShopOrderConfirmation({ order: shopOrder, appUrl, locale: 'en' }))],
   ['shop-admin', render(ShopOrderAdmin({ order: shopOrder, appUrl }))],
+  ['abandoned-cart', render(AbandonedCart({ name: 'Jean Dupont', items: shopOrder.items, subtotal: 8000, recoveryUrl: `${appUrl}/boutique/commande?panier=tok`, optOutUrl: `${appUrl}/api/boutique/cart/opt-out?token=tok` }))],
+  ['abandoned-cart-en', render(AbandonedCart({ name: 'Jane Doe', items: shopOrder.items, subtotal: 8000, recoveryUrl: `${appUrl}/en/boutique/commande?panier=tok`, optOutUrl: `${appUrl}/api/boutique/cart/opt-out?token=tok`, locale: 'en' }))],
   ['shipment', render(ShipmentNotification({ recipientName: 'Jean Dupont', orderRef: 'CA40306F', trackingUrl: `${appUrl}/boutique/suivi/x`, carrierTrackingNumber: '6A12345678901', carrierTrackingUrl: 'https://laposte.fr/suivi', deliveryMode: 'delivery', address: { name: 'Jean Dupont', line1: '12 rue des Lilas', line2: null, postalCode: '75001', city: 'Paris' } }))],
   ['delivered', render(OrderDelivered({ recipientName: 'Jean Dupont', orderRef: 'CA40306F', trackingUrl: `${appUrl}/boutique/suivi/x`, what: 'votre commande' }))],
   ['delivered-en', render(OrderDelivered({ recipientName: 'Jean Dupont', orderRef: 'CA40306F', trackingUrl: `${appUrl}/en/boutique/suivi/x`, locale: 'en' }))],

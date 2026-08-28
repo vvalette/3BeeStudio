@@ -91,6 +91,13 @@ export interface ShopOrder {
   // Stripe
   stripe_checkout_session_id: string | null
 
+  /**
+   * Jeton du panier abandonné dont cette commande est issue (lien de l'email de
+   * relance). `null` = commande passée sans relance. Sert uniquement à mesurer
+   * ce que la relance rapporte réellement.
+   */
+  recovery_token: string | null
+
   // Locale utilisé lors de la commande
   locale?: string
 

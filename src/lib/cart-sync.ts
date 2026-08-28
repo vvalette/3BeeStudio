@@ -1,4 +1,5 @@
 import type { CartItem } from '@/types/cart'
+import type { ShopOrderItem } from '@/types/shop-order'
 import type { ProductColor, ProductType } from '@/types/shop-product'
 import { effectivePrice, findProductColor } from '@/types/shop-product'
 
@@ -97,4 +98,39 @@ export function reconcileCart(items: CartItem[], products: CartSyncProduct[]): C
   }
 
   return changed ? next : items
+}
+
+/**
+ * Convertit l'instantané d'un panier abandonné en lignes de panier.
+ *
+ * Les lignes produites sont volontairement « périmées » : elles reprennent les
+ * valeurs figées au moment de l'abandon, que `reconcileCart` écrase ensuite avec
+ * l'état réel des produits (nom, prix, image, stock, coloris). Sans ce second
+ * passage, un panier repris le lendemain repartirait à l'ancien prix, et
+ * `/api/boutique/checkout` en facturerait un autre.
+ *
+ * Seule vraie conversion : `custom_field_values`, stocké en tableau sur une
+ * commande (avec son libellé, pour rester lisible des années après) et attendu
+ * en dictionnaire côté panier.
+ */
+export function cartItemsFromSnapshot(items: ShopOrderItem[]): CartItem[] {
+  return items.map((i) => ({
+    product_id:     i.product_id,
+    name:           i.product_name,
+    slug:           '',
+    price:          i.unit_price,
+    original_price: null,
+    image:          null,
+    quantity:       i.quantity,
+    max_stock:      null,
+    ...(i.is_digital ? { is_digital: true } : {}),
+    ...(i.color ? { color: { key: i.color.key, label: i.color.label } } : {}),
+    ...(i.custom_field_values
+      ? {
+          custom_field_values: Object.fromEntries(
+            i.custom_field_values.map((f) => [f.key, f.value]),
+          ),
+        }
+      : {}),
+  }))
 }

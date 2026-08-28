@@ -23,6 +23,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      abandoned_cart_optouts: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
+      abandoned_carts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          items: Json
+          locale: string
+          name: string | null
+          order_id: string | null
+          recovered_at: string | null
+          reminded_at: string | null
+          subtotal: number
+          token: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          items?: Json
+          locale?: string
+          name?: string | null
+          order_id?: string | null
+          recovered_at?: string | null
+          reminded_at?: string | null
+          subtotal?: number
+          token: string
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          items?: Json
+          locale?: string
+          name?: string | null
+          order_id?: string | null
+          recovered_at?: string | null
+          reminded_at?: string | null
+          subtotal?: number
+          token?: string
+          total_amount?: number
+        }
+        Relationships: []
+      }
       custom_orders: {
         Row: {
           admin_notes: string | null
@@ -509,6 +569,7 @@ export type Database = {
           pickup_point_postal_code: string | null
           pickup_point_street: string | null
           promo_code: string | null
+          recovery_token: string | null
           shipping: number
           shipping_address: string | null
           shipping_address2: string | null
@@ -546,6 +607,7 @@ export type Database = {
           pickup_point_postal_code?: string | null
           pickup_point_street?: string | null
           promo_code?: string | null
+          recovery_token?: string | null
           shipping?: number
           shipping_address?: string | null
           shipping_address2?: string | null
@@ -583,6 +645,7 @@ export type Database = {
           pickup_point_postal_code?: string | null
           pickup_point_street?: string | null
           promo_code?: string | null
+          recovery_token?: string | null
           shipping?: number
           shipping_address?: string | null
           shipping_address2?: string | null
@@ -663,6 +726,7 @@ export type Database = {
         Row: {
           active: boolean
           category: string | null
+          colors: Json
           created_at: string
           custom_fields: Json
           description: string
@@ -692,6 +756,7 @@ export type Database = {
         Insert: {
           active?: boolean
           category?: string | null
+          colors?: Json
           created_at?: string
           custom_fields?: Json
           description?: string
@@ -721,6 +786,7 @@ export type Database = {
         Update: {
           active?: boolean
           category?: string | null
+          colors?: Json
           created_at?: string
           custom_fields?: Json
           description?: string
@@ -851,6 +917,7 @@ export type Database = {
           oversold: boolean
         }[]
       }
+      purge_abandoned_carts: { Args: never; Returns: number }
       purge_product_stats: {
         Args: never
         Returns: {
