@@ -9,6 +9,10 @@
     {
       "path": "/api/cron/analytics-retention",
       "schedule": "0 4 * * 1"
+    },
+    {
+      "path": "/api/cron/abandoned-carts",
+      "schedule": "0 9 * * *"
     }
   ]
 }

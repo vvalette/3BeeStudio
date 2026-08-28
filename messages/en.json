@@ -847,6 +847,7 @@
       "title": "3D Prints",
       "description": "Each piece is hand-printed in our French studios. Delivered within 3 to 7 business days.",
       "cancelBanner": "Payment cancelled — your cart has been saved.",
+      "reminderOptOutBanner": "You won't receive cart reminders any more. Your order emails will keep coming through.",
       "empty": "Products coming soon…",
       "metaTitle": "Shop — 3BeeStudio",
       "metaDescription": "Hand-printed 3D objects from our French studios. Decor, accessories, unique pieces.",

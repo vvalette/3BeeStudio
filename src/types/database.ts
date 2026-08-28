@@ -31,6 +31,12 @@ type ShopOrderJsonColumns = {
   items: ShopOrderItem[]
 }
 
+// L'instantané d'un panier abandonné reprend exactement la forme des lignes de
+// commande : c'est une copie de `shop_orders.items` prise avant suppression.
+type AbandonedCartJsonColumns = {
+  items: ShopOrderItem[]
+}
+
 type OverrideColumns<Row, O> = Omit<Row, keyof O> & O
 
 type GenPublic = GeneratedDatabase['public']
@@ -45,11 +51,12 @@ type PatchedTable<Name extends keyof GenTables, O> = {
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {
   public: Omit<GenPublic, 'Tables'> & {
-    Tables: Omit<GenTables, 'shop_products' | 'shop_orders' | 'custom_orders' | 'invoices'> & {
+    Tables: Omit<GenTables, 'shop_products' | 'shop_orders' | 'custom_orders' | 'invoices' | 'abandoned_carts'> & {
       shop_products: PatchedTable<'shop_products', ShopProductJsonColumns>
       shop_orders: PatchedTable<'shop_orders', ShopOrderJsonColumns>
       custom_orders: PatchedTable<'custom_orders', CustomOrderJsonColumns>
       invoices: PatchedTable<'invoices', InvoiceJsonColumns>
+      abandoned_carts: PatchedTable<'abandoned_carts', AbandonedCartJsonColumns>
     }
   }
 }

@@ -5,6 +5,7 @@ import CustomOrderConfirmation from '@/emails/CustomOrderConfirmation'
 import CustomOrderAdmin from '@/emails/CustomOrderAdmin'
 import NewsletterWelcome from '@/emails/NewsletterWelcome'
 import ShopOrderConfirmation from '@/emails/ShopOrderConfirmation'
+import AbandonedCart from '@/emails/AbandonedCart'
 import ShopOrderAdmin from '@/emails/ShopOrderAdmin'
 import NfcOrderAdmin from '@/emails/NfcOrderAdmin'
 import ContactMessage from '@/emails/ContactMessage'
@@ -18,6 +19,8 @@ import { formatDestination } from '@/types/order'
 import type { Order } from '@/types/order'
 import type { CustomOrder } from '@/types/custom-order'
 import type { ShopOrder } from '@/types/shop-order'
+import type { AbandonedCart as AbandonedCartRow } from '@/types/abandoned-cart'
+import { recoveryUrl, optOutUrl } from '@/lib/abandoned-cart'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -245,6 +248,45 @@ export async function sendShopOrderConfirmation(order: ShopOrder): Promise<void>
 
   if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
   console.info('[resend]', JSON.stringify({ type: 'shop_order_confirmation', orderId: order.id, resendId: data?.id }))
+}
+
+/**
+ * Relance d'un panier laissé au moment de payer.
+ *
+ * Contrairement aux autres emails d'ici, celui-ci n'est pas transactionnel : il
+ * porte donc un lien de désinscription (`optOutUrl`), et le cron ne l'envoie
+ * qu'une fois par panier. Lève en cas d'échec pour que le cron ne marque pas la
+ * relance comme envoyée.
+ */
+export async function sendAbandonedCartReminder(cart: AbandonedCartRow): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const from   = getFrom()
+  const locale = cart.locale ?? 'fr'
+  const isEn   = locale === 'en'
+
+  const html = await render(
+    AbandonedCart({
+      name:        cart.name,
+      items:       cart.items,
+      subtotal:    cart.subtotal,
+      recoveryUrl: recoveryUrl(appUrl, cart.token, locale),
+      optOutUrl:   optOutUrl(appUrl, cart.token),
+      locale,
+    }),
+  )
+
+  const { data, error } = await resend.emails.send({
+    from,
+    replyTo: 'contact@3beestudio.fr',
+    to: cart.email,
+    subject: isEn
+      ? 'Your cart is still waiting — 3BeeStudio'
+      : 'Votre panier vous attend · 3BeeStudio',
+    html,
+  })
+
+  if (error) throw new Error(`Resend error ${error.name}: ${error.message}`)
+  console.info('[resend]', JSON.stringify({ type: 'abandoned_cart', cartId: cart.id, resendId: data?.id }))
 }
 
 /**

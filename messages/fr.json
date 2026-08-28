@@ -847,6 +847,7 @@
       "title": "Impressions 3D",
       "description": "Chaque pièce est imprimée à la main dans nos studios français. Livraison sous 3 à 7 jours ouvrés.",
       "cancelBanner": "Paiement annulé — votre panier a été conservé.",
+      "reminderOptOutBanner": "Vous ne recevrez plus de rappel de panier. Vos emails de commande, eux, continuent d'arriver.",
       "empty": "Les produits arrivent bientôt…",
       "metaTitle": "Boutique — 3BeeStudio",
       "metaDescription": "Objets imprimés en 3D à la main dans nos studios français. Décoration, accessoires, pièces uniques.",

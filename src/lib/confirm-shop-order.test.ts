@@ -30,10 +30,10 @@ const { supabaseMock, state } = vi.hoisted(() => {
           record.op = op
           record.values = args[0]
         }
-        if (op === 'eq') record.filters.push([args[0] as string, args[1]])
+        if (op === 'eq' || op === 'is') record.filters.push([args[0] as string, args[1]])
         return proxy
       }
-    for (const op of ['update', 'insert', 'delete', 'select', 'eq', 'in', 'maybeSingle', 'single', 'order']) {
+    for (const op of ['update', 'insert', 'delete', 'select', 'eq', 'is', 'in', 'maybeSingle', 'single', 'order']) {
       proxy[op] = chain(op)
     }
     proxy.then = (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) => {
@@ -102,6 +102,35 @@ beforeEach(() => {
 })
 
 describe('confirmShopOrder', () => {
+  it('ferme le panier abandonné dont la commande est issue', async () => {
+    state.queue('shop_orders', { data: { ...orderRow, recovery_token: 'tok_abc' }, error: null })
+    state.rpcResults.push({ data: [{ new_stock: 3, oversold: false }], error: null })
+    state.queue('shop_products', { data: [{ slug: 'vase-hex' }], error: null })
+
+    await confirmShopOrder('so_1')
+
+    const recovery = state.writes.find((w) => w.table === 'abandoned_carts')
+    expect(recovery).toMatchObject({
+      op: 'update',
+      // `.is('recovered_at', null)` : un rejeu de webhook ne doit pas réécrire la
+      // date d'une récupération déjà attribuée.
+      filters: [['token', 'tok_abc'], ['recovered_at', null]],
+    })
+    expect((recovery!.values as { recovered_at: string }).recovered_at).toEqual(expect.any(String))
+  })
+
+  it('ne touche à aucun panier quand la commande ne vient pas d’une relance', async () => {
+    // Sans ce garde-fou, une commande spontanée fermerait un panier au hasard et
+    // le taux de récupération deviendrait faux dans les deux sens.
+    state.queue('shop_orders', { data: orderRow, error: null })
+    state.rpcResults.push({ data: [{ new_stock: 3, oversold: false }], error: null })
+    state.queue('shop_products', { data: [{ slug: 'vase-hex' }], error: null })
+
+    await confirmShopOrder('so_1')
+
+    expect(state.writes.some((w) => w.table === 'abandoned_carts')).toBe(false)
+  })
+
   it('confirme, décrémente le stock, revalide et envoie l’email', async () => {
     state.queue('shop_orders', { data: orderRow, error: null })
     state.rpcResults.push({ data: [{ new_stock: 3, oversold: false }], error: null })

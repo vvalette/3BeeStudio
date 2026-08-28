@@ -4,8 +4,11 @@ import { Link } from '@/i18n/navigation'
 import type { ShopProduct } from '@/types/shop-product'
 import { toPublicProduct } from '@/types/shop-product'
 import { calcShopShipping, SHOP_FREE_SHIPPING_THRESHOLD, effectivePrice, discountPercent } from '@/types/shop-product'
-import { formatPrice } from '@/lib/utils'
-import { buildAlternates } from '@/lib/seo'
+import { formatPrice, plainSummary } from '@/lib/utils'
+import { buildAlternates, SITE_URL } from '@/lib/seo'
+import { shopProductSchema, breadcrumbSchema } from '@/lib/schema'
+import JsonLd from '@/components/seo/JsonLd'
+import { getPathname } from '@/i18n/navigation'
 import type { Locale } from '@/i18n/routing'
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -39,12 +42,28 @@ export async function generateMetadata({
 
   const isEn = locale === 'en'
   const name = (isEn && data.name_en) ? data.name_en : data.name
-  const description = (isEn && data.description_en) ? data.description_en : data.description
+  // Les descriptions produit sont du markdown : repris brut, l'aperçu Google et
+  // les cartes de partage affichaient les `**` et les puces.
+  const description = plainSummary((isEn && data.description_en) ? data.description_en : data.description)
 
   return {
     title: `${name} — Boutique 3BeeStudio`,
     description,
     alternates: buildAlternates(`/boutique/${slug}`, locale),
+    // Sans ça, la carte de partage montrait la bonne photo produit mais gardait
+    // le titre et l'accroche génériques du layout : la moitié du travail.
+    // L'image, elle, vient de `opengraph-image.tsx` dans ce même dossier.
+    openGraph: {
+      type:  'website',
+      title: name,
+      ...(description ? { description } : {}),
+      url:   SITE_URL + getPathname({ href: `/boutique/${slug}`, locale }),
+    },
+    twitter: {
+      card:  'summary_large_image',
+      title: name,
+      ...(description ? { description } : {}),
+    },
   }
 }
 
@@ -86,8 +105,36 @@ export default async function ProductPage({
   const shipping        = calcShopShipping(exampleSubtotal, 'relay')
   const discount        = discountPercent(product)
 
+  // Balisage Schema.org : c'est ici que les résultats enrichis (prix,
+  // disponibilité) ont le plus d'effet, la fiche étant la vraie page produit.
+  // Les URLs d'images doivent être absolues pour Google.
+  const canonical = SITE_URL + getPathname({ href: `/boutique/${slug}`, locale })
+  const absoluteImages = (product.images ?? []).map((src) =>
+    src.startsWith('http') ? src : `${SITE_URL}${src.startsWith('/') ? '' : '/'}${src}`,
+  )
+
+  const productLd = shopProductSchema({
+    name:        displayName,
+    description: plainSummary(displayDescription),
+    images:      absoluteImages,
+    url:         canonical,
+    sku:         product.id,
+    priceCents:  effectivePrice(product),
+    stock:       product.stock,
+    digital:     isDigitalProduct,
+  })
+
+  // Repris mot pour mot du fil d'Ariane affiché plus bas : Google refuse un
+  // balisage qui ne correspond pas à ce que voit le visiteur.
+  const breadcrumbLd = breadcrumbSchema([
+    { name: t('breadcrumb'), url: SITE_URL + getPathname({ href: '/boutique', locale }) },
+    { name: displayName,     url: canonical },
+  ])
+
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-6 pb-16">
+      <JsonLd data={productLd} />
+      <JsonLd data={breadcrumbLd} />
       {/* Compteur d'audience — invisible, ne rend rien (voir /admin/boutique/audience) */}
       <ProductViewTracker productId={product.id} />
       <div className="mx-auto max-w-5xl">

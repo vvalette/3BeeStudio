@@ -7,6 +7,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { Locale } from '@/i18n/routing'
 import BoutiqueCatalog from '@/components/boutique/BoutiqueCatalog'
 import CancelBanner from '@/components/boutique/CancelBanner'
+import JsonLd from '@/components/seo/JsonLd'
+import { itemListSchema } from '@/lib/schema'
+import { SITE_URL } from '@/lib/seo'
+import { getPathname } from '@/i18n/navigation'
 
 // ISR long + revalidation à la demande via revalidateShop() (src/lib/revalidate.ts)
 export const revalidate = 3600
@@ -44,8 +48,16 @@ export default async function BoutiquePage({ params }: Props) {
   const products   = (productsData ?? []) as ShopProductCard[]
   const categories = (catsData ?? []) as ShopCategoryRow[]
 
+  // Dit à Google que cette page est un listing et rattache les fiches entre
+  // elles, au lieu de les laisser se découvrir une par une par le sitemap.
+  const listLd = itemListSchema(
+    t('title'),
+    products.map((p) => SITE_URL + getPathname({ href: `/boutique/${p.slug}`, locale })),
+  )
+
   return (
     <main className="min-h-[calc(100dvh-72px)] bg-bg-0 px-4 pt-8 pb-16">
+      {products.length > 0 && <JsonLd data={listLd} />}
       <div className="mx-auto max-w-5xl">
 
         {/* En-tête */}

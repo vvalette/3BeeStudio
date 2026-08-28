@@ -205,6 +205,62 @@ describe('POST /api/stripe/webhook', () => {
     ])
   })
 
+  it('session expirée → le panier est copié AVANT la suppression de la commande', async () => {
+    // Ordre critique : l'instantané lit la commande. Inversé, il lirait une ligne
+    // déjà supprimée, ne trouverait rien, et la relance de panier s'éteindrait en
+    // silence — aucune erreur, juste plus aucun email envoyé.
+    state.queue('shop_orders', {
+      data: {
+        id: 'so_2', email: 'c@exemple.fr', name: 'Jean Dupont', locale: 'fr',
+        items: [{ product_id: 'p1', product_name: 'Vase', quantity: 1, unit_price: 2400 }],
+        subtotal: 2400, total_amount: 2890, status: 'pending_payment',
+      },
+      error: null,
+    })
+    state.queue('abandoned_cart_optouts', { data: null, error: null })
+
+    const res = await POST(
+      webhookRequest({
+        type: 'checkout.session.expired',
+        data: { object: { id: 'cs_test', metadata: { shop_order_id: 'so_2' } } },
+      }),
+    )
+
+    expect(res.status).toBe(200)
+    const ops = state.writes.map((w) => `${w.table}.${w.op}`)
+    expect(ops).toEqual(['abandoned_carts.insert', 'shop_orders.delete'])
+    expect(state.writes[0].values).toMatchObject({
+      email: 'c@exemple.fr',
+      name:  'Jean Dupont',
+      subtotal: 2400,
+    })
+    // Le jeton du lien de reprise ne doit jamais être prévisible.
+    const { token } = state.writes[0].values as { token: string }
+    expect(token).toMatch(/^[A-Za-z0-9_-]{32}$/)
+  })
+
+  it('session expirée → aucun instantané pour qui a refusé les relances', async () => {
+    state.queue('shop_orders', {
+      data: {
+        id: 'so_3', email: 'stop@exemple.fr', name: 'Jean Dupont', locale: 'fr',
+        items: [{ product_id: 'p1', product_name: 'Vase', quantity: 1, unit_price: 2400 }],
+        subtotal: 2400, total_amount: 2890, status: 'pending_payment',
+      },
+      error: null,
+    })
+    state.queue('abandoned_cart_optouts', { data: { email: 'stop@exemple.fr' }, error: null })
+
+    await POST(
+      webhookRequest({
+        type: 'checkout.session.expired',
+        data: { object: { id: 'cs_test', metadata: { shop_order_id: 'so_3' } } },
+      }),
+    )
+
+    // Le panier n'est même pas stocké : il ne servirait aucune finalité.
+    expect(state.writes.map((w) => `${w.table}.${w.op}`)).toEqual(['shop_orders.delete'])
+  })
+
   it('payment_intent.succeeded sans metadata → retrouve la commande via la session', async () => {
     stripeMock.checkout.sessions.list.mockResolvedValueOnce({
       data: [{ metadata: { shop_order_id: 'so_9' } }],
