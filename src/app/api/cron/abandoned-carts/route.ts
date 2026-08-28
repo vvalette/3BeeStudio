@@ -20,8 +20,12 @@ import {
  * à ne plus en recevoir (`abandoned_cart_optouts`) ou qui a fini par commander
  * de lui-même depuis l'abandon.
  *
- * Cadence attendue : toutes les heures. Une relance quotidienne arriverait
- * jusqu'à 24 h après l'abandon, soit à l'autre bout de la fenêtre utile.
+ * Cadence : une fois par jour (9 h UTC). Le plan Vercel Hobby refuse toute
+ * expression cron qui tournerait plus souvent, et fait échouer le déploiement.
+ * La relance part donc entre 1 h et 24 h après l'abandon selon l'heure de la
+ * commande, jamais au bout d'une heure pile. C'est la borne haute de 48 h qui
+ * rattrape le décalage, et un passage manqué : passer à l'heure exige un plan
+ * Pro, et se ferait en changeant la seule expression dans `vercel.json`.
  *
  * Protection : même contrat que /api/cron/low-stock (Bearer CRON_SECRET, fail-closed).
  */
