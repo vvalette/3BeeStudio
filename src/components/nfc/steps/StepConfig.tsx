@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -59,12 +59,23 @@ function NoSvgTip({ label, info }: { label: string; info: React.ReactNode }) {
 
 // ─── Étape 1 : Configuration (logo + URL NFC) ─────────────────────────────────
 
-export default function StepConfig({ defaultValues, logoFile, logoUrl, uploading, uploadError, onFileAccepted, onNext }: {
+export interface StepConfigHandle {
+  /** Valide l'étape depuis l'extérieur (clic sur un palier de la grille tarifaire).
+   *  Renvoie true si l'étape est passée, false si le formulaire affiche une erreur. */
+  submit: () => Promise<boolean>
+}
+
+interface StepConfigProps {
   defaultValues: Partial<NfcFormData>
   logoFile: File | null; logoUrl: string | null; uploading: boolean; uploadError: string | null
   onFileAccepted: (f: File) => void
   onNext: (d: Config) => void
-}) {
+}
+
+const StepConfig = forwardRef<StepConfigHandle, StepConfigProps>(function StepConfig(
+  { defaultValues, logoFile, logoUrl, uploading, uploadError, onFileAccepted, onNext },
+  ref,
+) {
   const t = useTranslations('nfcForm')
   const configSchema = useMemo(() => buildConfigSchema(t), [t])
   const { handleSubmit, control, formState: { errors } } = useForm<Config>({
@@ -73,6 +84,16 @@ export default function StepConfig({ defaultValues, logoFile, logoUrl, uploading
   })
 
   const [rejectError, setRejectError] = useState<string | null>(null)
+
+  // Le clic sur un palier tarifaire doit se comporter comme le bouton « Suivant » :
+  // valider la destination, afficher l'erreur si besoin, avancer sinon.
+  useImperativeHandle(ref, () => ({
+    async submit() {
+      let ok = false
+      await handleSubmit((data) => { ok = true; onNext(data) })()
+      return ok
+    },
+  }), [handleSubmit, onNext])
 
   const onDrop = useCallback((accepted: File[]) => {
     if (accepted[0]) {
@@ -236,4 +257,6 @@ export default function StepConfig({ defaultValues, logoFile, logoUrl, uploading
       </div>
     </form>
   )
-}
+})
+
+export default StepConfig

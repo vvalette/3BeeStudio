@@ -68,19 +68,31 @@ export const ORDER_STATUS_STEPS: OrderStatus[] = [
 // Prix unitaire en centimes selon la quantité.
 // Cible : ~0,50 €/porte-clé net au gros volume (charges micro ~13 %, coût revient ~1 €),
 // un peu plus de marge sur les petites quantités.
-//   qté   prix    net/pc (≈ prix×0,87 − 1 €)
-//   5-9   2,90 €   ~1,52 €
-//   10-49 2,50 €   ~1,18 €
-//   50-99 2,20 €   ~0,91 €
-//   100+  1,90 €   ~0,65 €
-//   250+  1,70 €   ~0,48 €
+//   qté     prix    net/pc (≈ prix×0,87 − 1 €)
+//   5-9     2,90 €   ~1,52 €
+//   10-24   2,60 €   ~1,26 €
+//   25-49   2,40 €   ~1,09 €
+//   50-99   2,20 €   ~0,91 €
+//   100-249 1,90 €   ~0,65 €
+//   250+    1,70 €   ~0,48 €
+// Paliers dégressifs, du plus gros volume au plus petit. Source unique : le prix
+// affiché au client (grille tarifaire de /nfc, étape quantité) est lu ici, il ne
+// peut donc pas diverger du prix facturé.
+export const PRICE_TIERS = [
+  { min: 250, unitPrice: 170 },
+  { min: 100, unitPrice: 190 },
+  { min: 50,  unitPrice: 220 },
+  { min: 25,  unitPrice: 240 },
+  { min: 10,  unitPrice: 260 },
+  { min: 5,   unitPrice: 290 },
+] as const
+
+// Quantité minimale de commande (reprise par le schéma de l'étape quantité).
+export const MIN_ORDER_QTY = 5
+
 export function getUnitPrice(quantity: number): number {
-  if (quantity >= 250) return 170
-  if (quantity >= 100) return 190
-  if (quantity >= 50) return 220
-  if (quantity >= 25) return 240
-  if (quantity >= 10) return 260
-  return 290
+  const tier = PRICE_TIERS.find((t) => quantity >= t.min)
+  return tier ? tier.unitPrice : PRICE_TIERS[PRICE_TIERS.length - 1].unitPrice
 }
 
 // Frais de port en centimes selon la quantité. Offert au-delà du seuil.

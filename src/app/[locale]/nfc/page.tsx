@@ -2,7 +2,7 @@ import { use } from 'react'
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
-import NfcOrderForm from '@/components/nfc/NfcOrderForm'
+import NfcOrderSection from '@/components/nfc/NfcOrderSection'
 import NfcFaq from '@/components/nfc/NfcFaq'
 import JsonLd from '@/components/seo/JsonLd'
 import { buildAlternates } from '@/lib/seo'
@@ -98,8 +98,10 @@ export default function NfcPage({ params }: Props) {
           </div>
         </div>
 
+        {/* La grille tarifaire est dans l'ancre #commander : le visiteur qui arrive
+            depuis la page d'accueil voit le prix avant le formulaire. */}
         <div id="commander" className="scroll-mt-[88px]">
-          <NfcOrderForm />
+          <NfcOrderSection />
         </div>
 
         <NfcFaq />

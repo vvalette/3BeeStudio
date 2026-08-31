@@ -281,6 +281,19 @@
       "payment": "Payment",
       "back": "Return to this step"
     },
+    "pricing": {
+      "title": "Pricing",
+      "sub": "The price per keychain drops automatically with volume — no quote, no negotiation.",
+      "fromQty": "from {qty}",
+      "perUnit": "per unit",
+      "pickHint": "Tap a tier to pick your quantity.",
+      "saved": "Quantity saved: {qty} keychains. Add your logo and link below to continue.",
+      "selected": "Quantity saved: {qty} keychains.",
+      "vat": "Incl. tax · VAT not applicable",
+      "minOrder": "Orders start at {qty} keychains.",
+      "shipping": "Shipping {price}, {priceFifty} from 50 keychains, free from {free}.",
+      "example": "Example: {qty} keychains, {subtotal} + {shipping} shipping, that is"
+    },
     "config": {
       "title": "Configuration",
       "sub": "Your logo and the NFC chip destination",

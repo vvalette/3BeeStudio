@@ -281,6 +281,19 @@
       "payment": "Paiement",
       "back": "Revenir à cette étape"
     },
+    "pricing": {
+      "title": "Tarifs",
+      "sub": "Le prix au porte-clé baisse tout seul avec la quantité, sans devis ni négociation.",
+      "fromQty": "dès {qty}",
+      "perUnit": "l'unité",
+      "pickHint": "Cliquez un palier pour choisir votre quantité.",
+      "saved": "Quantité retenue : {qty} porte-clés. Ajoutez votre logo et votre lien ci-dessous pour continuer.",
+      "selected": "Quantité retenue : {qty} porte-clés.",
+      "vat": "Prix TTC · TVA non applicable",
+      "minOrder": "Commande à partir de {qty} porte-clés.",
+      "shipping": "Livraison {price}, {priceFifty} dès 50 porte-clés, offerte dès {free}.",
+      "example": "Exemple : {qty} porte-clés, {subtotal} + {shipping} de livraison, soit"
+    },
     "config": {
       "title": "Configuration",
       "sub": "Votre logo et la destination de la puce NFC",
