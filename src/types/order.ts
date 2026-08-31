@@ -95,13 +95,12 @@ export function getUnitPrice(quantity: number): number {
   return tier ? tier.unitPrice : PRICE_TIERS[PRICE_TIERS.length - 1].unitPrice
 }
 
-// Frais de port en centimes selon la quantité. Offert au-delà du seuil.
+// Frais de port en centimes : tarif unique, offert au-delà du seuil.
 export const FREE_SHIPPING_QTY = 100
+export const SHIPPING_COST = 690
 
 export function getShipping(quantity: number): number {
-  if (quantity >= FREE_SHIPPING_QTY) return 0
-  if (quantity >= 50) return 690
-  return 490
+  return quantity >= FREE_SHIPPING_QTY ? 0 : SHIPPING_COST
 }
 
 export function calcOrder(quantity: number) {

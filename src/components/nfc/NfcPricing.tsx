@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations, useLocale } from 'next-intl'
-import { PRICE_TIERS, MIN_ORDER_QTY, FREE_SHIPPING_QTY, calcOrder, getShipping } from '@/types/order'
+import { PRICE_TIERS, MIN_ORDER_QTY, FREE_SHIPPING_QTY, SHIPPING_COST, calcOrder } from '@/types/order'
 
 // Grille tarifaire de la page NFC, affichée AVANT le formulaire : le prix au
 // porte-clé n'apparaissait qu'à l'étape 2, le visiteur devait donc uploader un
@@ -54,8 +54,6 @@ export default function NfcPricing({ selectedQty, pending, onPick }: {
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3">{t('vat')}</p>
       </div>
 
-      <p className="mt-2 text-sm text-ink-2">{t('sub')}</p>
-
       <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
         {tiers.map(({ min, unitPrice }) => {
           const active = activeMin === min
@@ -100,11 +98,7 @@ export default function NfcPricing({ selectedQty, pending, onPick }: {
         </li>
         <li className="flex gap-2">
           <span aria-hidden className="text-amber">·</span>
-          {t('shipping', {
-            price: money(getShipping(MIN_ORDER_QTY)),
-            priceFifty: money(getShipping(50)),
-            free: FREE_SHIPPING_QTY,
-          })}
+          {t('shipping', { price: money(SHIPPING_COST), free: FREE_SHIPPING_QTY })}
         </li>
         <li className="flex gap-2">
           <span aria-hidden className="text-amber">·</span>

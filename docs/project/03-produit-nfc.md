@@ -45,8 +45,7 @@ Approcher un smartphone ouvre instantanément le lien choisi par le client.
 ### Frais de port (facturés en plus, inclus dans le total)
 | Quantité | Port |
 |----------|------|
-| 5–49 | 4,90 € |
-| 50–99 | 6,90 € |
+| 5–99 | 6,90 € |
 | **100+** | **Offert** |
 
 Le port est ajouté au sous-total ; le client règle le **total intégral** (port compris) à la commande.
