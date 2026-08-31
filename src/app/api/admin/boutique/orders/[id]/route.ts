@@ -63,10 +63,21 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const order = raw as ShopOrder
 
-  // Remboursement Stripe + annulation Boxtal avant suppression (best-effort).
-  // Les erreurs Stripe bloquent la suppression ; les erreurs Boxtal sont ignorées.
+  // Remboursement Stripe + annulation Boxtal avant suppression.
+  // Les erreurs Stripe bloquent la suppression (on ne supprime pas une commande
+  // encaissée sans avoir remboursé) ; les erreurs Boxtal sont ignorées. Un paiement
+  // déjà remboursé à la main dans Stripe n'est pas une erreur : la suppression passe.
   if (order.status !== 'pending_payment' && order.status !== 'delivered' && order.status !== 'cancelled') {
-    await refundAndCancelShipment(order)
+    try {
+      await refundAndCancelShipment(order)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      console.error('[delete] Remboursement Stripe impossible:', message)
+      return NextResponse.json(
+        { error: `Remboursement Stripe impossible, commande non supprimée : ${message}` },
+        { status: 502 }
+      )
+    }
   }
 
   const { error } = await supabaseAdmin.from('shop_orders').delete().eq('id', id)

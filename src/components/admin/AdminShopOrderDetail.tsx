@@ -48,7 +48,7 @@ export default function AdminShopOrderDetail({
   const [editingLink, setEditingLink] = useState(false)
   const [copied, setCopied] = useState(false)
   const [cancelling, setCancelling] = useState(false)
-  const [cancelResult, setCancelResult] = useState<{ stripeRefunded: boolean; boxtalCancelled: boolean; boxtalError: string | null } | null>(null)
+  const [cancelResult, setCancelResult] = useState<{ stripeRefunded: boolean; stripeAlreadyRefunded: boolean; boxtalCancelled: boolean; boxtalError: string | null } | null>(null)
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -635,8 +635,12 @@ export default function AdminShopOrderDetail({
 
                 {cancelResult && (
                   <div className="space-y-1 text-xs">
-                    <p className={cancelResult.stripeRefunded ? 'text-emerald-400' : 'text-ink-3'}>
-                      {cancelResult.stripeRefunded ? '✓ Remboursement Stripe effectué' : '— Pas de paiement à rembourser'}
+                    <p className={cancelResult.stripeRefunded || cancelResult.stripeAlreadyRefunded ? 'text-emerald-400' : 'text-ink-3'}>
+                      {cancelResult.stripeRefunded
+                        ? '✓ Remboursement Stripe effectué'
+                        : cancelResult.stripeAlreadyRefunded
+                          ? '✓ Paiement déjà remboursé sur Stripe'
+                          : 'Pas de paiement à rembourser'}
                     </p>
                     {order.boxtal_order_id && (
                       <p className={cancelResult.boxtalCancelled ? 'text-emerald-400' : 'text-amber'}>

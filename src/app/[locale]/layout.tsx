@@ -8,6 +8,7 @@ import ThemeProvider from '@/components/layout/ThemeProvider'
 import CartProvider from '@/components/boutique/CartProvider'
 import CartDrawer from '@/components/boutique/CartDrawer'
 import { routing } from '@/i18n/routing'
+import { CLIENT_NAMESPACES } from '@/i18n/client-namespaces'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import '@/styles/globals.css'
@@ -85,14 +86,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   const allMessages = await getMessages()
 
-  // N'envoie au client que les namespaces réellement consommés par des composants 'use client'
-  // (navbar, panier, formulaires NFC/sur-mesure/boutique…). Le reste (pages légales, sections
-  // landing statiques, pages de suivi…) est rendu côté serveur via useTranslations/getTranslations
-  // en RSC et n'a jamais besoin du provider client — ~55% de payload i18n en moins.
-  const CLIENT_NAMESPACES = [
-    'nav', 'footer', 'boutique', 'common', 'newsletter', 'nfcSection', 'nfcForm', 'nfcLink', 'surMesureForm',
-    'errorPages', 'contactPage',
-  ] as const
+  // N'envoie au client que les namespaces réellement consommés par des composants
+  // 'use client' (liste et justification dans src/i18n/client-namespaces.ts).
   const messages = Object.fromEntries(
     CLIENT_NAMESPACES.filter((ns) => ns in allMessages).map((ns) => [ns, allMessages[ns]])
   )
