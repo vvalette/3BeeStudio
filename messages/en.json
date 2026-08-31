@@ -283,7 +283,6 @@
     },
     "pricing": {
       "title": "Pricing",
-      "sub": "The price per keychain drops automatically with volume — no quote, no negotiation.",
       "fromQty": "from {qty}",
       "perUnit": "per unit",
       "pickHint": "Tap a tier to pick your quantity.",
@@ -291,7 +290,7 @@
       "selected": "Quantity saved: {qty} keychains.",
       "vat": "Incl. tax · VAT not applicable",
       "minOrder": "Orders start at {qty} keychains.",
-      "shipping": "Shipping {price}, {priceFifty} from 50 keychains, free from {free}.",
+      "shipping": "Shipping {price}, free from {free} keychains.",
       "example": "Example: {qty} keychains, {subtotal} + {shipping} shipping, that is"
     },
     "config": {
