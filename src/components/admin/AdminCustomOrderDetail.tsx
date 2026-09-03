@@ -378,7 +378,17 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
 
             {/* Lien suivi client */}
             <Card title="Lien de suivi client">
-              <p className="break-all font-mono text-xs leading-relaxed text-ink-2">{suiviUrl}</p>
+              {/* Cliquable aussi côté admin : c'est le moyen le plus court de
+                  voir la page telle que le client la reçoit. Chemin relatif en
+                  `href`, l'URL affichée n'étant connue qu'après hydratation. */}
+              <a
+                href={`/custom/${order.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block cursor-pointer break-all font-mono text-xs leading-relaxed text-ink-2 underline-offset-2 transition-colors hover:text-amber hover:underline"
+              >
+                {suiviUrl}
+              </a>
               <button
                 onClick={() => navigator.clipboard.writeText(suiviUrl)}
                 className="mt-2.5 flex cursor-pointer items-center gap-1.5 text-xs font-medium text-amber transition-colors hover:text-amber-soft"
