@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Select from '@/components/ui/Select'
+import PaymentModeToggle, { type QuotePaymentMode } from './PaymentModeToggle'
 import { formatPrice } from '@/lib/utils'
 import {
   computeBalance,
@@ -14,7 +15,12 @@ import {
 } from '@/types/custom-order'
 
 /**
- * Qui a payé quoi, quand, et par quel moyen.
+ * L'argent : ce qui est réclamé, ce qui est arrivé, quand et par quel moyen.
+ *
+ * Seul endroit de la fiche où l'on touche aux encaissements — la carte « Devis »
+ * s'occupe du document et de ses montants, celle-ci de leur vie ensuite :
+ * réclamer le solde, déclarer un règlement reçu. Les deux se marchaient dessus
+ * tant que le solde avait sa propre carte.
  *
  * Tout ne passe pas par Stripe : un acompte arrive souvent par virement, parfois
  * en espèces. Aucun webhook ne vient alors poser la date d'encaissement, donc
@@ -46,63 +52,74 @@ export default function AdminCustomPayments({
 }) {
   const pay = paymentState(order)
   const balanceDue = computeBalance(order)
+  const balanceAmount = order.balance_amount ?? balanceDue
 
   return (
-    <div className="space-y-3 text-sm">
-      {order.deposit_amount !== null && (
-        <PaymentLine
-          label="Acompte"
-          amount={order.deposit_amount}
-          received={pay.depositPaid}
-          at={pay.depositPaidAt}
-          method={pay.depositMethod}
-          pendingLabel="en attente de règlement"
-        />
-      )}
+    <div className="space-y-4 text-sm">
+      {/* ── Acompte ── */}
+      <section className="space-y-2">
+        {order.deposit_amount !== null ? (
+          <PaymentLine
+            label="Acompte"
+            amount={order.deposit_amount}
+            received={pay.depositPaid}
+            at={pay.depositPaidAt}
+            method={pay.depositMethod}
+            pendingLabel={order.payment_url ? 'lien envoyé, en attente' : 'en attente de règlement'}
+          />
+        ) : (
+          <p className="text-[13px] text-ink-3">Aucun acompte défini pour l’instant.</p>
+        )}
 
-      <Receipt
-        order={order}
-        kind="deposit"
-        received={pay.depositPaid}
-        declared={!!pay.depositPaidAt}
-        defaultAmount={order.deposit_amount}
-        onChange={onChange}
-      />
-
-      {!order.total_amount && !pay.depositPaid && (
-        <p className="text-[11px] leading-relaxed text-ink-3">
-          Aucun devis n’est passé par l’app pour cette demande : tu peux enregistrer
-          l’acompte déjà reçu ici, sans rien envoyer au client.
-        </p>
-      )}
-
-      {(order.balance_amount || balanceDue) && (
-        <PaymentLine
-          label="Solde"
-          amount={order.balance_amount ?? balanceDue ?? 0}
-          received={pay.balancePaid}
-          at={pay.balancePaidAt}
-          method={pay.balanceMethod}
-          pendingLabel={order.balance_payment_url ? 'demande envoyée, en attente' : 'pas encore réclamé'}
-        />
-      )}
-
-      {/* Réclamer le solde avant l'acompte n'a pas de sens : la production n'est
-          pas lancée, il n'y a rien à libérer. */}
-      {pay.depositPaid && (
         <Receipt
           order={order}
-          kind="balance"
-          received={pay.balancePaid}
-          declared={!!pay.balancePaidAt}
-          defaultAmount={order.balance_amount ?? balanceDue}
+          kind="deposit"
+          received={pay.depositPaid}
+          declared={!!pay.depositPaidAt}
+          defaultAmount={order.deposit_amount}
           onChange={onChange}
         />
+
+        {!order.total_amount && !pay.depositPaid && (
+          <p className="text-[11px] leading-relaxed text-ink-3">
+            Demande négociée ailleurs ? Enregistre ici l’acompte déjà reçu, sans rien envoyer au client.
+          </p>
+        )}
+      </section>
+
+      {/* ── Solde : rien à réclamer tant que l’acompte n’est pas encaissé,
+             la production n’étant pas lancée. ── */}
+      {pay.depositPaid && (
+        <section className="space-y-2 border-t border-[var(--line)] pt-4">
+          {balanceAmount ? (
+            <PaymentLine
+              label="Solde"
+              amount={balanceAmount}
+              received={pay.balancePaid}
+              at={pay.balancePaidAt}
+              method={pay.balanceMethod}
+              pendingLabel={order.balance_payment_url ? 'demande envoyée, en attente' : 'pas encore réclamé'}
+            />
+          ) : (
+            <p className="text-[13px] text-ink-3">Solde : rien à réclamer après l’acompte.</p>
+          )}
+
+          {!pay.balancePaid && <BalanceRequest order={order} onChange={onChange} />}
+
+          <Receipt
+            order={order}
+            kind="balance"
+            received={pay.balancePaid}
+            declared={!!pay.balancePaidAt}
+            defaultAmount={balanceAmount}
+            onChange={onChange}
+          />
+        </section>
       )}
 
+      {/* ── Récapitulatif ── */}
       {order.total_amount && (
-        <>
-          <div className="my-1 border-t border-dashed" style={{ borderColor: 'var(--line-amber)' }} />
+        <div className="space-y-1 border-t border-dashed pt-3" style={{ borderColor: 'var(--line-amber)' }}>
           <div className="flex items-baseline justify-between">
             <span className="text-ink-2">Encaissé</span>
             <span className="font-mono font-semibold text-ink-0">{formatPrice(pay.amountPaid)}</span>
@@ -111,8 +128,137 @@ export default function AdminCustomPayments({
             <span className="font-semibold text-amber">Total du devis</span>
             <span className="font-mono text-base font-bold text-amber">{formatPrice(order.total_amount)}</span>
           </div>
-        </>
+        </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * Réclamer le solde au client : second Checkout Stripe, ou simple demande quand
+ * le règlement se fait par virement. Envoyé quand la pièce est prête, juste
+ * avant l'expédition — l'acompte a lancé la production, le solde la libère.
+ */
+function BalanceRequest({
+  order,
+  onChange,
+}: {
+  order: CustomOrder
+  onChange: (order: CustomOrder) => void
+}) {
+  const router = useRouter()
+  const [open, setOpen]       = useState(false)
+  const [amount, setAmount]   = useState(() => {
+    const due = computeBalance(order)
+    return due ? String(due / 100) : ''
+  })
+  const [mode, setMode]       = useState<QuotePaymentMode>('stripe')
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  async function send() {
+    const value = cents(amount)
+    if (!value) {
+      setError('Montant du solde requis')
+      return
+    }
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/custom/${order.id}/balance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ balance_amount: value, payment_mode: mode }),
+      })
+      const json = await res.json().catch(() => null) as
+        { error?: string; payment_url?: string | null; balance_amount?: number } | null
+      if (!res.ok) throw new Error(json?.error ?? 'Erreur inattendue')
+      onChange({
+        ...order,
+        balance_amount:      json?.balance_amount ?? value,
+        balance_payment_url: json?.payment_url ?? null,
+      })
+      setOpen(false)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <div className="space-y-1.5">
+        {order.balance_payment_url && (
+          <a
+            href={order.balance_payment_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-[11px] text-amber hover:underline"
+          >
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 3h6v6M11 3L3 11" />
+            </svg>
+            Voir le lien de paiement du solde
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--line-2)] px-3 py-2 text-[12px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2L2 6.5l5 2L9 14l5-12z" />
+          </svg>
+          {order.balance_payment_url ? 'Renvoyer la demande de solde' : 'Réclamer le solde au client'}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2.5 rounded-xl border border-[var(--line-2)] bg-bg-2/50 p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">Demande de solde</p>
+
+      <div>
+        <label className="mb-1 block text-[10px] uppercase tracking-wider text-ink-3">Montant (€)</label>
+        <input
+          type="number" min="1" step="0.01"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="200"
+          className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
+        />
+        <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
+          {computeBalance(order)
+            ? 'Pré-rempli avec le total du devis moins l’acompte. Ajustable si le projet a évolué.'
+            : 'Renseigne le total dans la carte « Devis » pour un pré-remplissage automatique.'}
+        </p>
+      </div>
+
+      <PaymentModeToggle value={mode} onChange={setMode} />
+
+      {error && <p className="text-[11px] text-red-400">{error}</p>}
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={send}
+          disabled={loading}
+          className="flex h-9 cursor-pointer items-center rounded-pill px-4 text-[12px] font-bold text-bg-0 transition-all hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: 'var(--btn-primary-bg)' }}
+        >
+          {loading ? 'Envoi…' : mode === 'transfer' ? 'Envoyer la demande (virement)' : 'Envoyer la demande + lien'}
+        </button>
+        <button
+          type="button"
+          onClick={() => { setOpen(false); setError(null) }}
+          className="cursor-pointer text-[12px] text-ink-3 transition-colors hover:text-ink-1"
+        >
+          Annuler
+        </button>
+      </div>
     </div>
   )
 }
@@ -173,8 +319,10 @@ function Receipt({
   const [error, setError]   = useState<string | null>(null)
 
   const what = kind === 'deposit' ? 'acompte' : 'solde'
-  // Demande négociée hors de l'app : personne n'a encore dit ce que vaut le
-  // projet, et sans ce chiffre le solde comme la facture restent aveugles.
+  // Demande négociée hors de l'app : la carte « Devis » n'a rien produit, donc
+  // personne n'a dit ce que vaut le projet, et sans ce chiffre le solde comme la
+  // facture restent aveugles. Champ masqué dès qu'un total existe : les deux
+  // cartes ne doivent jamais proposer la même saisie en même temps.
   const needsTotal = kind === 'deposit' && !order.total_amount
 
   async function submit(isReceived: boolean) {
@@ -259,7 +407,7 @@ function Receipt({
 
       {needsTotal && (
         <div>
-          <label className="mb-1 block text-[10px] uppercase tracking-wider text-ink-3">Total du projet (€)</label>
+          <label className="mb-1 block text-[10px] uppercase tracking-wider text-ink-3">Total du devis (€)</label>
           <input
             type="number" min="0" step="0.01"
             value={total}
@@ -270,7 +418,7 @@ function Receipt({
           <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
             {cents(total)
               ? `Reste ${formatPrice(Math.max(0, cents(total) - cents(amount)))} à réclamer en solde.`
-              : 'Sans lui, le solde ne pourra pas se déduire et la facture n’aura pas de montant.'}
+              : 'Le même que dans la carte « Devis », à saisir ici quand aucun devis n’est passé par l’app. Sans lui, ni solde déduit ni facture chiffrée.'}
           </p>
         </div>
       )}
