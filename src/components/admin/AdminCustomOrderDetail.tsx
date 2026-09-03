@@ -11,6 +11,8 @@ import AdminFeedback, { UnsavedDot } from './AdminFeedback'
 import useUnsavedWarning from './useUnsavedWarning'
 import AdminQuoteComposer from './AdminQuoteComposer'
 import AdminQuoteImport from './AdminQuoteImport'
+import AdminCustomPayments from './AdminCustomPayments'
+import PaymentModeToggle, { type QuotePaymentMode } from './PaymentModeToggle'
 import AdminCustomShipping from './AdminCustomShipping'
 
 const MANUAL_STATUSES: CustomOrderStatus[] = [
@@ -42,11 +44,13 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
     const due = computeBalance(initialOrder)
     return due ? String(due / 100) : ''
   })
+  const [balanceMode, setBalanceMode]       = useState<QuotePaymentMode>('stripe')
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError]     = useState<string | null>(null)
   const router = useRouter()
 
   const status = order.status as CustomOrderStatus
+  const pay = paymentState(order)
   const suiviUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/custom/${order.id}`
 
   const notesDirty    = notesInput !== (order.admin_notes ?? '')
@@ -74,7 +78,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
       const res = await fetch(`/api/custom/${order.id}/balance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ balance_amount: cents }),
+        body: JSON.stringify({ balance_amount: cents, payment_mode: balanceMode }),
       })
       const json = await res.json() as { error?: string; payment_url?: string; balance_amount?: number }
       if (!res.ok) throw new Error(json.error ?? 'Erreur inattendue')
@@ -340,6 +344,8 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                       </p>
                     </div>
 
+                    <PaymentModeToggle value={balanceMode} onChange={setBalanceMode} />
+
                     {balanceError && <p className="text-xs text-red-400">{balanceError}</p>}
 
                     <button
@@ -361,6 +367,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                             <path d="M14 2L2 6.5l5 2L9 14l5-12z" />
                           </svg>
                           {order.balance_payment_url ? 'Renvoyer la demande de solde' : 'Envoyer la demande de solde'}
+                        {balanceMode === 'transfer' ? ' (virement)' : ''}
                         </>
                       )}
                     </button>
@@ -460,56 +467,17 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
               </div>
             </Card>
 
-            {/* Paiements — qui a payé quoi, et quand */}
-            {(order.deposit_amount || order.total_amount || order.balance_amount) && (() => {
-              const pay = paymentState(order)
-              return (
-                <Card
-                  title="Paiements"
-                  right={pay.fullyPaid
-                    ? <span className="rounded-pill bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Soldé</span>
-                    : pay.outstanding
-                      ? <span className="rounded-pill bg-amber/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">Reste {formatPrice(pay.outstanding)}</span>
-                      : undefined}
-                >
-                  <div className="space-y-3 text-sm">
-                    {order.deposit_amount && (
-                      <PaymentLine
-                        label="Acompte"
-                        amount={order.deposit_amount}
-                        received={pay.depositPaid}
-                        at={pay.depositPaidAt}
-                        pendingLabel="en attente de règlement"
-                      />
-                    )}
-
-                    {(order.balance_amount || pay.outstanding) && (
-                      <PaymentLine
-                        label="Solde"
-                        amount={order.balance_amount ?? pay.outstanding ?? 0}
-                        received={pay.balancePaid}
-                        at={pay.balancePaidAt}
-                        pendingLabel={order.balance_payment_url ? 'demande envoyée, en attente' : 'pas encore réclamé'}
-                      />
-                    )}
-
-                    {order.total_amount && (
-                      <>
-                        <div className="my-1 border-t border-dashed" style={{ borderColor: 'var(--line-amber)' }} />
-                        <div className="flex items-baseline justify-between">
-                          <span className="text-ink-2">Encaissé</span>
-                          <span className="font-mono font-semibold text-ink-0">{formatPrice(pay.amountPaid)}</span>
-                        </div>
-                        <div className="flex items-baseline justify-between">
-                          <span className="font-semibold text-amber">Total du devis</span>
-                          <span className="font-mono text-base font-bold text-amber">{formatPrice(order.total_amount)}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Card>
-              )
-            })()}
+            {/* Paiements — qui a payé quoi, quand, et par quel moyen */}
+            <Card
+              title="Paiements"
+              right={pay.fullyPaid
+                ? <span className="rounded-pill bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Soldé</span>
+                : pay.outstanding
+                  ? <span className="rounded-pill bg-amber/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber">Reste {formatPrice(pay.outstanding)}</span>
+                  : undefined}
+            >
+              <AdminCustomPayments order={order} onChange={setOrder} />
+            </Card>
 
             {/* Notes internes */}
             <Card title="Notes internes" right={notesDirty ? <UnsavedDot /> : undefined}>
@@ -561,40 +529,6 @@ function Card({ title, right, children }: { title: string; right?: React.ReactNo
       </header>
       <div className="p-4 sm:p-5">{children}</div>
     </section>
-  )
-}
-
-/**
- * Une échéance : montant, et surtout si l'argent est arrivé.
- *
- * La date peut manquer sur les demandes réglées avant la migration 035 — on
- * affiche alors « reçu » sans date plutôt que d'inventer un horodatage.
- */
-function PaymentLine({
-  label, amount, received, at, pendingLabel,
-}: {
-  label: string
-  amount: number
-  received: boolean
-  at: string | null
-  pendingLabel: string
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <span className="min-w-0">
-        <span className="text-ink-2">{label}</span>
-        <span className={['ml-1.5 text-[11px]', received ? 'text-emerald-400' : 'text-ink-3'].join(' ')}>
-          {received
-            ? at
-              ? `· reçu le ${new Date(at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`
-              : '· reçu'
-            : `· ${pendingLabel}`}
-        </span>
-      </span>
-      <span className={['shrink-0 font-mono', received ? 'text-ink-1' : 'text-ink-3'].join(' ')}>
-        {formatPrice(amount)}
-      </span>
-    </div>
   )
 }
 

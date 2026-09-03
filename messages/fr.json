@@ -699,7 +699,8 @@
       "title": "Votre devis est prêt",
       "deposit": "Acompte :",
       "total": "Total estimé :",
-      "pay": "Régler mon acompte →"
+      "pay": "Régler mon acompte →",
+      "transfer": "Règlement par virement. Indiquez la référence {ref} en libellé, les coordonnées bancaires vous sont transmises à part."
     },
     "payments": {
       "heading": "Paiements",
@@ -718,7 +719,8 @@
       "desc": "Réglez le solde pour déclencher l'expédition.",
       "amount": "Solde à régler :",
       "deposit": "Acompte déjà versé :",
-      "pay": "Régler le solde →"
+      "pay": "Régler le solde →",
+      "transfer": "Règlement par virement. Indiquez la référence {ref} en libellé, les coordonnées bancaires vous sont transmises à part."
     },
     "balancePaid": {
       "eyebrow": "Solde reçu",

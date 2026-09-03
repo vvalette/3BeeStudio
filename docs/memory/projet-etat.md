@@ -17,7 +17,7 @@ Formulaire multi-step : upload logo → sélecteur lien NFC → infos contact �
 Formulaire multi-step : type de projet → description → budget → délai → contact → adresse → envoi
 
 - URL : `/custom` (ancienne `/sur-mesure` redirige vers `/custom`)
-- Paiement **acompte 50%** via Stripe Checkout Session (créé manuellement par l'admin)
+- Paiement **acompte 50%** via Stripe Checkout Session (créé manuellement par l'admin), ou **par virement** : envoi sans lien, puis encaissement déclaré à la main sur la fiche (montant, date du relevé, moyen)
 - Statuts : `pending_quote → quote_sent → deposit_paid → in_production → shipped → delivered → cancelled`
 - Webhook `/api/stripe/webhook` : détecte `custom_order_id` + `type: 'custom_deposit'` dans metadata
 - Deux emails automatiques à la soumission : confirmation client + notification admin interne
@@ -57,6 +57,7 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `POST /api/upload/logo` | Upload logo vers Supabase Storage (bucket `logos`) |
 | `POST /api/custom/order` | Crée demande sur-mesure Supabase + emails confirmation/admin |
 | `POST /api/custom/[orderId]/quote` | Admin : crée session Stripe acompte + email client (auth header `x-admin-password`) |
+| `POST /api/admin/custom/[orderId]/payment` | Déclare (ou annule) un encaissement reçu hors Stripe : acompte ou solde, montant, date, moyen |
 | `POST/DELETE /api/admin/custom/[orderId]/quote-file` | Téléverse ou retire un devis PDF importé (bucket privé `quotes`, auth cookie) |
 | `GET/POST /api/admin/custom/[orderId]/quote-pdf` | Devis envoyé (ou PDF importé) / aperçu du brouillon (auth cookie) |
 | `GET /api/admin/orders` | Liste commandes NFC (auth cookie) |

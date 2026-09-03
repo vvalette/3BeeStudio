@@ -47,9 +47,11 @@ export default async function SuiviMesurePage({
   const isJustPaid      = payment === 'success'
   const isJustPaidBalance = payment === 'balance'
 
-  // Solde : demandé dès qu'un lien existe, soldé quand la date est posée. Pas de
-  // statut dédié — la timeline reste pilotée par la production et l'expédition.
-  const balanceDue  = o.balance_payment_url && !o.balance_paid_at
+  // Solde : réclamé dès qu'un montant est posé (avec ou sans lien de paiement,
+  // le règlement pouvant se faire par virement), soldé quand la date arrive.
+  // Pas de statut dédié — la timeline reste pilotée par la production et
+  // l'expédition.
+  const balanceDue  = (o.balance_amount || o.balance_payment_url) && !o.balance_paid_at
   const pay = paymentState(o)
   const payDate = (iso: string) => new Date(iso).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
     day: '2-digit', month: 'long', year: 'numeric',
@@ -130,8 +132,10 @@ export default async function SuiviMesurePage({
           </header>
         )}
 
-        {/* ── Payer l'acompte (si devis envoyé + lien dispo) ── */}
-        {o.status === 'quote_sent' && o.payment_url && (
+        {/* ── Régler l'acompte (devis envoyé). Sans lien de paiement, le
+               règlement se fait par virement : on dit la marche à suivre plutôt
+               que de laisser la page muette. ── */}
+        {o.status === 'quote_sent' && (o.payment_url || o.deposit_amount) && (
           <section className="overflow-hidden rounded-2xl border border-amber/40 bg-[rgba(245,158,11,0.06)] p-5">
             <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-amber mb-3">{t('action.eyebrow')}</p>
             <p className="text-sm font-semibold text-ink-0 mb-1">{t('action.title')}</p>
@@ -139,13 +143,19 @@ export default async function SuiviMesurePage({
               {o.deposit_amount && <>{t('action.deposit')} <span className="text-ink-1 font-mono">{formatPrice(o.deposit_amount)}</span> — </>}
               {o.total_amount && <>{t('action.total')} <span className="text-ink-1 font-mono">{formatPrice(o.total_amount)}</span></>}
             </p>
-            <a
-              href={o.payment_url}
-              className="flex h-[48px] w-full items-center justify-center gap-2 rounded-pill font-semibold text-[14px] text-[#1A1300] transition-all hover:brightness-105"
-              style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
-            >
-              {t('action.pay')}
-            </a>
+            {o.payment_url ? (
+              <a
+                href={o.payment_url}
+                className="flex h-[48px] w-full items-center justify-center gap-2 rounded-pill font-semibold text-[14px] text-[#1A1300] transition-all hover:brightness-105"
+                style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+              >
+                {t('action.pay')}
+              </a>
+            ) : (
+              <p className="text-xs leading-relaxed text-ink-2">
+                {t('action.transfer', { ref: `#${o.id.slice(0, 8).toUpperCase()}` })}
+              </p>
+            )}
           </section>
         )}
 
@@ -159,13 +169,19 @@ export default async function SuiviMesurePage({
               {o.balance_amount && <>{t('balanceAction.amount')} <span className="text-ink-1 font-mono">{formatPrice(o.balance_amount)}</span></>}
               {o.deposit_amount && <> — {t('balanceAction.deposit')} <span className="text-ink-1 font-mono">{formatPrice(o.deposit_amount)}</span></>}
             </p>
-            <a
-              href={o.balance_payment_url!}
-              className="flex h-[48px] w-full items-center justify-center gap-2 rounded-pill font-semibold text-[14px] text-[#1A1300] transition-all hover:brightness-105"
-              style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
-            >
-              {t('balanceAction.pay')}
-            </a>
+            {o.balance_payment_url ? (
+              <a
+                href={o.balance_payment_url}
+                className="flex h-[48px] w-full items-center justify-center gap-2 rounded-pill font-semibold text-[14px] text-[#1A1300] transition-all hover:brightness-105"
+                style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
+              >
+                {t('balanceAction.pay')}
+              </a>
+            ) : (
+              <p className="text-xs leading-relaxed text-ink-2">
+                {t('balanceAction.transfer', { ref: `#${o.id.slice(0, 8).toUpperCase()}` })}
+              </p>
+            )}
           </section>
         )}
 

@@ -90,7 +90,7 @@ export async function POST(req: Request) {
         if (session.payment_status === 'paid') {
           const { error } = await supabaseAdmin
             .from('custom_orders')
-            .update({ status: 'deposit_paid', deposit_paid_at: new Date().toISOString() })
+            .update({ status: 'deposit_paid', deposit_paid_at: new Date().toISOString(), deposit_method: 'stripe' })
             .eq('id', customOrderId)
             .eq('status', 'quote_sent')
           if (error) {
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
         if (session.payment_status === 'paid') {
           const { error } = await supabaseAdmin
             .from('custom_orders')
-            .update({ balance_paid_at: new Date().toISOString() })
+            .update({ balance_paid_at: new Date().toISOString(), balance_method: 'stripe' })
             .eq('id', customOrderId)
             .is('balance_paid_at', null) // rejeu du webhook → aucune ligne touchée
           if (error) {

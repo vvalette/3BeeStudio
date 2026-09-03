@@ -12,6 +12,10 @@ import type { CustomOrder, QuoteLineItem } from '@/types/custom-order'
  * Un devis importé n'a pas de lignes saisies (`items` vide) : on affiche alors
  * le total seul et on renvoie à la pièce jointe, plutôt que d'inventer un
  * détail que le PDF ne dirait pas.
+ *
+ * Sans `paymentUrl`, l'acompte se règle par virement : le bouton disparaît et
+ * l'email dit où en est la suite, plutôt que de promettre un paiement en ligne
+ * qui n'existe pas.
  */
 
 interface Props {
@@ -23,7 +27,8 @@ interface Props {
   deposit: number       // centimes
   validUntil: Date
   appUrl: string
-  paymentUrl: string
+  /** `null` quand l'acompte se règle par virement : pas de bouton de paiement. */
+  paymentUrl: string | null
 }
 
 function euros(cents: number): string {
@@ -143,13 +148,33 @@ export default function CustomQuote({
         </table>
       </Card>
 
-      <Button href={paymentUrl}>Régler mon acompte →</Button>
+      {paymentUrl ? (
+        <>
+          <Button href={paymentUrl}>Régler mon acompte →</Button>
 
-      <Note>
-        Paiement sécurisé par Stripe. Dès réception, nous lançons la fabrication et vous pouvez suivre
-        l’avancement sur <a href={`${appUrl}/custom/${order.id}`} style={{ color: color.amberDeep, fontWeight: 600 }}>votre page de suivi</a>.
-        Une question sur le devis ? Répondez simplement à cet email.
-      </Note>
+          <Note>
+            Paiement sécurisé par Stripe. Dès réception, nous lançons la fabrication et vous pouvez suivre
+            l’avancement sur <a href={`${appUrl}/custom/${order.id}`} style={{ color: color.amberDeep, fontWeight: 600 }}>votre page de suivi</a>.
+            Une question sur le devis ? Répondez simplement à cet email.
+          </Note>
+        </>
+      ) : (
+        <>
+          <Card tone="amber" title="Règlement par virement">
+            <Text style={{ color: color.ink1, fontSize: 13, lineHeight: '1.6', margin: 0 }}>
+              L’acompte de <strong style={{ color: color.ink0 }}>{euros(deposit)}</strong> se règle par virement.
+              Les coordonnées bancaires vous sont transmises à part, avec la référence{' '}
+              <span style={{ fontFamily: font.mono, color: color.ink0 }}>#{ref}</span> à indiquer en libellé.
+            </Text>
+          </Card>
+
+          <Note>
+            Dès réception du virement, nous lançons la fabrication et vous pouvez suivre l’avancement
+            sur <a href={`${appUrl}/custom/${order.id}`} style={{ color: color.amberDeep, fontWeight: 600 }}>votre page de suivi</a>.
+            Une question sur le devis ? Répondez simplement à cet email.
+          </Note>
+        </>
+      )}
     </EmailLayout>
   )
 }

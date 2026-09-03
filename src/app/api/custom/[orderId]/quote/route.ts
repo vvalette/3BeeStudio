@@ -7,6 +7,9 @@
  * (le document est alors fabriqué ici), ou un devis **importé** téléversé au
  * préalable (`use_imported_pdf`), qui part tel quel. Dans ce second cas les
  * lignes n'existent pas : c'est `total_amount` qui porte le montant du devis.
+ *
+ * Le paiement, lui, n'est pas toujours en ligne : en mode `transfer`, aucun
+ * Checkout n'est créé et l'email part sans bouton de paiement.
  * Protégé par le même mot de passe admin que le reste de l'admin panel.
  */
 import { NextResponse } from 'next/server'
@@ -38,6 +41,12 @@ const schema = z.object({
   use_imported_pdf: z.boolean().optional(),
   /** Numéro porté par le PDF importé. Vide : numérotation maison (DEV-AAAA-NNN). */
   quote_number:   z.string().trim().min(3).max(40).optional(),
+  /**
+   * Comment le client règle l'acompte. `transfer` n'ouvre aucun lien Stripe :
+   * l'email annonce le montant, le règlement arrive par virement et l'admin le
+   * déclare depuis la fiche quand il le voit sur son compte.
+   */
+  payment_mode:   z.enum(['stripe', 'transfer']).default('stripe'),
 })
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -82,6 +91,7 @@ export async function POST(
   const order = orderRaw as CustomOrder
 
   const imported = parsed.data.use_imported_pdf === true
+  const transfer = parsed.data.payment_mode === 'transfer'
 
   if (imported && !order.quote_pdf_path) {
     return NextResponse.json(
@@ -140,8 +150,10 @@ export async function POST(
   let quoteNumber = manualNumber ?? order.quote_number
   let updateError: { code?: string; message?: string } | null = null
 
-  // Création du Stripe Checkout Session pour l'acompte
-  const session = await stripe.checkout.sessions.create({
+  // Checkout Stripe pour l'acompte. Rien à créer si le client règle par
+  // virement : un lien de paiement laissé ouvert finirait par être cliqué, et
+  // l'acompte serait encaissé deux fois.
+  const session = transfer ? null : await stripe.checkout.sessions.create({
     mode: 'payment',
     locale: 'fr',
     customer_email: order.email,
@@ -172,8 +184,8 @@ export async function POST(
         status:                     'quote_sent',
         deposit_amount,
         total_amount:               total,
-        payment_url:                session.url,
-        stripe_checkout_session_id: session.id,
+        payment_url:                session?.url ?? null,
+        stripe_checkout_session_id: session?.id ?? null,
         quote_number:               quoteNumber,
         quote_object:               object,
         quote_items:                items, // null sur un devis importé : rien n'a été saisi
@@ -227,7 +239,7 @@ export async function POST(
     deposit: deposit_amount,
     validUntil: new Date(issuedAt.getTime() + QUOTE_VALIDITY_DAYS * 24 * 3600 * 1000),
     appUrl,
-    paymentUrl: session.url!,
+    paymentUrl: session?.url ?? null,
   }))
 
   const { error: emailError } = await resend.emails.send({
@@ -245,16 +257,21 @@ export async function POST(
   if (emailError) {
     console.error('[custom/quote] ERREUR envoi:', JSON.stringify(emailError))
     return NextResponse.json(
-      { error: 'Devis enregistré, mais l\'email n\'est pas parti — transmettez le lien au client.', payment_url: session.url },
+      {
+        error: transfer
+          ? 'Devis enregistré, mais l\'email n\'est pas parti — transmettez-le au client vous-même.'
+          : 'Devis enregistré, mais l\'email n\'est pas parti — transmettez le lien au client.',
+        payment_url: session?.url ?? null,
+      },
       { status: 502 },
     )
   }
 
-  console.info('[custom/quote]', JSON.stringify({ orderId, quoteNumber, total, deposit_amount }))
+  console.info('[custom/quote]', JSON.stringify({ orderId, quoteNumber, total, deposit_amount, payment_mode: parsed.data.payment_mode }))
 
   return NextResponse.json({
-    session_id: session.id,
-    payment_url: session.url,
+    session_id: session?.id ?? null,
+    payment_url: session?.url ?? null,
     quote_number: quoteNumber,
     total_amount: total,
   })

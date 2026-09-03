@@ -699,7 +699,8 @@
       "title": "Your quote is ready",
       "deposit": "Deposit:",
       "total": "Estimated total:",
-      "pay": "Pay my deposit →"
+      "pay": "Pay my deposit →",
+      "transfer": "Payment by bank transfer — use reference {ref} on the transfer; bank details are sent to you separately."
     },
     "payments": {
       "heading": "Payments",
@@ -718,7 +719,8 @@
       "desc": "Pay the balance to trigger shipping.",
       "amount": "Balance due:",
       "deposit": "Deposit already paid:",
-      "pay": "Pay the balance →"
+      "pay": "Pay the balance →",
+      "transfer": "Payment by bank transfer — use reference {ref} on the transfer; bank details are sent to you separately."
     },
     "balancePaid": {
       "eyebrow": "Balance received",
