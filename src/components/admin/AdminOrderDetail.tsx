@@ -440,7 +440,16 @@ export default function AdminOrderDetail({ order: initialOrder }: { order: Order
 
             {/* Lien suivi client */}
             <Card title="Lien de suivi client">
-              <p className="break-all font-mono text-xs leading-relaxed text-ink-2">{suiviUrl}</p>
+              {/* Cliquable aussi côté admin : le chemin le plus court pour voir
+                  la page telle que le client la reçoit. */}
+              <a
+                href={suiviUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block cursor-pointer break-all font-mono text-xs leading-relaxed text-ink-2 underline-offset-2 transition-colors hover:text-amber hover:underline"
+              >
+                {suiviUrl}
+              </a>
               <button
                 onClick={() => copy(`${window.location.origin}/suivi/${order.id}`, 'link')}
                 className="mt-2.5 flex cursor-pointer items-center gap-1.5 text-xs font-medium text-amber transition-colors hover:text-amber-soft"
