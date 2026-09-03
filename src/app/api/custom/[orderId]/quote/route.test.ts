@@ -54,11 +54,16 @@ const sendMock = vi.hoisted(() =>
 const sessionCreate = vi.hoisted(() =>
   vi.fn(async () => ({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1' })),
 )
+const downloadMock = vi.hoisted(() =>
+  vi.fn(async () => Buffer.from('%PDF-1.7 devis importe')),
+)
 
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: supabaseMock, supabase: supabaseMock }))
 vi.mock('@/lib/stripe', () => ({ stripe: { checkout: { sessions: { create: sessionCreate } } } }))
 vi.mock('@/lib/auth', () => ({ isAuthenticated: vi.fn(async () => true) }))
 vi.mock('resend', () => ({ Resend: class { emails = { send: sendMock } } }))
+// Le devis importé vit dans Supabase Storage : seul son contenu compte ici.
+vi.mock('@/lib/documents/quote-file', () => ({ downloadQuotePdf: downloadMock }))
 
 import { POST } from './route'
 import { isAuthenticated } from '@/lib/auth'
@@ -87,10 +92,14 @@ function request(body: unknown) {
 
 const ITEMS = [{ label: 'Cache en H', detail: 'PETG', quantity: 10, unit_price: 350 }]
 
+/** Même demande, avec un devis PDF déjà téléversé par l'admin. */
+const IMPORTED = { ...ORDER, quote_pdf_path: 'order/devis.pdf', quote_pdf_name: 'Devis_2026-014.pdf' }
+
 beforeEach(() => {
   state.reset()
   sendMock.mockClear()
   sessionCreate.mockClear()
+  downloadMock.mockClear()
   vi.mocked(isAuthenticated).mockResolvedValue(true)
 })
 
@@ -171,6 +180,68 @@ describe('POST /api/custom/[orderId]/quote', () => {
     const write = state.writes.at(-1)!
     expect(write.values.quote_items).toHaveLength(1)
     expect(write.values.total_amount).toBe(3500)
+  })
+
+  it('joint le PDF importé tel quel et garde le numéro saisi', async () => {
+    state.queue('custom_orders',
+      { data: IMPORTED, error: null },
+      { data: null, error: null },  // update — aucune numérotation à allouer
+    )
+
+    const res = await POST(request({
+      use_imported_pdf: true,
+      deposit_amount: 15000,
+      total_amount: 35000,
+      quote_number: '2026-014',
+    }), { params })
+    expect(res.status).toBe(200)
+
+    const json = await res.json() as { quote_number: string; total_amount: number }
+    expect(json.quote_number).toBe('2026-014')
+    // Le total ne se déduit pas du PDF : c'est celui déclaré par l'admin.
+    expect(json.total_amount).toBe(35000)
+
+    const email = sendMock.mock.calls[0][0] as SentEmail
+    expect(email.attachments![0].filename).toBe('Devis_2026-014.pdf')
+    expect(Buffer.from(email.attachments![0].content, 'base64').toString()).toBe('%PDF-1.7 devis importe')
+
+    const write = state.writes.at(-1)!
+    expect(write.values.status).toBe('quote_sent')
+    // Aucune ligne saisie : on n'en invente pas pour l'email ni pour la facture.
+    expect(write.values.quote_items).toBeNull()
+  })
+
+  it('refuse un envoi importé sans total', async () => {
+    state.queue('custom_orders', { data: IMPORTED, error: null })
+    const res = await POST(request({ use_imported_pdf: true, deposit_amount: 15000 }), { params })
+    expect(res.status).toBe(422)
+    expect((await res.json() as { error: string }).error).toContain('total')
+    expect(sendMock).not.toHaveBeenCalled()
+  })
+
+  it('refuse un envoi importé quand aucun PDF n’a été téléversé', async () => {
+    state.queue('custom_orders', { data: ORDER, error: null })
+    const res = await POST(request({ use_imported_pdf: true, deposit_amount: 15000, total_amount: 35000 }), { params })
+    expect(res.status).toBe(422)
+    expect(sessionCreate).not.toHaveBeenCalled()
+  })
+
+  it('rend la main si le numéro saisi est déjà pris', async () => {
+    state.queue('custom_orders',
+      { data: IMPORTED, error: null },
+      { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "custom_orders_quote_number_key"' } },
+    )
+
+    const res = await POST(request({
+      use_imported_pdf: true,
+      deposit_amount: 15000,
+      total_amount: 35000,
+      quote_number: '2026-014',
+    }), { params })
+    expect(res.status).toBe(409)
+    // Corriger le numéro en douce ferait diverger l'email du PDF joint.
+    expect((await res.json() as { error: string }).error).toContain('2026-014')
+    expect(sendMock).not.toHaveBeenCalled()
   })
 
   it('signale un échec d’email sans perdre le devis', async () => {

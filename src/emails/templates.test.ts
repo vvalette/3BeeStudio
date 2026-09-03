@@ -67,6 +67,8 @@ const templates: Array<[string, Promise<string>]> = [
   ['custom-confirmation', render(CustomOrderConfirmation({ order: customOrder, appUrl }))],
   ['custom-admin', render(CustomOrderAdmin({ order: customOrder, appUrl }))],
   ['custom-quote', render(CustomQuote({ order: customOrder, quoteNumber: 'DEV-2026-002', object: 'fabrication de caches en H — impression 3D PETG', items, total: 3500, deposit: 1750, validUntil: new Date('2026-09-21'), appUrl, paymentUrl: 'https://checkout.stripe.com/c/pay/cs_1' }))],
+  // Devis importé : aucune ligne saisie, l'email renvoie à la pièce jointe.
+  ['custom-quote-imported', render(CustomQuote({ order: customOrder, quoteNumber: '2026-014', object: 'fabrication de caches en H', items: [], total: 35000, deposit: 15000, validUntil: new Date('2026-09-21'), appUrl, paymentUrl: 'https://checkout.stripe.com/c/pay/cs_1' }))],
   ['custom-balance', render(CustomBalance({ order: customOrder, amount: 1750, appUrl, paymentUrl: 'https://checkout.stripe.com/c/pay/cs_2' }))],
   ['shop-confirmation', render(ShopOrderConfirmation({ order: shopOrder, appUrl }))],
   ['shop-confirmation-en', render(ShopOrderConfirmation({ order: shopOrder, appUrl, locale: 'en' }))],

@@ -51,6 +51,12 @@ export interface CustomOrder {
   quote_items: QuoteLineItem[] | null
   quote_issued_at: string | null
 
+  // Devis importé — PDF fabriqué hors de l'app, téléversé par l'admin
+  /** Chemin dans le bucket privé `quotes`. Non nul = ce fichier remplace le PDF généré. */
+  quote_pdf_path: string | null
+  /** Nom d'origine du fichier, réutilisé en pièce jointe. */
+  quote_pdf_name: string | null
+
   // Solde — second encaissement, réclamé avant expédition
   balance_amount: number | null
   balance_payment_url: string | null

@@ -5,8 +5,10 @@
  *  - POST : un aperçu du brouillon en cours de saisie, sans rien enregistrer —
  *           c'est le même générateur, donc ce qu'on voit est ce qui partira.
  *
- * Le PDF n'est jamais stocké : il se reconstruit à l'identique depuis les
- * colonnes `quote_*`, ce qui évite un bucket de plus à gérer et à purger.
+ * Le PDF généré n'est jamais stocké : il se reconstruit à l'identique depuis
+ * les colonnes `quote_*`, ce qui évite un bucket de plus à gérer et à purger.
+ * Un devis **importé** (PDF fabriqué ailleurs), lui, vit dans le bucket privé
+ * `quotes` : le GET le sert tel quel.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -15,6 +17,7 @@ import { isAuthenticated } from '@/lib/auth'
 import { buildQuotePdf, quoteFileName } from '@/lib/documents/pdf'
 import { nextQuoteNumber } from '@/lib/documents/number'
 import { fallbackQuoteItems, fallbackQuoteObject, quoteItemSchema } from '@/lib/documents/input'
+import { downloadQuotePdf } from '@/lib/documents/quote-file'
 import type { CustomOrder } from '@/types/custom-order'
 
 const previewSchema = z.object({
@@ -54,7 +57,7 @@ function pdfResponse(bytes: Uint8Array, filename: string) {
   })
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
@@ -62,6 +65,24 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ ord
   const { orderId } = await params
   const order = await loadOrder(orderId)
   if (!order) return NextResponse.json({ error: 'Demande introuvable' }, { status: 404 })
+
+  // Devis importé : c'est ce fichier-là que le client reçoit, pas un rendu
+  // maison. Servi dès le téléversement, avant même l'envoi, pour que l'admin
+  // relise ce qui partira.
+  //
+  // Les deux modes cohabitent sur une même demande : `?source=imported` réclame
+  // explicitement le fichier téléversé (bouton « Ouvrir » du panneau d'import),
+  // tandis que sans paramètre on rend le devis réellement parti au client, que
+  // les lignes en base désignent — `quote_items` renseigné = devis composé.
+  const wantsImported = req.nextUrl.searchParams.get('source') === 'imported'
+  if (order.quote_pdf_path && (wantsImported || !order.quote_items?.length)) {
+    try {
+      const stored = await downloadQuotePdf(order.quote_pdf_path)
+      return pdfResponse(stored, order.quote_pdf_name ?? 'Devis.pdf')
+    } catch (err) {
+      return failed('lecture du devis importé', err)
+    }
+  }
 
   if (!order.quote_number) {
     return NextResponse.json({ error: 'Aucun devis envoyé pour cette demande.' }, { status: 404 })
