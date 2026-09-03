@@ -69,6 +69,13 @@ export default function AdminCustomPayments({
         onChange={onChange}
       />
 
+      {!order.total_amount && !pay.depositPaid && (
+        <p className="text-[11px] leading-relaxed text-ink-3">
+          Aucun devis n’est passé par l’app pour cette demande : tu peux enregistrer
+          l’acompte déjà reçu ici, sans rien envoyer au client.
+        </p>
+      )}
+
       {(order.balance_amount || balanceDue) && (
         <PaymentLine
           label="Solde"
@@ -159,12 +166,16 @@ function Receipt({
   const router = useRouter()
   const [open, setOpen]     = useState(false)
   const [amount, setAmount] = useState(defaultAmount ? String(defaultAmount / 100) : '')
+  const [total, setTotal]   = useState('')
   const [date, setDate]     = useState(today())
   const [method, setMethod] = useState<PaymentMethod>('transfer')
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState<string | null>(null)
 
   const what = kind === 'deposit' ? 'acompte' : 'solde'
+  // Demande négociée hors de l'app : personne n'a encore dit ce que vaut le
+  // projet, et sans ce chiffre le solde comme la facture restent aveugles.
+  const needsTotal = kind === 'deposit' && !order.total_amount
 
   async function submit(isReceived: boolean) {
     setError(null)
@@ -176,7 +187,14 @@ function Receipt({
         body: JSON.stringify({
           kind,
           received: isReceived,
-          ...(isReceived ? { amount: cents(amount) || undefined, paid_at: date, method } : {}),
+          ...(isReceived
+            ? {
+                amount: cents(amount) || undefined,
+                paid_at: date,
+                method,
+                ...(needsTotal && cents(total) ? { total_amount: cents(total) } : {}),
+              }
+            : {}),
         }),
       })
       const json = await res.json().catch(() => null) as (CustomOrder & { error?: string }) | null
@@ -238,6 +256,24 @@ function Receipt({
           className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
         />
       </div>
+
+      {needsTotal && (
+        <div>
+          <label className="mb-1 block text-[10px] uppercase tracking-wider text-ink-3">Total du projet (€)</label>
+          <input
+            type="number" min="0" step="0.01"
+            value={total}
+            onChange={(e) => setTotal(e.target.value)}
+            placeholder="350"
+            className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
+          />
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
+            {cents(total)
+              ? `Reste ${formatPrice(Math.max(0, cents(total) - cents(amount)))} à réclamer en solde.`
+              : 'Sans lui, le solde ne pourra pas se déduire et la facture n’aura pas de montant.'}
+          </p>
+        </div>
+      )}
 
       <div>
         <label className="mb-1 block text-[10px] uppercase tracking-wider text-ink-3">Date d’encaissement</label>

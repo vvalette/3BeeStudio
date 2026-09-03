@@ -101,6 +101,30 @@ describe('POST /api/admin/custom/[orderId]/payment', () => {
     expect(String(write.deposit_paid_at)).toContain('2026-08-20')
   })
 
+  it('enregistre un acompte déjà reçu sur une demande sans devis', async () => {
+    // Négociée en DM : ni devis, ni lien de paiement, ni montants connus de l'app.
+    const bare = { ...ORDER, status: 'pending_quote', deposit_amount: null, total_amount: null }
+    state.queue('custom_orders', { data: bare, error: null }, { data: bare, error: null })
+
+    const res = await POST(request({
+      kind: 'deposit', amount: 15000, total_amount: 35000, method: 'transfer', paid_at: '2026-08-12',
+    }), { params })
+    expect(res.status).toBe(200)
+
+    const write = lastWrite()
+    expect(write.status).toBe('deposit_paid')
+    expect(write.deposit_amount).toBe(15000)
+    // Sans ce total, le solde n'aurait rien à déduire et la facture rien à imprimer.
+    expect(write.total_amount).toBe(35000)
+  })
+
+  it('refuse un acompte supérieur au total du projet', async () => {
+    state.queue('custom_orders', { data: { ...ORDER, total_amount: null }, error: null })
+    const res = await POST(request({ kind: 'deposit', amount: 40000, total_amount: 35000 }), { params })
+    expect(res.status).toBe(422)
+    expect(state.writes).toHaveLength(0)
+  })
+
   it('ne fait pas reculer une demande déjà en production', async () => {
     state.queue('custom_orders',
       { data: { ...ORDER, status: 'in_production' }, error: null },

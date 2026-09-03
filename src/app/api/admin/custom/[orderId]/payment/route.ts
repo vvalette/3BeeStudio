@@ -6,6 +6,10 @@
  * d'encaissement — aucun webhook ne passe pour le poser — et la fiche resterait
  * bloquée sur « en attente de règlement ».
  *
+ * Elle sert aussi aux demandes négociées ailleurs, dont l'acompte est encaissé
+ * avant qu'un devis ne parte de l'app : rien n'est envoyé au client ici, ni
+ * email ni lien de paiement.
+ *
  * `received: false` annule la déclaration (erreur de saisie), sans jamais faire
  * reculer une demande déjà en production ou expédiée : seul le statut
  * `deposit_paid` revient à `quote_sent`.
@@ -26,6 +30,12 @@ const schema = z.object({
   amount:   z.number().int().positive().optional(),
   /** Date d'encaissement (`YYYY-MM-DD` ou ISO). Défaut : maintenant. */
   paid_at:  z.string().min(4).optional(),
+  /**
+   * Total du projet, quand l'acompte est encaissé sans qu'aucun devis ne soit
+   * passé par l'app (accord en DM, virement déjà reçu). Sans lui, le solde n'a
+   * rien à déduire et la facture n'a rien à imprimer.
+   */
+  total_amount: z.number().int().positive().optional(),
   method:   z.enum(['transfer', 'cash', 'check', 'stripe']).default('transfer'),
 })
 
@@ -85,9 +95,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
           { status: 422 },
         )
       }
+      // Total connu seulement de l'admin sur une demande sans devis : on le pose
+      // ici, sinon `computeBalance` et la facture resteraient sans référence.
+      const total = parsed.data.total_amount ?? order.total_amount
+      if (total && amount > total) {
+        return NextResponse.json(
+          { error: 'L\'acompte dépasse le total du projet.' },
+          { status: 422 },
+        )
+      }
+
       patch.deposit_amount  = amount
       patch.deposit_paid_at = paidAt.toISOString()
       patch.deposit_method  = method
+      if (parsed.data.total_amount) patch.total_amount = parsed.data.total_amount
       if (BUMPABLE.includes(order.status)) patch.status = 'deposit_paid'
     } else {
       patch.deposit_paid_at = null
