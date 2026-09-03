@@ -22,7 +22,7 @@ Formulaire multi-step : type de projet → description → budget → délai →
 - Webhook `/api/stripe/webhook` : détecte `custom_order_id` + `type: 'custom_deposit'` dans metadata
 - Deux emails automatiques à la soumission : confirmation client + notification admin interne
 - Page suivi `/custom/[orderId]` avec timeline, détails projet, CTA paiement si devis envoyé
-- **Devis** : composé dans l'admin (lignes → PDF généré) **ou importé** (PDF fabriqué ailleurs, téléversé dans le bucket privé `quotes`, joint tel quel). Un devis importé n'a pas de lignes : le total est déclaré à la main et l'email renvoie à la pièce jointe
+- **Devis** : composé dans l'admin (lignes → PDF généré) **ou importé** (PDF fabriqué ailleurs, téléversé dans le bucket privé `quotes`, joint tel quel). Un devis importé n'a pas de lignes : le total est déclaré à la main et l'email renvoie à la pièce jointe. Import possible sur la fiche (onglet « Importer un PDF ») comme dès la création dans `/admin/sur-mesure/nouveau`
 - **Refus possible** : tous les projets ne sont pas réalisables — indiqué dans le formulaire
 
 ## Pages live
