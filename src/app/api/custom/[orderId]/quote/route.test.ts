@@ -244,6 +244,30 @@ describe('POST /api/custom/[orderId]/quote', () => {
     expect(sendMock).not.toHaveBeenCalled()
   })
 
+  it('n’ouvre aucun lien Stripe quand l’acompte se règle par virement', async () => {
+    state.queue('custom_orders',
+      { data: ORDER, error: null },
+      { data: [], error: null },
+      { data: null, error: null },
+    )
+
+    const res = await POST(request({
+      deposit_amount: 1750, quote_items: ITEMS, payment_mode: 'transfer',
+    }), { params })
+    expect(res.status).toBe(200)
+
+    // Un lien laissé ouvert finirait par être cliqué : l'acompte serait encaissé deux fois.
+    expect(sessionCreate).not.toHaveBeenCalled()
+    expect((await res.json() as { payment_url: string | null }).payment_url).toBeNull()
+
+    const write = state.writes.at(-1)!
+    expect(write.values.payment_url).toBeNull()
+    expect(write.values.stripe_checkout_session_id).toBeNull()
+    // Le devis part quand même, avec sa pièce jointe.
+    expect(sendMock).toHaveBeenCalledOnce()
+    expect((sendMock.mock.calls[0][0] as SentEmail).attachments).toHaveLength(1)
+  })
+
   it('signale un échec d’email sans perdre le devis', async () => {
     state.queue('custom_orders',
       { data: ORDER, error: null },

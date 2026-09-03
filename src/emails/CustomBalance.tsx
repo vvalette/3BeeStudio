@@ -6,13 +6,17 @@ import type { CustomOrder } from '@/types/custom-order'
 /**
  * « Votre projet est prêt, il reste le solde » — sur-mesure.
  * Envoyé quand la pièce est terminée, avant l'expédition.
+ *
+ * Sans `paymentUrl`, le solde se règle par virement : le bouton disparaît au
+ * profit de la marche à suivre, coordonnées transmises à part.
  */
 
 interface Props {
   order: CustomOrder
   amount: number        // solde, en centimes
   appUrl: string
-  paymentUrl: string
+  /** `null` quand le solde se règle par virement : pas de bouton de paiement. */
+  paymentUrl: string | null
 }
 
 function euros(cents: number): string {
@@ -55,7 +59,16 @@ export default function CustomBalance({ order, amount, appUrl, paymentUrl }: Pro
         </table>
       </Card>
 
-      <Button href={paymentUrl}>Régler le solde →</Button>
+      {paymentUrl ? (
+        <Button href={paymentUrl}>Régler le solde →</Button>
+      ) : (
+        <Card tone="amber" title="Règlement par virement">
+          <Text style={{ color: color.ink1, fontSize: 13, lineHeight: '1.6', margin: 0 }}>
+            Le solde se règle par virement. Les coordonnées bancaires vous sont transmises à part,
+            avec la référence #{ref} à indiquer en libellé.
+          </Text>
+        </Card>
+      )}
 
       <Card title="Ensuite">
         <Text style={{ color: color.ink1, fontSize: 13, lineHeight: '1.65', margin: 0 }}>
@@ -65,7 +78,7 @@ export default function CustomBalance({ order, amount, appUrl, paymentUrl }: Pro
       </Card>
 
       <Note>
-        Paiement sécurisé par Stripe. Suivi de votre projet :{' '}
+        {paymentUrl ? 'Paiement sécurisé par Stripe. ' : ''}Suivi de votre projet :{' '}
         <a href={`${appUrl}/custom/${order.id}`} style={{ color: color.amberDeep, fontWeight: 600 }}>
           référence #{ref}
         </a>.

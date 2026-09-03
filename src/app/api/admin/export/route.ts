@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
 import type { Order } from '@/types/order'
-import type { CustomOrder } from '@/types/custom-order'
+import { PAYMENT_METHOD_LABELS, paymentState, type CustomOrder } from '@/types/custom-order'
 import type { ShopOrder } from '@/types/shop-order'
 
 /**
@@ -21,7 +21,8 @@ import type { ShopOrder } from '@/types/shop-order'
 
 const HEADERS = [
   'Date', 'Flux', 'Catégorie fiscale', 'Référence', 'Client', 'Email', 'Statut',
-  'Montant encaissé (€)', 'Dont port (€)', 'Réduction (€)', 'Coût étiquette HT (€)', 'Marge port (€)',
+  'Montant encaissé (€)', 'Moyen d\'encaissement',
+  'Dont port (€)', 'Réduction (€)', 'Coût étiquette HT (€)', 'Marge port (€)',
   'Mode livraison', 'Suivi',
 ] as const
 
@@ -36,6 +37,12 @@ const HEADERS = [
  * seuil de 10 000 € et guichet OSS).
  */
 type FiscalCategory = 'Marchandises' | 'Services'
+
+/**
+ * Statuts qui prouvent qu'un acompte est encaissé même sans `deposit_paid_at`
+ * (demandes antérieures à la migration 035, qui a introduit l'horodatage).
+ */
+const LEGACY_PAID_STATUSES = ['deposit_paid', 'in_production', 'shipped', 'delivered']
 
 /** Un montant en centimes → « 12,34 » (virgule décimale, format FR). */
 function euros(cents: number | null | undefined): string {
@@ -58,6 +65,8 @@ interface Row {
   email: string
   statut: string
   total: number
+  /** Comment l'argent est arrivé. Vide tant que rien n'est encaissé. */
+  moyen: string
   port: number | null
   reduction: number | null
   coutEtiquette: number | null
@@ -78,6 +87,7 @@ function toCsv(rows: Row[]): string {
       cell(r.email),
       cell(r.statut),
       cell(euros(r.total)),
+      cell(r.moyen),
       cell(euros(r.port)),
       cell(euros(r.reduction)),
       cell(euros(r.coutEtiquette)),
@@ -114,9 +124,24 @@ export async function GET(req: Request) {
     return out
   }
 
-  const [nfc, custom, customBalance, shop] = await Promise.all([
+  const [nfc, custom, customLegacy, customBalance, shop] = await Promise.all([
     applyRange(supabaseAdmin.from('orders').select('*')),
-    applyRange(supabaseAdmin.from('custom_orders').select('*')),
+    // Acompte : daté du jour où l'argent est arrivé, pas de la création de la
+    // demande. Un virement encaissé trois semaines plus tard appartient à SON
+    // trimestre. Une demande sans encaissement n'a rien à faire dans un export
+    // de CA, d'où le filtre.
+    applyRange(
+      supabaseAdmin.from('custom_orders').select('*').not('deposit_paid_at', 'is', null),
+      'deposit_paid_at',
+    ),
+    // Demandes encaissées avant l'ajout de `deposit_paid_at` (migration 035) :
+    // sans date d'encaissement mais bien payées. Elles disparaîtraient des
+    // exports des trimestres passés, donc on les garde sur leur date de création.
+    applyRange(
+      supabaseAdmin.from('custom_orders').select('*')
+        .is('deposit_paid_at', null)
+        .in('status', LEGACY_PAID_STATUSES),
+    ),
     applyRange(
       supabaseAdmin.from('custom_orders').select('*').not('balance_paid_at', 'is', null),
       'balance_paid_at',
@@ -124,8 +149,8 @@ export async function GET(req: Request) {
     applyRange(supabaseAdmin.from('shop_orders').select('*')),
   ])
 
-  if (nfc.error || custom.error || customBalance.error || shop.error) {
-    const err = nfc.error ?? custom.error ?? customBalance.error ?? shop.error
+  if (nfc.error || custom.error || customLegacy.error || customBalance.error || shop.error) {
+    const err = nfc.error ?? custom.error ?? customLegacy.error ?? customBalance.error ?? shop.error
     return NextResponse.json({ error: err?.message ?? 'Erreur export' }, { status: 500 })
   }
 
@@ -139,17 +164,18 @@ export async function GET(req: Request) {
       email: o.email,
       statut: o.status,
       total: o.total_amount,
+      moyen: PAYMENT_METHOD_LABELS.stripe,
       port: null,
       reduction: null,
       coutEtiquette: o.shipping_cost,
       modeLivraison: 'livraison',
       suivi: o.tracking_number,
     })),
-    // Sur-mesure : deux encaissements distincts, donc deux lignes. L'acompte est
-    // daté de la commande, le solde de son propre règlement — c'est la date
-    // d'encaissement qui fait foi pour la déclaration de CA.
-    ...((custom.data ?? []) as CustomOrder[]).map((o) => ({
-      date: o.created_at,
+    // Sur-mesure : deux encaissements distincts, donc deux lignes, chacune datée
+    // de son propre règlement — c'est la date d'encaissement qui fait foi pour
+    // la déclaration de CA.
+    ...([...((custom.data ?? []) as CustomOrder[]), ...((customLegacy.data ?? []) as CustomOrder[])]).map((o) => ({
+      date: o.deposit_paid_at ?? o.created_at,
       flux: 'Sur-mesure (acompte)',
       categorie: 'Services' as FiscalCategory,
       ref: o.id.slice(0, 8).toUpperCase(),
@@ -158,6 +184,9 @@ export async function GET(req: Request) {
       email: o.email,
       statut: o.status,
       total: o.deposit_amount ?? 0,
+      // Ces lignes sont encaissées par construction ; le repli `stripe` couvre
+      // les demandes réglées avant l'existence de la colonne.
+      moyen: paymentState(o).depositPaid ? PAYMENT_METHOD_LABELS[o.deposit_method ?? 'stripe'] : '',
       port: null,
       reduction: null,
       // Porté par la ligne d'acompte : l'étiquette est une dépense unique, la
@@ -177,6 +206,7 @@ export async function GET(req: Request) {
         email: o.email,
         statut: o.status,
         total: o.balance_amount ?? 0,
+        moyen: PAYMENT_METHOD_LABELS[o.balance_method ?? 'stripe'],
         port: null,
         reduction: null,
         coutEtiquette: null,
@@ -194,6 +224,7 @@ export async function GET(req: Request) {
       email: o.email,
       statut: o.status,
       total: o.total_amount,
+      moyen: PAYMENT_METHOD_LABELS.stripe,
       port: o.shipping,
       reduction: o.discount_amount ?? 0,
       coutEtiquette: o.shipping_cost ?? null,

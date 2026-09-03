@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatPrice } from '@/lib/utils'
+import PaymentModeToggle, { type QuotePaymentMode } from './PaymentModeToggle'
 import type { CustomOrder, QuoteLineItem } from '@/types/custom-order'
 
 /**
@@ -74,6 +75,7 @@ export default function AdminQuoteComposer({
   const [object, setObject]   = useState(order.quote_object ?? '')
   const [items, setItems]     = useState<ItemDraft[]>(() => toDrafts(order.quote_items))
   const [deposit, setDeposit] = useState(order.deposit_amount ? String(order.deposit_amount / 100) : '')
+  const [mode, setMode]       = useState<QuotePaymentMode>('stripe')
   const [sending, setSending] = useState(false)
   const [previewing, setPreviewing] = useState(false)
   const [error, setError]     = useState<string | null>(null)
@@ -142,6 +144,7 @@ export default function AdminQuoteComposer({
           deposit_amount: depositCents,
           quote_object: object.trim() || undefined,
           quote_items: payload,
+          payment_mode: mode,
         }),
       })
       const json = await res.json().catch(() => null) as
@@ -297,6 +300,8 @@ export default function AdminQuoteComposer({
         </div>
       </div>
 
+      <PaymentModeToggle value={mode} onChange={setMode} />
+
       {error && <p className="text-xs text-red-400">{error}</p>}
 
       <div className="flex flex-wrap items-center gap-2">
@@ -338,7 +343,9 @@ export default function AdminQuoteComposer({
       </div>
 
       <p className="text-[11px] leading-relaxed text-ink-3">
-        L’envoi joint le devis en PDF à l’email et crée le lien de paiement de l’acompte.
+        {mode === 'stripe'
+          ? 'L’envoi joint le devis en PDF à l’email et crée le lien de paiement de l’acompte.'
+          : 'L’envoi joint le devis en PDF à l’email, sans lien de paiement. Déclare l’acompte reçu depuis la carte « Paiements » quand le virement arrive.'}
       </p>
     </div>
   )

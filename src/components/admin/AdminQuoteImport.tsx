@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { formatPrice } from '@/lib/utils'
+import PaymentModeToggle, { type QuotePaymentMode } from './PaymentModeToggle'
 import type { CustomOrder } from '@/types/custom-order'
 
 /**
@@ -46,6 +47,7 @@ export default function AdminQuoteImport({
   const [reference, setReference] = useState(order.quote_number ?? '')
   const [total, setTotal]         = useState(order.total_amount ? String(order.total_amount / 100) : '')
   const [deposit, setDeposit]     = useState(order.deposit_amount ? String(order.deposit_amount / 100) : '')
+  const [mode, setMode]           = useState<QuotePaymentMode>('stripe')
   const [uploading, setUploading] = useState(false)
   const [removing, setRemoving]   = useState(false)
   const [sending, setSending]     = useState(false)
@@ -112,6 +114,7 @@ export default function AdminQuoteImport({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           use_imported_pdf: true,
+          payment_mode: mode,
           deposit_amount: depositCents,
           total_amount: totalCents,
           quote_object: optional(object),
@@ -281,6 +284,8 @@ export default function AdminQuoteImport({
         </div>
       </div>
 
+      <PaymentModeToggle value={mode} onChange={setMode} />
+
       {error && <p className="text-xs text-red-400">{error}</p>}
 
       <button
@@ -308,7 +313,7 @@ export default function AdminQuoteImport({
       </button>
 
       <p className="text-[11px] leading-relaxed text-ink-3">
-        Le PDF importé part tel quel en pièce jointe, avec le lien de paiement de l’acompte.
+        Le PDF importé part tel quel en pièce jointe{mode === 'stripe' ? ', avec le lien de paiement de l’acompte' : ', sans lien de paiement'}.
         L’email n’affiche pas le détail des lignes : il renvoie au document joint.
       </p>
     </div>

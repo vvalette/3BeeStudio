@@ -88,6 +88,7 @@ export type Database = {
           admin_notes: string | null
           balance_amount: number | null
           balance_paid_at: string | null
+          balance_method: string | null
           balance_payment_url: string | null
           balance_session_id: string | null
           boxtal_order_id: string | null
@@ -97,6 +98,7 @@ export type Database = {
           deadline: string | null
           deposit_amount: number | null
           deposit_paid_at: string | null
+          deposit_method: string | null
           description: string
           email: string
           id: string
@@ -131,6 +133,7 @@ export type Database = {
           admin_notes?: string | null
           balance_amount?: number | null
           balance_paid_at?: string | null
+          balance_method?: string | null
           balance_payment_url?: string | null
           balance_session_id?: string | null
           boxtal_order_id?: string | null
@@ -140,6 +143,7 @@ export type Database = {
           deadline?: string | null
           deposit_amount?: number | null
           deposit_paid_at?: string | null
+          deposit_method?: string | null
           description: string
           email: string
           id?: string
@@ -174,6 +178,7 @@ export type Database = {
           admin_notes?: string | null
           balance_amount?: number | null
           balance_paid_at?: string | null
+          balance_method?: string | null
           balance_payment_url?: string | null
           balance_session_id?: string | null
           boxtal_order_id?: string | null
@@ -183,6 +188,7 @@ export type Database = {
           deadline?: string | null
           deposit_amount?: number | null
           deposit_paid_at?: string | null
+          deposit_method?: string | null
           description?: string
           email?: string
           id?: string

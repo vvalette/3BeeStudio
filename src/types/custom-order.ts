@@ -7,6 +7,23 @@ export type CustomOrderStatus =
   | 'delivered'
   | 'cancelled'
 
+/**
+ * Comment l'argent est arrivé. `stripe` se pose tout seul par le webhook ; les
+ * autres sont déclarés à la main par l'admin, faute de quoi un acompte réglé
+ * par virement n'aurait jamais de date d'encaissement.
+ */
+export type PaymentMethod = 'stripe' | 'transfer' | 'cash' | 'check'
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  stripe:   'Carte bancaire',
+  transfer: 'Virement',
+  cash:     'Espèces',
+  check:    'Chèque',
+}
+
+/** Moyens saisissables à la main : Stripe n'a pas à être déclaré. */
+export const MANUAL_PAYMENT_METHODS: PaymentMethod[] = ['transfer', 'cash', 'check']
+
 /** Une ligne du tableau du devis. `unit_price` est en centimes. */
 export interface QuoteLineItem {
   label: string
@@ -41,6 +58,8 @@ export interface CustomOrder {
   // Devis & paiement — acompte
   deposit_amount: number | null
   deposit_paid_at: string | null
+  /** Moyen d'encaissement. `null` sur les demandes d'avant la migration 041. */
+  deposit_method: PaymentMethod | null
   total_amount: number | null
   payment_url: string | null
   stripe_checkout_session_id: string | null
@@ -62,6 +81,7 @@ export interface CustomOrder {
   balance_payment_url: string | null
   balance_session_id: string | null
   balance_paid_at: string | null
+  balance_method: PaymentMethod | null
 
   // Adresse
   shipping_name: string | null
@@ -148,8 +168,10 @@ export interface CustomPaymentState {
   /** Date d'encaissement, `null` si inconnue (demandes d'avant la migration 035). */
   depositPaidAt: string | null
   depositPaid: boolean
+  depositMethod: PaymentMethod | null
   balancePaidAt: string | null
   balancePaid: boolean
+  balanceMethod: PaymentMethod | null
   /** Reste à encaisser, `null` si rien n'est dû. */
   outstanding: number | null
   /** Encaissé à ce jour. */
@@ -167,7 +189,8 @@ export interface CustomPaymentState {
  */
 export function paymentState(
   order: Pick<CustomOrder,
-    'status' | 'deposit_amount' | 'deposit_paid_at' | 'total_amount' | 'balance_amount' | 'balance_paid_at'>,
+    'status' | 'deposit_amount' | 'deposit_paid_at' | 'deposit_method' |
+    'total_amount' | 'balance_amount' | 'balance_paid_at' | 'balance_method'>,
 ): CustomPaymentState {
   const depositPaid = !!order.deposit_paid_at || PAID_STATUSES.includes(order.status)
   const balancePaid = !!order.balance_paid_at
@@ -184,8 +207,10 @@ export function paymentState(
   return {
     depositPaidAt: order.deposit_paid_at,
     depositPaid,
+    depositMethod: order.deposit_method ?? null,
     balancePaidAt: order.balance_paid_at,
     balancePaid,
+    balanceMethod: order.balance_method ?? null,
     outstanding: fullyPaid ? null : balanceDue,
     amountPaid,
     fullyPaid,

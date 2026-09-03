@@ -1,7 +1,8 @@
 /**
  * POST /api/custom/[orderId]/balance
- * Réclame le solde d'un projet sur-mesure : crée un second lien de paiement
- * Stripe et l'envoie au client. Appelé par l'admin quand la pièce est prête,
+ * Réclame le solde d'un projet sur-mesure : envoie la demande au client, avec
+ * un second lien de paiement Stripe, ou sans lien si le règlement se fait par
+ * virement. Appelé par l'admin quand la pièce est prête,
  * avant expédition — l'acompte a lancé la production, le solde la libère.
  *
  * Symétrique de `./quote/route.ts` (acompte), mais sans toucher au statut : la
@@ -21,6 +22,11 @@ import CustomBalance from '@/emails/CustomBalance'
 const schema = z.object({
   /** Montant en centimes. Omis → total estimé moins l'acompte. */
   balance_amount: z.number().int().positive().optional(),
+  /**
+   * `transfer` : aucun lien Stripe. L'email annonce le solde, le virement
+   * arrive, et l'admin le déclare depuis la fiche.
+   */
+  payment_mode:   z.enum(['stripe', 'transfer']).default('stripe'),
 })
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -79,8 +85,11 @@ export async function POST(
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
+  const transfer = parsed.data.payment_mode === 'transfer'
 
-  const session = await stripe.checkout.sessions.create({
+  // Pas de lien laissé ouvert quand le règlement se fait par virement : il
+  // finirait par être cliqué, et le solde serait encaissé deux fois.
+  const session = transfer ? null : await stripe.checkout.sessions.create({
     mode: 'payment',
     locale: 'fr',
     customer_email: order.email,
@@ -104,8 +113,8 @@ export async function POST(
     .from('custom_orders')
     .update({
       balance_amount:      amount,
-      balance_payment_url: session.url,
-      balance_session_id:  session.id,
+      balance_payment_url: session?.url ?? null,
+      balance_session_id:  session?.id ?? null,
       updated_at:          new Date().toISOString(),
     })
     .eq('id', orderId)
@@ -120,7 +129,7 @@ export async function POST(
     order,
     amount,
     appUrl,
-    paymentUrl: session.url!,
+    paymentUrl: session?.url ?? null,
   }))
 
   const { error: emailError } = await resend.emails.send({
@@ -136,12 +145,21 @@ export async function POST(
     // Le lien est enregistré et visible sur la page de suivi : la demande n'est
     // pas perdue, seul l'email a échoué.
     return NextResponse.json(
-      { error: 'Lien de paiement créé, mais l\'email n\'est pas parti — transmettez-le au client.', payment_url: session.url },
+      {
+        error: transfer
+          ? 'Solde enregistré, mais l\'email n\'est pas parti — prévenez le client vous-même.'
+          : 'Lien de paiement créé, mais l\'email n\'est pas parti — transmettez-le au client.',
+        payment_url: session?.url ?? null,
+      },
       { status: 502 },
     )
   }
 
-  console.info('[custom/balance]', JSON.stringify({ orderId, amount, sessionId: session.id }))
+  console.info('[custom/balance]', JSON.stringify({ orderId, amount, sessionId: session?.id ?? null, payment_mode: parsed.data.payment_mode }))
 
-  return NextResponse.json({ session_id: session.id, payment_url: session.url, balance_amount: amount })
+  return NextResponse.json({
+    session_id:  session?.id ?? null,
+    payment_url: session?.url ?? null,
+    balance_amount: amount,
+  })
 }
