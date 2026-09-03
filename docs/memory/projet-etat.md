@@ -22,6 +22,7 @@ Formulaire multi-step : type de projet → description → budget → délai →
 - Webhook `/api/stripe/webhook` : détecte `custom_order_id` + `type: 'custom_deposit'` dans metadata
 - Deux emails automatiques à la soumission : confirmation client + notification admin interne
 - Page suivi `/custom/[orderId]` avec timeline, détails projet, CTA paiement si devis envoyé
+- **Devis** : composé dans l'admin (lignes → PDF généré) **ou importé** (PDF fabriqué ailleurs, téléversé dans le bucket privé `quotes`, joint tel quel). Un devis importé n'a pas de lignes : le total est déclaré à la main et l'email renvoie à la pièce jointe
 - **Refus possible** : tous les projets ne sont pas réalisables — indiqué dans le formulaire
 
 ## Pages live
@@ -56,6 +57,8 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `POST /api/upload/logo` | Upload logo vers Supabase Storage (bucket `logos`) |
 | `POST /api/custom/order` | Crée demande sur-mesure Supabase + emails confirmation/admin |
 | `POST /api/custom/[orderId]/quote` | Admin : crée session Stripe acompte + email client (auth header `x-admin-password`) |
+| `POST/DELETE /api/admin/custom/[orderId]/quote-file` | Téléverse ou retire un devis PDF importé (bucket privé `quotes`, auth cookie) |
+| `GET/POST /api/admin/custom/[orderId]/quote-pdf` | Devis envoyé (ou PDF importé) / aperçu du brouillon (auth cookie) |
 | `GET /api/admin/orders` | Liste commandes NFC (auth cookie) |
 | `PATCH /api/admin/orders/[id]` | Met à jour statut/notes NFC (auth cookie) |
 | `DELETE /api/admin/orders/[id]` | Supprime commande NFC (auth cookie) |

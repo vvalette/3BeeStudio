@@ -15,6 +15,7 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
   - `logos` → logos NFC via `/api/upload/logo` (SVG uniquement, sanitisé XSS)
   - `product-images` → images produits boutique via `/api/admin/upload/product-image`
   - `stl-files` → modèles 3D STL produits via `/api/admin/upload/stl`
+  - `quotes` (**privé**) → devis PDF importés dans l'admin sur-mesure, servis uniquement par `/api/admin/custom/[orderId]/quote-pdf`
 - Tout nouvel upload → Supabase Storage, jamais `@vercel/blob` ni `put()` de Vercel Blob (non installé, non configuré)
 
 ## État du projet (juin 2026)
@@ -29,6 +30,7 @@ Trois flux de commande **complets et fonctionnels** :
 **Sur-mesure**
 - Formulaire multi-step `/custom` (type projet → description → budget/délai → contact → adresse)
 - Devis admin + acompte via Stripe depuis `/admin/custom/[orderId]` : composeur de lignes (objet, désignation, qté, PU), **PDF généré par l'app** (`src/lib/quote/pdf.ts`, maquette `docs/reference/devis-modele.pdf`) joint à l'email, numérotation `DEV-AAAA-NNN`. Le total du devis = somme des lignes, jamais un champ libre
+- **Devis importé** : onglet « Importer un PDF » sur la même fiche, pour un devis fabriqué hors de l'app. Le PDF va dans le bucket privé `quotes` et part tel quel en pièce jointe ; le total et le numéro sont alors déclarés à la main (rien ne les lit dans le fichier), `quote_items` reste `null` et l'email renvoie au document joint
 - **Encaissements horodatés** : `deposit_paid_at` et `balance_paid_at` posés par le webhook Stripe, lus par `paymentState()` — carte « Paiements » sur la fiche admin et sur la page de suivi client
 - **Solde** réclamé depuis la même fiche quand la pièce est prête, avant expédition (2ᵉ Checkout Stripe, colonnes `balance_*`) — déclaré à la date d'encaissement du solde, ligne CSV séparée
 - Demande créable **à la main** depuis `/admin/sur-mesure/nouveau` (demandes reçues en DM)

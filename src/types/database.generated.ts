@@ -112,6 +112,8 @@ export type Database = {
           quote_items: Json | null
           quote_number: string | null
           quote_object: string | null
+          quote_pdf_name: string | null
+          quote_pdf_path: string | null
           reference_file_url: string | null
           shipping_address: string | null
           shipping_city: string | null
@@ -153,6 +155,8 @@ export type Database = {
           quote_items?: Json | null
           quote_number?: string | null
           quote_object?: string | null
+          quote_pdf_name?: string | null
+          quote_pdf_path?: string | null
           reference_file_url?: string | null
           shipping_address?: string | null
           shipping_city?: string | null
@@ -194,6 +198,8 @@ export type Database = {
           quote_items?: Json | null
           quote_number?: string | null
           quote_object?: string | null
+          quote_pdf_name?: string | null
+          quote_pdf_path?: string | null
           reference_file_url?: string | null
           shipping_address?: string | null
           shipping_city?: string | null

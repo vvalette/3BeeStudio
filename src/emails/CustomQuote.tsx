@@ -8,6 +8,10 @@ import type { CustomOrder, QuoteLineItem } from '@/types/custom-order'
  *
  * L'email reprend les lignes du devis pour qu'il soit lisible sans ouvrir la
  * pièce jointe : sur mobile, beaucoup de clients n'affichent pas les PDF.
+ *
+ * Un devis importé n'a pas de lignes saisies (`items` vide) : on affiche alors
+ * le total seul et on renvoie à la pièce jointe, plutôt que d'inventer un
+ * détail que le PDF ne dirait pas.
  */
 
 interface Props {
@@ -81,6 +85,15 @@ export default function CustomQuote({
       <Card title="Détail du devis">
         <table width="100%" cellPadding={0} cellSpacing={0} style={{ borderCollapse: 'collapse' }}>
           <tbody>
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={2} style={{ paddingBottom: 12 }}>
+                  <Text style={{ color: color.ink2, fontSize: 13, lineHeight: '1.6', margin: 0 }}>
+                    Le détail des prestations figure sur le devis joint à cet email.
+                  </Text>
+                </td>
+              </tr>
+            )}
             {items.map((item, index) => (
               <tr key={`${item.label}-${index}`}>
                 <td style={{ paddingBottom: 12, paddingRight: 12, verticalAlign: 'top' }}>

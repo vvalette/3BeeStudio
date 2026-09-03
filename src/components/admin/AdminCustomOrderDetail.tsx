@@ -10,6 +10,7 @@ import { useAdminMutation } from './useAdminMutation'
 import AdminFeedback, { UnsavedDot } from './AdminFeedback'
 import useUnsavedWarning from './useUnsavedWarning'
 import AdminQuoteComposer from './AdminQuoteComposer'
+import AdminQuoteImport from './AdminQuoteImport'
 import AdminCustomShipping from './AdminCustomShipping'
 
 const MANUAL_STATUSES: CustomOrderStatus[] = [
@@ -20,6 +21,14 @@ const MANUAL_STATUSES: CustomOrderStatus[] = [
 // qui est en jeu, pas le reste à payer.
 const BALANCE_STATUSES: CustomOrderStatus[] = ['deposit_paid', 'in_production', 'shipped', 'delivered']
 
+/** Devis composé dans l'app, ou PDF fabriqué ailleurs et importé. */
+type QuoteMode = 'compose' | 'import'
+
+const QUOTE_MODES: { value: QuoteMode; label: string }[] = [
+  { value: 'compose', label: 'Composer le devis' },
+  { value: 'import',  label: 'Importer un PDF' },
+]
+
 export default function AdminCustomOrderDetail({ order: initialOrder }: { order: CustomOrder }) {
   const [order, setOrder]               = useState(initialOrder)
   const { mutate, loading: saving, error: mutationError, success: successMsg, clear } = useAdminMutation()
@@ -27,6 +36,8 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
   const [trackingNum, setTrackingNum]   = useState(order.tracking_number ?? '')
   const [trackingUrl, setTrackingUrl]   = useState(order.tracking_url ?? '')
   const [quoteSent, setQuoteSent]       = useState(false)
+  // Un PDF déjà téléversé dit de lui-même quel mode la demande utilise.
+  const [quoteMode, setQuoteMode]       = useState<QuoteMode>(initialOrder.quote_pdf_path ? 'import' : 'compose')
   const [balanceInput, setBalanceInput]     = useState(() => {
     const due = computeBalance(initialOrder)
     return due ? String(due / 100) : ''
@@ -207,7 +218,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                         ? ` le ${new Date(order.quote_issued_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`
                         : ''} — PDF joint à l’email.
                     </p>
-                    {order.quote_number && (
+                    {(order.quote_number || order.quote_pdf_path) && (
                       <a
                         href={`/api/admin/custom/${order.id}/quote-pdf`}
                         target="_blank"
@@ -223,13 +234,43 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                   </div>
                 )}
 
-                <AdminQuoteComposer
-                  order={order}
-                  onSent={(patch) => {
-                    setQuoteSent(true)
-                    setOrder((o) => ({ ...o, ...patch }))
-                  }}
-                />
+                <div className="flex w-fit gap-1 rounded-pill border border-[var(--line-2)] p-1">
+                  {QUOTE_MODES.map(({ value, label }) => {
+                    const active = quoteMode === value
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setQuoteMode(value)}
+                        className={[
+                          'cursor-pointer rounded-pill px-3.5 py-1.5 text-xs font-medium transition-colors',
+                          active ? 'bg-amber/10 text-amber' : 'text-ink-3 hover:text-ink-1',
+                        ].join(' ')}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {quoteMode === 'compose' ? (
+                  <AdminQuoteComposer
+                    order={order}
+                    onSent={(patch) => {
+                      setQuoteSent(true)
+                      setOrder((o) => ({ ...o, ...patch }))
+                    }}
+                  />
+                ) : (
+                  <AdminQuoteImport
+                    order={order}
+                    onChange={(patch) => setOrder((o) => ({ ...o, ...patch }))}
+                    onSent={(patch) => {
+                      setQuoteSent(true)
+                      setOrder((o) => ({ ...o, ...patch }))
+                    }}
+                  />
+                )}
 
                 {order.payment_url && (
                   <a
