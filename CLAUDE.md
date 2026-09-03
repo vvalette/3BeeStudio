@@ -33,7 +33,7 @@ Trois flux de commande **complets et fonctionnels** :
 - **Devis importé** : onglet « Importer un PDF » sur la même fiche, pour un devis fabriqué hors de l'app. Le PDF va dans le bucket privé `quotes` et part tel quel en pièce jointe ; le total et le numéro sont alors déclarés à la main (rien ne les lit dans le fichier), `quote_items` reste `null` et l'email renvoie au document joint
 - **Encaissements horodatés** : `deposit_paid_at` et `balance_paid_at` posés par le webhook Stripe, lus par `paymentState()` — carte « Paiements » sur la fiche admin et sur la page de suivi client
 - **Solde** réclamé depuis la même fiche quand la pièce est prête, avant expédition (2ᵉ Checkout Stripe, colonnes `balance_*`) — déclaré à la date d'encaissement du solde, ligne CSV séparée
-- Demande créable **à la main** depuis `/admin/sur-mesure/nouveau` (demandes reçues en DM)
+- Demande créable **à la main** depuis `/admin/sur-mesure/nouveau` (demandes reçues en DM) : au choix saisie classique, ou import d'un devis PDF joint dès la création (le fichier attend côté navigateur, puis se range dans `quotes` une fois la demande créée)
 - **Étiquette Boxtal** générée depuis la fiche : colis (poids + dimensions) déclaré à la main, coût relevé après création, passage en `shipped` par le webhook Boxtal
 - Page suivi `/custom/[orderId]` avec timeline et CTA paiement acompte
 - Emails : confirmation client + notification admin interne

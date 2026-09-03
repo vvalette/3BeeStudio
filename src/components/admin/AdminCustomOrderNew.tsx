@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useDropzone } from 'react-dropzone'
 import Link from 'next/link'
 import type { Route } from 'next'
 import Select from '@/components/ui/Select'
@@ -17,12 +18,25 @@ import useUnsavedWarning from './useUnsavedWarning'
  * Saisie manuelle d'une demande sur-mesure (DM Instagram, téléphone, salon…).
  * Seuls le projet, le nom et l'email sont exigés : le reste se complète au fil
  * de l'échange depuis la fiche de la demande.
+ *
+ * Un devis PDF déjà fabriqué peut être joint dès la saisie. Il ne part nulle
+ * part tant que la demande n'existe pas : le fichier attend côté navigateur,
+ * puis est téléversé sur la demande tout juste créée. Le total, l'acompte et
+ * l'envoi au client se règlent ensuite sur la fiche.
  */
 
 const inputClass = 'w-full rounded-xl border border-[var(--line-2)] bg-bg-2 px-3.5 py-2.5 text-sm text-ink-0 placeholder:text-ink-3 transition-colors focus:border-amber/50 focus:outline-none'
 const labelClass = 'mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-ink-3'
 
 const UNSET = { value: '', label: 'Non précisé' }
+
+/** Même plafond que la route de téléversement, pour refuser avant l'envoi. */
+const MAX_PDF_SIZE = 10 * 1024 * 1024 // 10 Mo
+
+function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
+  return `${Math.max(1, Math.round(bytes / 1024))} Ko`
+}
 
 // Origine de la demande. Pas de colonne dédiée en base : l'info est écrite en
 // tête des notes internes, où elle reste visible sur la fiche.
@@ -47,18 +61,72 @@ const EMPTY = {
 
 type FormState = typeof EMPTY
 
+/** Deux façons d'ouvrir une demande : tout saisir, ou partir d'un devis déjà fait. */
+type CreateMode = 'form' | 'import'
+
+const CREATE_MODES: { value: CreateMode; label: string; hint: string; icon: React.ReactNode }[] = [
+  {
+    value: 'form',
+    label: 'Saisir la demande',
+    hint: 'Le devis se compose ensuite dans l’app, ligne par ligne.',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 13l.5-2.5 7-7 2 2-7 7L3 13zM10 3.5l2 2" />
+      </svg>
+    ),
+  },
+  {
+    value: 'import',
+    label: 'Importer un devis PDF',
+    hint: 'Le devis existe déjà : il part tel quel au client depuis sa fiche.',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 10.5V2M8 2L5 5M8 2l3 3M2.5 11.5v1.5a1 1 0 001 1h9a1 1 0 001-1v-1.5" />
+      </svg>
+    ),
+  },
+]
+
+interface CreatedWithWarnings {
+  order: CustomOrder
+  /** L'accusé de réception n'est pas parti. */
+  emailFailed: boolean
+  /** Le devis PDF n'a pas pu être rattaché — cause à afficher. */
+  uploadError: string | null
+}
+
 export default function AdminCustomOrderNew() {
   const router = useRouter()
   const [form, setForm]     = useState<FormState>(EMPTY)
   const [notify, setNotify] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState<string | null>(null)
-  // Demande créée mais accusé de réception en échec : on ne redirige pas pour
-  // que l'admin voie qu'il reste à prévenir le client lui-même.
-  const [emailFailed, setEmailFailed] = useState<CustomOrder | null>(null)
+  // Demande créée mais quelque chose n'a pas suivi (accusé de réception,
+  // devis joint) : on ne redirige pas, pour que l'admin voie ce qu'il reste à
+  // faire lui-même.
+  const [created, setCreated] = useState<CreatedWithWarnings | null>(null)
+  // Devis importé : gardé en mémoire le temps de la saisie, il n'a pas encore
+  // de demande à laquelle se rattacher.
+  const [quoteFile, setQuoteFile] = useState<File | null>(null)
+  const [mode, setMode] = useState<CreateMode>('form')
 
-  const dirty = Object.values(form).some((v) => v !== '')
-  useUnsavedWarning(dirty && !saving && !emailFailed)
+  const dirty = Object.values(form).some((v) => v !== '') || !!quoteFile
+  useUnsavedWarning(dirty && !saving && !created)
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (accepted) => {
+      const file = accepted[0]
+      if (!file) return
+      if (file.size > MAX_PDF_SIZE) {
+        setError('Devis PDF trop lourd (max 10 Mo).')
+        return
+      }
+      setError(null)
+      setQuoteFile(file)
+    },
+    accept: { 'application/pdf': ['.pdf'] },
+    maxFiles: 1,
+  })
 
   function set<K extends keyof FormState>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -91,8 +159,26 @@ export default function AdminCustomOrderNew() {
         return
       }
 
-      if (payload.email_failed) {
-        setEmailFailed(payload.order)
+      // La demande existe enfin : le devis mis de côté a maintenant où aller.
+      let uploadError: string | null = null
+      if (quoteFile) {
+        try {
+          const body = new FormData()
+          body.append('file', quoteFile)
+          const upload = await fetch(`/api/admin/custom/${payload.order.id}/quote-file`, { method: 'POST', body })
+          if (!upload.ok) {
+            const detail = await upload.json().catch(() => null) as { error?: string } | null
+            uploadError = detail?.error ?? `Téléversement refusé (${upload.status})`
+          }
+        } catch {
+          uploadError = 'Réseau interrompu pendant l’envoi du devis.'
+        }
+      }
+
+      // Un raté sur l'email ou sur le devis ne doit pas passer inaperçu dans la
+      // redirection : la demande est créée, mais il reste quelque chose à faire.
+      if (payload.email_failed || uploadError) {
+        setCreated({ order: payload.order, emailFailed: !!payload.email_failed, uploadError })
         setSaving(false)
         return
       }
@@ -134,15 +220,27 @@ export default function AdminCustomOrderNew() {
           </div>
         )}
 
-        {emailFailed ? (
+        {created ? (
           <div className="space-y-4 rounded-2xl border border-amber/30 bg-amber/5 p-5">
-            <p className="text-sm font-semibold text-ink-0">Demande créée, mais l’email au client n’est pas parti.</p>
-            <p className="text-[13px] leading-relaxed text-ink-2">
-              La demande #{emailFailed.id.slice(0, 8).toUpperCase()} est bien enregistrée. Préviens
-              {' '}{emailFailed.name} toi-même, ou transmets-lui le lien de suivi depuis sa fiche.
+            <p className="text-sm font-semibold text-ink-0">
+              Demande #{created.order.id.slice(0, 8).toUpperCase()} créée, mais il reste à faire.
             </p>
+            <ul className="space-y-2 text-[13px] leading-relaxed text-ink-2">
+              {created.emailFailed && (
+                <li>
+                  L’accusé de réception n’est pas parti : préviens {created.order.name} toi-même,
+                  ou transmets-lui le lien de suivi depuis sa fiche.
+                </li>
+              )}
+              {created.uploadError && (
+                <li>
+                  Le devis PDF n’a pas été joint ({created.uploadError}). Reprends-le depuis la fiche,
+                  onglet « Importer un PDF ».
+                </li>
+              )}
+            </ul>
             <Link
-              href={`/admin/custom/${emailFailed.id}` as Route}
+              href={`/admin/custom/${created.order.id}` as Route}
               className="inline-flex h-[42px] cursor-pointer items-center gap-2 rounded-pill px-5 text-[13px] font-bold text-bg-0 transition-all hover:brightness-105"
               style={{ background: 'var(--btn-primary-bg)' }}
             >
@@ -151,6 +249,88 @@ export default function AdminCustomOrderNew() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            <Card title="Point de départ">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {CREATE_MODES.map((m) => {
+                  const active = mode === m.value
+                  return (
+                    <button
+                      key={m.value}
+                      type="button"
+                      onClick={() => {
+                        setMode(m.value)
+                        // Revenir à la saisie classique lâche le devis mis de
+                        // côté : il partirait sinon sans que l'écran le montre.
+                        if (m.value === 'form') setQuoteFile(null)
+                        // Idem dans l'autre sens : budget et délai disparaissent
+                        // de l'écran, ils ne doivent pas partir en douce.
+                        else setForm((prev) => ({ ...prev, budget_range: '', deadline: '' }))
+                      }}
+                      className={[
+                        'flex cursor-pointer flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors',
+                        active ? 'border-[var(--line-amber)] bg-amber/5' : 'border-[var(--line)] hover:border-[var(--line-2)]',
+                      ].join(' ')}
+                    >
+                      <span className={['flex items-center gap-2 text-sm font-semibold', active ? 'text-amber' : 'text-ink-1'].join(' ')}>
+                        {m.icon}
+                        {m.label}
+                      </span>
+                      <span className="text-[11px] leading-snug text-ink-3">{m.hint}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </Card>
+
+            {mode === 'import' && (
+              <Card title="Devis à joindre">
+                {quoteFile ? (
+                  <div className="flex items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-emerald-400">
+                      <path d="M9.5 1.5H4a1 1 0 00-1 1v11a1 1 0 001 1h8a1 1 0 001-1V5l-3.5-3.5z" /><path d="M9.5 1.5V5H13" />
+                    </svg>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink-0">{quoteFile.name}</p>
+                      <p className="text-[11px] text-ink-3">
+                        {formatSize(quoteFile.size)} · rattaché à la demande dès sa création
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteFile(null)}
+                      aria-label="Retirer le devis"
+                      className="shrink-0 cursor-pointer rounded-lg p-1.5 text-ink-3 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 5h10M5 5V3.5h6V5M6 8v5M10 8v5M4 5l1 8h6l1-8" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    {...getRootProps()}
+                    className={[
+                      'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all',
+                      isDragActive ? 'border-amber bg-amber/5 text-amber' : 'border-[var(--line)] text-ink-3 hover:border-amber/50 hover:text-ink-2',
+                    ].join(' ')}
+                  >
+                    <input {...getInputProps()} />
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8 10.5V2M8 2L5 5M8 2l3 3M2.5 11.5v1.5a1 1 0 001 1h9a1 1 0 001-1v-1.5" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium">Glisser ou cliquer pour importer le devis</p>
+                      <p className="text-[11px]">PDF uniquement — max 10 Mo</p>
+                    </div>
+                  </div>
+                )}
+                <p className="mt-3 text-[11px] leading-relaxed text-ink-3">
+                  Le fichier attend la création de la demande, puis se range dans son stockage privé.
+                  Le total, l’acompte et l’envoi au client se règlent juste après, sur sa fiche.
+                </p>
+              </Card>
+            )}
 
             <Card title="Projet">
               <div className="space-y-4">
@@ -177,26 +357,30 @@ export default function AdminCustomOrderNew() {
                   />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className={labelClass}>Budget</label>
-                    <Select
-                      value={form.budget_range}
-                      onChange={(v) => set('budget_range', v)}
-                      options={[UNSET, ...BUDGET_RANGES.map((b) => ({ value: b, label: b }))]}
-                      placeholder="Non précisé"
-                    />
+                {/* Fourchette de budget et délai servent à préparer un chiffrage :
+                    quand le devis est déjà fait, ils n'ont plus rien à cadrer. */}
+                {mode === 'form' && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Budget</label>
+                      <Select
+                        value={form.budget_range}
+                        onChange={(v) => set('budget_range', v)}
+                        options={[UNSET, ...BUDGET_RANGES.map((b) => ({ value: b, label: b }))]}
+                        placeholder="Non précisé"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Délai</label>
+                      <Select
+                        value={form.deadline}
+                        onChange={(v) => set('deadline', v)}
+                        options={[UNSET, ...DEADLINES.map((d) => ({ value: d, label: d }))]}
+                        placeholder="Non précisé"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelClass}>Délai</label>
-                    <Select
-                      value={form.deadline}
-                      onChange={(v) => set('deadline', v)}
-                      options={[UNSET, ...DEADLINES.map((d) => ({ value: d, label: d }))]}
-                      placeholder="Non précisé"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             </Card>
 
@@ -350,7 +534,7 @@ export default function AdminCustomOrderNew() {
                     </svg>
                     Création…
                   </>
-                ) : 'Créer la demande'}
+                ) : mode === 'import' && quoteFile ? 'Créer la demande et joindre le devis' : 'Créer la demande'}
               </button>
               <Link
                 href="/admin/sur-mesure"
