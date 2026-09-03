@@ -51,11 +51,15 @@ export default function AdminQuoteImport({
   const [uploading, setUploading] = useState(false)
   const [removing, setRemoving]   = useState(false)
   const [sending, setSending]     = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [saved, setSaved]         = useState(false)
   const [error, setError]         = useState<string | null>(null)
 
   const totalCents   = cents(total)
   const depositCents = cents(deposit)
   const ready = !!order.quote_pdf_path && totalCents > 0 && depositCents > 0 && depositCents <= totalCents
+  // Enregistrer ne demande pas d'acompte : un devis déjà réglé en une fois n'en a pas.
+  const savable = totalCents > 0 && depositCents <= totalCents
 
   const onDrop = useCallback(async (accepted: File[]) => {
     const file = accepted[0]
@@ -101,6 +105,38 @@ export default function AdminQuoteImport({
       setError(e instanceof Error ? e.message : 'Suppression impossible')
     } finally {
       setRemoving(false)
+    }
+  }
+
+  /**
+   * Enregistre les montants sans rien envoyer : le devis a déjà été transmis au
+   * client par ailleurs, et souvent l'acompte est même déjà encaissé.
+   */
+  async function save() {
+    if (!savable) return
+    setError(null)
+    setSaved(false)
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/custom/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          total_amount: totalCents,
+          ...(depositCents ? { deposit_amount: depositCents } : {}),
+          quote_object: optional(object) ?? null,
+          ...(optional(reference) ? { quote_number: optional(reference) } : {}),
+        }),
+      })
+      const json = await res.json().catch(() => null) as (CustomOrder & { error?: string }) | null
+      if (!res.ok) throw new Error(json?.error ?? `Erreur ${res.status}`)
+      if (json) onChange(json)
+      setSaved(true)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -207,7 +243,7 @@ export default function AdminQuoteImport({
           <input
             id="import-object"
             value={object}
-            onChange={(e) => setObject(e.target.value)}
+            onChange={(e) => { setObject(e.target.value); setSaved(false) }}
             placeholder="fabrication de 10 supports muraux"
             className={inputClass}
           />
@@ -221,7 +257,7 @@ export default function AdminQuoteImport({
           <input
             id="import-number"
             value={reference}
-            onChange={(e) => setReference(e.target.value)}
+            onChange={(e) => { setReference(e.target.value); setSaved(false) }}
             placeholder="2026-014"
             className={numClass}
           />
@@ -240,7 +276,7 @@ export default function AdminQuoteImport({
             id="import-total"
             type="number" min="1" step="0.01"
             value={total}
-            onChange={(e) => setTotal(e.target.value)}
+            onChange={(e) => { setTotal(e.target.value); setSaved(false) }}
             placeholder="350"
             className={numClass}
           />
@@ -269,7 +305,7 @@ export default function AdminQuoteImport({
             id="import-deposit"
             type="number" min="1" step="0.01"
             value={deposit}
-            onChange={(e) => setDeposit(e.target.value)}
+            onChange={(e) => { setDeposit(e.target.value); setSaved(false) }}
             placeholder="150"
             className={numClass}
           />
@@ -288,6 +324,7 @@ export default function AdminQuoteImport({
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 
+      <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
         onClick={send}
@@ -307,14 +344,28 @@ export default function AdminQuoteImport({
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2L2 6.5l5 2L9 14l5-12z" />
             </svg>
-            {order.quote_number ? 'Renvoyer le devis + lien de paiement' : 'Envoyer le devis + lien de paiement'}
+            {order.quote_number ? 'Renvoyer le devis' : 'Envoyer le devis'}
+            {mode === 'stripe' ? ' + lien de paiement' : ''}
           </>
         )}
       </button>
 
+      <button
+        type="button"
+        onClick={save}
+        disabled={!savable || saving}
+        className="flex h-[42px] cursor-pointer items-center gap-2 rounded-pill border border-[var(--line-2)] px-4 text-[13px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {saving ? 'Enregistrement…' : saved ? 'Enregistré ✓' : 'Enregistrer sans envoyer'}
+      </button>
+      </div>
+
       <p className="text-[11px] leading-relaxed text-ink-3">
         Le PDF importé part tel quel en pièce jointe{mode === 'stripe' ? ', avec le lien de paiement de l’acompte' : ', sans lien de paiement'}.
         L’email n’affiche pas le détail des lignes : il renvoie au document joint.
+        <br />
+        « Enregistrer sans envoyer » range le devis et ses montants sur la fiche sans écrire au client :
+        pour un devis déjà transmis de ton côté, ou dont l’acompte est déjà encaissé.
       </p>
     </div>
   )

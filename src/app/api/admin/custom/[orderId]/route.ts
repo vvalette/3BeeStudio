@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
 import { z } from 'zod'
+import { quoteItemSchema } from '@/lib/documents/input'
+import { isQuoteNumberConflict } from '@/lib/documents/number'
 import type { CustomOrderStatus } from '@/types/custom-order'
 
 const CUSTOM_STATUSES: CustomOrderStatus[] = [
@@ -15,6 +17,12 @@ const patchSchema = z.object({
   tracking_url:    z.string().optional(),
   deposit_amount:  z.number().int().positive().optional(),
   total_amount:    z.number().int().positive().optional(),
+  // Champs du devis, enregistrables sans envoi : un devis fabriqué et transmis
+  // ailleurs (DM, email direct) doit pouvoir entrer dans l'app avec ses
+  // montants, sans qu'un email parte une seconde fois au client.
+  quote_object:    z.string().trim().max(300).nullable().optional(),
+  quote_number:    z.string().trim().min(3).max(40).nullable().optional(),
+  quote_items:     z.array(quoteItemSchema).max(40).nullable().optional(),
 })
 
 export async function DELETE(
@@ -30,6 +38,11 @@ export async function DELETE(
   return NextResponse.json({ ok: true })
 }
 
+/**
+ * Mise à jour partielle d'une demande. Ne déclenche jamais d'envoi : le devis
+ * s'enregistre ici (montants, objet, numéro) sans email ni lien de paiement,
+ * l'envoi restant l'affaire de POST /api/custom/[orderId]/quote.
+ */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
@@ -49,6 +62,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ or
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Le numéro de devis est unique en base : le corriger en douce ferait
+    // diverger la fiche du document déjà transmis au client.
+    if (isQuoteNumberConflict(error)) {
+      return NextResponse.json(
+        { error: `Le numéro ${parsed.data.quote_number} est déjà utilisé par un autre devis.` },
+        { status: 409 },
+      )
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
   return NextResponse.json(data)
 }
