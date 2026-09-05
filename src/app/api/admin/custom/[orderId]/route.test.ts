@@ -86,6 +86,38 @@ describe('PATCH /api/admin/custom/[orderId]', () => {
     expect(write).not.toHaveProperty('quote_issued_at')
   })
 
+  it('corrige la fiche client et son adresse', async () => {
+    state.queue('custom_orders', { data: { id: 'x' }, error: null })
+
+    const res = await PATCH(request({
+      name: 'Jean Dupont', email: '  contact@exemple.fr ', phone: '',
+      shipping_name: 'Jean Dupont', shipping_address: '12 rue des Lilas',
+      shipping_postal_code: '75001', shipping_city: 'Paris',
+    }), { params })
+    expect(res.status).toBe(200)
+
+    const write = state.writes.at(-1)!.values
+    expect(write.name).toBe('Jean Dupont')
+    expect(write.email).toBe('contact@exemple.fr')
+    expect(write.shipping_city).toBe('Paris')
+  })
+
+  it('range un champ nullable vidé en null, jamais en chaîne vide', async () => {
+    state.queue('custom_orders', { data: { id: 'x' }, error: null })
+
+    await PATCH(request({ company: '', budget_range: '' }), { params })
+    const write = state.writes.at(-1)!.values
+    expect(write.company).toBeNull()
+    expect(write.budget_range).toBeNull()
+  })
+
+  it('refuse un email invalide et un champ NOT NULL vidé', async () => {
+    expect((await PATCH(request({ email: 'pas-un-email' }), { params })).status).toBe(400)
+    expect((await PATCH(request({ name: '   ' }), { params })).status).toBe(400)
+    // Rien n'est parti en base.
+    expect(state.writes).toHaveLength(0)
+  })
+
   it('signale un numéro de devis déjà pris', async () => {
     state.queue('custom_orders', {
       data: null,

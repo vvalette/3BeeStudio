@@ -686,7 +686,9 @@ function NfcList({
 
 // ── Liste Custom ──────────────────────────────────────────────────────────────
 
-const PROJECT_TYPE_LABELS: Record<string, string> = {
+// Forme courte, pour la pastille d'une ligne de tableau. Les libellés complets
+// (« Objet déco / design ») vivent dans PROJECT_TYPE_LABELS, côté types.
+const PROJECT_TYPE_SHORT: Record<string, string> = {
   cadeau: 'Cadeau', deco: 'Déco', prototype: 'Prototype', mecanique: 'Mécanique', reparation: 'Réparation', autre: 'Autre',
 }
 
@@ -734,7 +736,7 @@ function CustomList({
                 </p>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <span className="rounded-pill px-2 py-0.5 font-mono text-[10px]" style={{ background: 'var(--hi-04)', border: '1px solid var(--line)', color: 'var(--ink-2)' }}>
-                    {PROJECT_TYPE_LABELS[order.project_type] ?? order.project_type}
+                    {PROJECT_TYPE_SHORT[order.project_type] ?? order.project_type}
                   </span>
                   {order.budget_range && <span className="text-[10px] text-ink-3">{order.budget_range}</span>}
                 </div>

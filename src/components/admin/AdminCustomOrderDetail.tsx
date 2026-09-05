@@ -2,7 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { CUSTOM_STATUS_LABELS, paymentState, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
+import {
+  BUDGET_RANGES,
+  CUSTOM_STATUS_LABELS,
+  DEADLINES,
+  PROJECT_TYPES,
+  paymentState,
+  projectTypeLabel,
+  type CustomOrder,
+  type CustomOrderStatus,
+} from '@/types/custom-order'
 import { formatPrice } from '@/lib/utils'
 import { CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT } from '@/lib/status-ui'
 import { useAdminMutation } from './useAdminMutation'
@@ -12,6 +21,7 @@ import AdminQuoteComposer from './AdminQuoteComposer'
 import AdminQuoteImport from './AdminQuoteImport'
 import AdminCustomPayments from './AdminCustomPayments'
 import AdminCustomShipping from './AdminCustomShipping'
+import AdminCustomFields, { type EditableField } from './AdminCustomFields'
 
 const MANUAL_STATUSES: CustomOrderStatus[] = [
   'pending_quote', 'quote_sent', 'deposit_paid', 'in_production', 'shipped', 'delivered', 'cancelled',
@@ -25,6 +35,40 @@ const QUOTE_MODES: { value: QuoteMode; label: string }[] = [
   { value: 'import',  label: 'Importer un PDF' },
 ]
 
+/** Bloc de la fiche en cours d'édition. Un seul à la fois : deux formulaires
+ *  ouverts, c'est une saisie qu'on oublie de valider. */
+type EditSection = 'project' | 'client' | 'address'
+
+const UNSET = { value: '', label: 'Non précisé' }
+
+const PROJECT_FIELDS: EditableField[] = [
+  {
+    key: 'project_type', label: 'Type de projet', required: true,
+    options: PROJECT_TYPES.map(({ value, label }) => ({ value, label })),
+    placeholder: 'Choisir un type',
+  },
+  { key: 'budget_range', label: 'Budget',  options: [UNSET, ...BUDGET_RANGES.map((b) => ({ value: b, label: b }))] },
+  { key: 'deadline',     label: 'Délai',   options: [UNSET, ...DEADLINES.map((d) => ({ value: d, label: d }))] },
+  {
+    key: 'description', label: 'Description', type: 'textarea', required: true, full: true,
+    placeholder: 'Ce que le client demande, dimensions, matière, quantité, contraintes…',
+  },
+]
+
+const CLIENT_FIELDS: EditableField[] = [
+  { key: 'name',    label: 'Nom',        required: true, placeholder: 'Jean Dupont' },
+  { key: 'company', label: 'Société',    placeholder: 'Optionnel' },
+  { key: 'email',   label: 'Email',      required: true, type: 'email', placeholder: 'vous@exemple.fr' },
+  { key: 'phone',   label: 'Téléphone',  type: 'tel', placeholder: 'Optionnel' },
+]
+
+const ADDRESS_FIELDS: EditableField[] = [
+  { key: 'shipping_name',        label: 'Destinataire', full: true, placeholder: 'Jean Dupont' },
+  { key: 'shipping_address',     label: 'Adresse',      full: true, placeholder: '12 rue des Lilas' },
+  { key: 'shipping_postal_code', label: 'Code postal',  placeholder: '75001' },
+  { key: 'shipping_city',        label: 'Ville',        placeholder: 'Paris' },
+]
+
 export default function AdminCustomOrderDetail({ order: initialOrder }: { order: CustomOrder }) {
   const [order, setOrder]               = useState(initialOrder)
   const { mutate, loading: saving, error: mutationError, success: successMsg, clear } = useAdminMutation()
@@ -34,6 +78,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
   const [quoteSent, setQuoteSent]       = useState(false)
   // Un PDF déjà téléversé dit de lui-même quel mode la demande utilise.
   const [quoteMode, setQuoteMode]       = useState<QuoteMode>(initialOrder.quote_pdf_path ? 'import' : 'compose')
+  const [editing, setEditing]           = useState<EditSection | null>(null)
 
   const status = order.status as CustomOrderStatus
   const pay = paymentState(order)
@@ -134,30 +179,44 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
             </Card>
 
             {/* Projet */}
-            <Card title="Projet">
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <InfoItem label="Type" value={order.project_type} />
-                  {order.budget_range && <InfoItem label="Budget" value={order.budget_range} />}
-                  {order.deadline && <InfoItem label="Délai" value={order.deadline} />}
-                </div>
-                <div
-                  className="rounded-xl p-4 text-sm leading-relaxed text-ink-1"
-                  style={{ background: 'var(--hi-03)', border: '1px solid var(--line)' }}
-                >
-                  {order.description}
-                </div>
-                {order.reference_file_url && (
-                  <a
-                    href={order.reference_file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+            <Card
+              title="Projet"
+              right={editing === 'project' ? undefined : <EditButton onClick={() => setEditing('project')} />}
+            >
+              {editing === 'project' ? (
+                <AdminCustomFields
+                  order={order}
+                  fields={PROJECT_FIELDS}
+                  onSaved={setOrder}
+                  onCancel={() => setEditing(null)}
+                />
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {/* La base stocke le slug (`deco`) : sans son libellé, la fiche
+                        affichait un mot de code. */}
+                    <InfoItem label="Type" value={projectTypeLabel(order.project_type)} />
+                    {order.budget_range && <InfoItem label="Budget" value={order.budget_range} />}
+                    {order.deadline && <InfoItem label="Délai" value={order.deadline} />}
+                  </div>
+                  <div
+                    className="whitespace-pre-line rounded-xl p-4 text-sm leading-relaxed text-ink-1"
+                    style={{ background: 'var(--hi-03)', border: '1px solid var(--line)' }}
                   >
-                    📎 Voir le fichier de référence
-                  </a>
-                )}
-              </div>
+                    {order.description}
+                  </div>
+                  {order.reference_file_url && (
+                    <a
+                      href={order.reference_file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-pill border border-amber/30 bg-amber/10 px-3.5 py-1.5 text-xs font-semibold text-amber transition-colors hover:bg-amber/20"
+                    >
+                      📎 Voir le fichier de référence
+                    </a>
+                  )}
+                </div>
+              )}
             </Card>
 
             {/* Devis — le document et ses montants. L'argent réellement
@@ -267,22 +326,52 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
             {/* Expédition */}
             <Card
               title="Expédition"
-              right={order.boxtal_order_id
-                ? <span className="font-mono text-[10px] text-ink-3">{order.boxtal_order_id}</span>
-                : undefined}
+              right={
+                <div className="flex items-center gap-2.5">
+                  {order.boxtal_order_id && (
+                    <span className="font-mono text-[10px] text-ink-3">{order.boxtal_order_id}</span>
+                  )}
+                  {editing !== 'address' && (
+                    <EditButton
+                      label={order.shipping_address ? 'Modifier' : 'Ajouter'}
+                      onClick={() => setEditing('address')}
+                    />
+                  )}
+                </div>
+              }
             >
-              {order.shipping_address ? (
+              {editing === 'address' ? (
+                <AdminCustomFields
+                  order={order}
+                  fields={ADDRESS_FIELDS}
+                  note="L’étiquette Boxtal se fabrique à partir de cette adresse : destinataire, rue, code postal et ville doivent tous être renseignés."
+                  onSaved={setOrder}
+                  onCancel={() => setEditing(null)}
+                />
+              ) : (
                 <div className="space-y-4">
-                  <address className="text-[13px] not-italic leading-relaxed text-ink-1">
-                    <span className="font-semibold text-ink-0">{order.shipping_name}</span><br />
-                    {order.shipping_address}<br />
-                    {order.shipping_postal_code} {order.shipping_city}
-                  </address>
+                  {order.shipping_address ? (
+                    <address className="text-[13px] not-italic leading-relaxed text-ink-1">
+                      <span className="font-semibold text-ink-0">{order.shipping_name}</span><br />
+                      {order.shipping_address}<br />
+                      {order.shipping_postal_code} {order.shipping_city}
+                    </address>
+                  ) : (
+                    <p className="text-xs text-ink-3">
+                      Aucune adresse de livraison renseignée. « Ajouter » pour la saisir, une fois
+                      qu’elle est connue.
+                    </p>
+                  )}
 
-                  <AdminCustomShipping
-                    order={order}
-                    onShipped={(patch) => setOrder((o) => ({ ...o, ...patch }))}
-                  />
+                  {/* Boxtal a besoin d'une adresse complète : sans elle, pas
+                      d'étiquette à proposer. Le suivi manuel reste dispo, il
+                      couvre la remise en main propre. */}
+                  {order.shipping_address && (
+                    <AdminCustomShipping
+                      order={order}
+                      onShipped={(patch) => setOrder((o) => ({ ...o, ...patch }))}
+                    />
+                  )}
 
                   <div className="border-t border-[var(--line)] pt-4">
                     <div className="mb-2 flex items-center gap-2">
@@ -322,8 +411,6 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                     />
                   </div>
                 </div>
-              ) : (
-                <p className="text-xs text-ink-3">Aucune adresse de livraison renseignée.</p>
               )}
             </Card>
           </div>
@@ -332,27 +419,43 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
           <div className="space-y-5">
 
             {/* Client */}
-            <Card title="Client">
-              <p className="text-sm font-semibold text-ink-0">{order.name}</p>
-              {order.company && <p className="mt-0.5 text-xs text-ink-3">{order.company}</p>}
-              <div className="mt-3 space-y-2">
-                <a href={`mailto:${order.email}`} className="flex items-center gap-2 text-[13px] text-amber hover:underline">
-                  <svg className="shrink-0 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="3.5" width="12" height="9" rx="1.5" /><path d="M2 5l6 4 6-4" />
-                  </svg>
-                  <span className="truncate">{order.email}</span>
-                </a>
-                {/* Chaîne vide = demande saisie à la main sans numéro : un lien
-                    `tel:` vide n'aurait rien à composer. */}
-                {order.phone && (
-                  <a href={`tel:${order.phone}`} className="flex items-center gap-2 text-[13px] text-amber hover:underline">
-                    <svg className="shrink-0 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3.5 2.5h2l1.3 3.3-1.6 1a7 7 0 003.3 3.3l1-1.6 3.3 1.3v2a1.3 1.3 0 01-1.3 1.3A10.7 10.7 0 012.2 3.8 1.3 1.3 0 013.5 2.5z" />
-                    </svg>
-                    {order.phone}
-                  </a>
-                )}
-              </div>
+            <Card
+              title="Client"
+              right={editing === 'client' ? undefined : <EditButton onClick={() => setEditing('client')} />}
+            >
+              {editing === 'client' ? (
+                <AdminCustomFields
+                  order={order}
+                  fields={CLIENT_FIELDS}
+                  columns={1}
+                  note="L’email sert au devis, au lien de paiement et aux emails de suivi : le corriger ici redirige tout ce qui partira ensuite."
+                  onSaved={setOrder}
+                  onCancel={() => setEditing(null)}
+                />
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-ink-0">{order.name}</p>
+                  {order.company && <p className="mt-0.5 text-xs text-ink-3">{order.company}</p>}
+                  <div className="mt-3 space-y-2">
+                    <a href={`mailto:${order.email}`} className="flex items-center gap-2 text-[13px] text-amber hover:underline">
+                      <svg className="shrink-0 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="3.5" width="12" height="9" rx="1.5" /><path d="M2 5l6 4 6-4" />
+                      </svg>
+                      <span className="truncate">{order.email}</span>
+                    </a>
+                    {/* Chaîne vide = demande saisie à la main sans numéro : un lien
+                        `tel:` vide n'aurait rien à composer. */}
+                    {order.phone && (
+                      <a href={`tel:${order.phone}`} className="flex items-center gap-2 text-[13px] text-amber hover:underline">
+                        <svg className="shrink-0 text-ink-3" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3.5 2.5h2l1.3 3.3-1.6 1a7 7 0 003.3 3.3l1-1.6 3.3 1.3v2a1.3 1.3 0 01-1.3 1.3A10.7 10.7 0 012.2 3.8 1.3 1.3 0 013.5 2.5z" />
+                        </svg>
+                        {order.phone}
+                      </a>
+                    )}
+                  </div>
+                </>
+              )}
             </Card>
 
             {/* Notes internes */}
@@ -415,6 +518,22 @@ function Card({ title, right, children }: { title: string; right?: React.ReactNo
       </header>
       <div className="p-4 sm:p-5">{children}</div>
     </section>
+  )
+}
+
+/** Ouvre l'édition d'un bloc, posé dans l'en-tête de sa carte. */
+function EditButton({ label = 'Modifier', onClick }: { label?: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-pill border border-[var(--line-2)] px-2.5 py-1 text-[11px] font-medium text-ink-3 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
+    >
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 13l.5-2.5 7-7 2 2-7 7L3 13zM10 3.5l2 2" />
+      </svg>
+      {label}
+    </button>
   )
 }
 

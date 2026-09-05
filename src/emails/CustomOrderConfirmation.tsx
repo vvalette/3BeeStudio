@@ -1,16 +1,12 @@
 import { Section, Text, Link } from 'react-email'
 import { EmailLayout, Hero, Card, InfoTable, InfoRow, Button, Steps } from './components'
 import { color, style } from './theme'
-import { PROJECT_TYPES, type CustomOrder } from '@/types/custom-order'
+import { projectTypeLabel, type CustomOrder } from '@/types/custom-order'
 
 interface Props {
   order: CustomOrder
   appUrl: string
 }
-
-const PROJECT_LABELS: Record<string, string> = Object.fromEntries(
-  PROJECT_TYPES.map(({ value, label }) => [value, label]),
-)
 
 export default function CustomOrderConfirmation({ order, appUrl }: Props) {
   const trackUrl = `${appUrl}/custom/${order.id}`
@@ -37,7 +33,7 @@ export default function CustomOrderConfirmation({ order, appUrl }: Props) {
           <InfoRow label="Référence" value={ref} mono accent />
           <InfoRow
             label="Projet"
-            value={PROJECT_LABELS[order.project_type] ?? order.project_type}
+            value={projectTypeLabel(order.project_type)}
             last={!order.reference_file_url}
           />
         </InfoTable>

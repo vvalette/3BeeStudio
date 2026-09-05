@@ -1,16 +1,12 @@
 import { Text, Link } from 'react-email'
 import { EmailLayout, Hero, Card, InfoTable, InfoRow, Button, InternalFooter, Divider } from './components'
 import { color, style } from './theme'
-import { PROJECT_TYPES, type CustomOrder } from '@/types/custom-order'
+import { projectTypeLabel, type CustomOrder } from '@/types/custom-order'
 
 interface Props {
   order: CustomOrder
   appUrl: string
 }
-
-const PROJECT_LABELS: Record<string, string> = Object.fromEntries(
-  PROJECT_TYPES.map(({ value, label }) => [value, label]),
-)
 
 export default function CustomOrderAdmin({ order, appUrl }: Props) {
   const ref = `#${order.id.slice(0, 8).toUpperCase()}`
@@ -53,7 +49,7 @@ export default function CustomOrderAdmin({ order, appUrl }: Props) {
         <InfoTable>
           <InfoRow
             label="Type"
-            value={PROJECT_LABELS[order.project_type] ?? order.project_type}
+            value={projectTypeLabel(order.project_type)}
             last
           />
         </InfoTable>
