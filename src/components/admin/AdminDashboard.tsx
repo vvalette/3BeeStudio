@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import type { Order } from '@/types/order'
-import type { CustomOrder } from '@/types/custom-order'
+import { projectTypeLabel, type CustomOrder } from '@/types/custom-order'
 import type { ShopOrder } from '@/types/shop-order'
 import type { ShopProduct } from '@/types/shop-product'
 import { formatPrice } from '@/lib/utils'
@@ -80,7 +80,7 @@ export default function AdminDashboard({
         id: o.id,
         label: o.company || o.name, // `||` : company vaut '' pour un particulier, pas null
         href: `/admin/custom/${o.id}` as Route,
-        meta: o.project_type,
+        meta: projectTypeLabel(o.project_type),
       })),
     },
     {

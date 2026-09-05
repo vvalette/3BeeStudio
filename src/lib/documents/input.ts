@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { PROJECT_TYPES, type CustomOrder, type QuoteLineItem } from '@/types/custom-order'
+import { projectTypeLabel, type CustomOrder, type QuoteLineItem } from '@/types/custom-order'
 
 /** Schéma partagé par la route d'envoi et celle d'aperçu. */
 export const quoteItemSchema = z.object({
@@ -9,12 +9,8 @@ export const quoteItemSchema = z.object({
   unit_price: z.number().int().nonnegative().max(100000000), // centimes
 })
 
-const PROJECT_LABELS: Record<string, string> = Object.fromEntries(
-  PROJECT_TYPES.map(({ value, label }) => [value, label]),
-)
-
 export function projectLabel(order: CustomOrder): string {
-  return PROJECT_LABELS[order.project_type] ?? order.project_type
+  return projectTypeLabel(order.project_type)
 }
 
 /**

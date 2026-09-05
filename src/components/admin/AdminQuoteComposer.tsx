@@ -13,6 +13,12 @@ import type { CustomOrder, QuoteLineItem } from '@/types/custom-order'
  * encaissé : le total du devis est toujours la somme des lignes, jamais un
  * champ libre, pour qu'un client ne reçoive pas un PDF affichant autre chose
  * que ce qu'on lui demande de payer.
+ *
+ * Deux gestes, et c'est important qu'ils soient deux : « Enregistrer » pose le
+ * total et l'acompte sur la demande sans rien envoyer, « Envoyer » y ajoute
+ * l'email et le lien de paiement. Sans le premier, les montants tapés ici
+ * restaient dans le navigateur : la carte « Paiements » en dessous continuait
+ * d'afficher « aucun acompte défini », et le solde n'avait rien à déduire.
  */
 
 interface ItemDraft {
@@ -66,9 +72,12 @@ function toPayload(items: ItemDraft[]): QuoteLineItem[] {
 
 export default function AdminQuoteComposer({
   order,
+  onSaved,
   onSent,
 }: {
   order: CustomOrder
+  /** Montants enregistrés sans envoi : la demande revient entière de l'API. */
+  onSaved: (order: CustomOrder) => void
   onSent: (patch: Partial<CustomOrder>) => void
 }) {
   const router = useRouter()
@@ -77,15 +86,22 @@ export default function AdminQuoteComposer({
   const [deposit, setDeposit] = useState(order.deposit_amount ? String(order.deposit_amount / 100) : '')
   const [mode, setMode]       = useState<QuotePaymentMode>('stripe')
   const [sending, setSending] = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const [saved, setSaved]     = useState(false)
   const [previewing, setPreviewing] = useState(false)
   const [error, setError]     = useState<string | null>(null)
 
   const total = draftTotal(items)
   const payload = toPayload(items)
   const depositCents = cents(deposit)
-  const ready = payload.length > 0 && total > 0 && depositCents > 0 && depositCents <= total
+  const tooBig = depositCents > total && total > 0
+  // Enregistrer n'exige pas d'acompte : un devis peut se chiffrer avant qu'on
+  // sache ce qu'on demande à la commande.
+  const savable = payload.length > 0 && total > 0 && !tooBig
+  const ready = savable && depositCents > 0
 
   function setItem(index: number, patch: Partial<ItemDraft>) {
+    setSaved(false)
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)))
   }
 
@@ -132,6 +148,39 @@ export default function AdminQuoteComposer({
     }
   }
 
+  /**
+   * Pose le chiffrage sur la demande sans rien envoyer : le devis part parfois
+   * par un autre canal, et l'acompte est parfois déjà encaissé. C'est aussi ce
+   * qui alimente la carte « Paiements » en dessous.
+   */
+  async function save() {
+    if (!savable) return
+    setError(null)
+    setSaved(false)
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/custom/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quote_object: object.trim() || null,
+          quote_items: payload,
+          total_amount: total,
+          ...(depositCents ? { deposit_amount: depositCents } : {}),
+        }),
+      })
+      const json = await res.json().catch(() => null) as (CustomOrder & { error?: string }) | null
+      if (!res.ok) throw new Error(json?.error ?? `Erreur ${res.status}`)
+      if (json) onSaved(json)
+      setSaved(true)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function send() {
     if (!ready) return
     setError(null)
@@ -175,7 +224,7 @@ export default function AdminQuoteComposer({
         <input
           id="quote-object"
           value={object}
-          onChange={(e) => setObject(e.target.value)}
+          onChange={(e) => { setSaved(false); setObject(e.target.value) }}
           placeholder="fabrication de 10 supports muraux — impression 3D PETG"
           className={inputClass}
         />
@@ -285,16 +334,21 @@ export default function AdminQuoteComposer({
             id="quote-deposit"
             type="number" min="1" step="0.01"
             value={deposit}
-            onChange={(e) => setDeposit(e.target.value)}
+            onChange={(e) => { setSaved(false); setDeposit(e.target.value) }}
             placeholder="150"
             className={numClass}
           />
           {depositCents > 0 && depositCents < total && (
             <p className="mt-1.5 text-[11px] text-ink-3">
-              Solde restant : <span className="font-mono text-ink-2">{formatPrice(total - depositCents)}</span> — à réclamer avant expédition.
+              Solde restant : <span className="font-mono text-ink-2">{formatPrice(total - depositCents)}</span>, à réclamer avant expédition.
             </p>
           )}
-          {depositCents > total && total > 0 && (
+          {depositCents > 0 && depositCents === total && (
+            <p className="mt-1.5 text-[11px] text-ink-3">
+              Réglé en une fois : pas de solde à réclamer ensuite.
+            </p>
+          )}
+          {tooBig && (
             <p className="mt-1.5 text-[11px] text-red-400">L’acompte dépasse le total du devis.</p>
           )}
         </div>
@@ -305,6 +359,34 @@ export default function AdminQuoteComposer({
       {error && <p className="text-xs text-red-400">{error}</p>}
 
       <div className="flex flex-wrap items-center gap-2">
+        {/* « Enregistrer » d'abord : c'est le geste sans conséquence pour le
+            client, et celui qui fait descendre les montants dans la carte
+            « Paiements ». « Envoyer » écrit au client, il vient après. */}
+        <button
+          type="button"
+          onClick={save}
+          disabled={!savable || saving}
+          className="flex h-[42px] cursor-pointer items-center gap-2 rounded-pill border border-[var(--line-2)] px-4 text-[13px] font-semibold text-ink-1 transition-colors hover:border-[var(--line-amber)] hover:text-amber disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? (
+            'Enregistrement…'
+          ) : saved ? (
+            <>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
+                <path d="M2 7l3.5 3.5L12 4" />
+              </svg>
+              Enregistré
+            </>
+          ) : (
+            <>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 2.5h7.5L13.5 5.5V13a.5.5 0 01-.5.5H3a.5.5 0 01-.5-.5V3a.5.5 0 01.5-.5z" /><path d="M5 2.5v3.5h5M5 13.5V9.5h6" />
+              </svg>
+              Enregistrer sans envoyer
+            </>
+          )}
+        </button>
+
         <button
           type="button"
           onClick={send}
@@ -342,11 +424,18 @@ export default function AdminQuoteComposer({
         </button>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-ink-3">
-        {mode === 'stripe'
-          ? 'L’envoi joint le devis en PDF à l’email et crée le lien de paiement de l’acompte.'
-          : 'L’envoi joint le devis en PDF à l’email, sans lien de paiement. Déclare l’acompte reçu depuis la carte « Paiements » quand le virement arrive.'}
-      </p>
+      <div className="space-y-1 text-[11px] leading-relaxed text-ink-3">
+        <p>
+          <span className="text-ink-2">Enregistrer</span> pose le total et l’acompte sur la demande,
+          sans écrire au client. Ils apparaissent aussitôt dans la carte « Paiements ».
+        </p>
+        <p>
+          <span className="text-ink-2">Envoyer</span>{' '}
+          {mode === 'stripe'
+            ? 'joint le devis en PDF à l’email et crée le lien de paiement de l’acompte.'
+            : 'joint le devis en PDF à l’email, sans lien de paiement. Déclare l’acompte reçu depuis la carte « Paiements » quand le virement arrive.'}
+        </p>
+      </div>
     </div>
   )
 }

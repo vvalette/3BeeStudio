@@ -130,6 +130,20 @@ export const PROJECT_TYPES = [
   { value: 'autre',       label: 'Autre projet' },
 ] as const
 
+/**
+ * Libellés lisibles, indexés par la valeur stockée en base. La colonne
+ * `project_type` porte le slug (`deco`), jamais le libellé : sans cette table,
+ * la fiche admin et le tableau de bord affichaient « deco » au client.
+ */
+export const PROJECT_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  PROJECT_TYPES.map(({ value, label }) => [value, label]),
+)
+
+/** Valeur inconnue (demande ancienne, saisie hors liste) rendue telle quelle. */
+export function projectTypeLabel(value: string): string {
+  return PROJECT_TYPE_LABELS[value] ?? value
+}
+
 export const BUDGET_RANGES = [
   'Moins de 50 €',
   '50 € – 200 €',

@@ -10,6 +10,11 @@ const CUSTOM_STATUSES: CustomOrderStatus[] = [
   'pending_quote', 'quote_sent', 'deposit_paid', 'in_production', 'shipped', 'delivered', 'cancelled',
 ]
 
+/** Colonne NOT NULL : la vider casserait la fiche, l'email et le devis. */
+const required = (max: number) => z.string().trim().min(1).max(max)
+/** Colonne nullable : le champ laissé vide se range en `null`, pas en `''`. */
+const erasable = (max: number) => z.string().trim().max(max).transform((v) => v || null).nullable()
+
 const patchSchema = z.object({
   status:          z.enum(CUSTOM_STATUSES as [CustomOrderStatus, ...CustomOrderStatus[]]).optional(),
   admin_notes:     z.string().optional(),
@@ -17,6 +22,26 @@ const patchSchema = z.object({
   tracking_url:    z.string().optional(),
   deposit_amount:  z.number().int().positive().optional(),
   total_amount:    z.number().int().positive().optional(),
+
+  // Fiche client et projet, corrigeables après coup : une demande arrivée par
+  // le formulaire ou par DM se complète au fil de l'échange (adresse dictée au
+  // téléphone, email mal tapé, projet précisé). Sans ça, la seule issue était
+  // de recréer la demande, en perdant devis et encaissements.
+  name:            required(120).optional(),
+  company:         erasable(120).optional(),
+  email:           z.string().trim().email('Email invalide').max(200).optional(),
+  // NOT NULL en base mais facultatif pour le client : vide reste vide.
+  phone:           z.string().trim().max(40).optional(),
+  project_type:    required(60).optional(),
+  description:     required(5000).optional(),
+  budget_range:    erasable(80).optional(),
+  deadline:        erasable(80).optional(),
+
+  shipping_name:        erasable(120).optional(),
+  shipping_address:     erasable(300).optional(),
+  shipping_postal_code: erasable(20).optional(),
+  shipping_city:        erasable(120).optional(),
+
   // Champs du devis, enregistrables sans envoi : un devis fabriqué et transmis
   // ailleurs (DM, email direct) doit pouvoir entrer dans l'app avec ses
   // montants, sans qu'un email parte une seconde fois au client.
@@ -53,6 +78,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ or
   const parsed = patchSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
+  }
+
+  // Un acompte supérieur au total casserait `computeBalance` (solde négatif,
+  // donc `null`) et la facture. Le composeur de devis l'interdit déjà, mais il
+  // écrit maintenant les deux montants : la règle appartient au serveur.
+  const { deposit_amount: nextDeposit, total_amount: nextTotal } = parsed.data
+  if (nextDeposit !== undefined || nextTotal !== undefined) {
+    const { data: current } = await supabaseAdmin
+      .from('custom_orders')
+      .select('deposit_amount, total_amount')
+      .eq('id', orderId)
+      .single()
+
+    const deposit = nextDeposit ?? current?.deposit_amount ?? null
+    const total   = nextTotal ?? current?.total_amount ?? null
+    if (deposit && total && deposit > total) {
+      return NextResponse.json(
+        { error: 'L\'acompte dépasse le total du projet.' },
+        { status: 422 },
+      )
+    }
   }
 
   const { data, error } = await supabaseAdmin
