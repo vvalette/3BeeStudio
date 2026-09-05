@@ -70,7 +70,11 @@ describe('PATCH /api/admin/custom/[orderId]', () => {
   })
 
   it('enregistre les montants du devis sans le marquer envoyé', async () => {
-    state.queue('custom_orders', { data: { id: 'x' }, error: null })
+    // Deux requêtes : la relecture qui contrôle acompte contre total, puis l'écriture.
+    state.queue('custom_orders',
+      { data: { deposit_amount: null, total_amount: null }, error: null },
+      { data: { id: 'x' }, error: null },
+    )
 
     const res = await PATCH(request({
       total_amount: 35000, deposit_amount: 17500,
@@ -116,6 +120,26 @@ describe('PATCH /api/admin/custom/[orderId]', () => {
     expect((await PATCH(request({ name: '   ' }), { params })).status).toBe(400)
     // Rien n'est parti en base.
     expect(state.writes).toHaveLength(0)
+  })
+
+  it('refuse un acompte supérieur au total du projet', async () => {
+    // Lecture de l'existant, puis rien : l'écriture ne doit pas avoir lieu.
+    state.queue('custom_orders', { data: { deposit_amount: null, total_amount: 30000 }, error: null })
+
+    const res = await PATCH(request({ deposit_amount: 45000 }), { params })
+    expect(res.status).toBe(422)
+    expect(state.writes).toHaveLength(0)
+  })
+
+  it('accepte un acompte égal au total (réglé en une fois)', async () => {
+    state.queue('custom_orders',
+      { data: { deposit_amount: null, total_amount: null }, error: null },
+      { data: { id: 'x' }, error: null },
+    )
+
+    const res = await PATCH(request({ deposit_amount: 30000, total_amount: 30000 }), { params })
+    expect(res.status).toBe(200)
+    expect(state.writes.at(-1)!.values.deposit_amount).toBe(30000)
   })
 
   it('signale un numéro de devis déjà pris', async () => {

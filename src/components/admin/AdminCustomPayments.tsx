@@ -53,14 +53,40 @@ export default function AdminCustomPayments({
   const pay = paymentState(order)
   const balanceDue = computeBalance(order)
   const balanceAmount = order.balance_amount ?? balanceDue
+  // Acompte égal au total : le client a tout réglé d'un coup. Continuer à
+  // appeler ça un « acompte » ferait chercher un solde qui n'existe pas.
+  const inFull = !!order.deposit_amount && order.deposit_amount === order.total_amount
 
   return (
     <div className="space-y-4 text-sm">
-      {/* ── Acompte ── */}
+      {/* ── Où en est l'argent : en tête, pas en pied. C'est la question qu'on
+             se pose en ouvrant la carte. ── */}
+      {order.total_amount ? (
+        <div className="space-y-1.5 rounded-xl p-3.5" style={{ background: 'var(--hi-03)', border: '1px solid var(--line)' }}>
+          <Row label="Total du projet" value={formatPrice(order.total_amount)} />
+          <Row
+            label="Encaissé"
+            value={formatPrice(pay.amountPaid)}
+            tone={pay.amountPaid > 0 ? 'ok' : 'muted'}
+          />
+          <div className="border-t border-[var(--line)] pt-1.5">
+            {pay.fullyPaid
+              ? <Row label="Reste dû" value="Soldé" tone="ok" strong />
+              : <Row label="Reste dû" value={formatPrice(Math.max(0, order.total_amount - pay.amountPaid))} tone="due" strong />}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[13px] leading-relaxed text-ink-3">
+          Aucun montant enregistré. Chiffre le devis au-dessus puis clique « Enregistrer sans envoyer »,
+          ou déclare directement ci-dessous un règlement déjà reçu.
+        </p>
+      )}
+
+      {/* ── Acompte, ou règlement unique ── */}
       <section className="space-y-2">
         {order.deposit_amount !== null ? (
           <PaymentLine
-            label="Acompte"
+            label={inFull ? 'Réglé en une fois' : 'Acompte'}
             amount={order.deposit_amount}
             received={pay.depositPaid}
             at={pay.depositPaidAt}
@@ -77,19 +103,15 @@ export default function AdminCustomPayments({
           received={pay.depositPaid}
           declared={!!pay.depositPaidAt}
           defaultAmount={order.deposit_amount}
+          suggestions={suggestionsFor(order, 'deposit')}
           onChange={onChange}
         />
-
-        {!order.total_amount && !pay.depositPaid && (
-          <p className="text-[11px] leading-relaxed text-ink-3">
-            Demande négociée ailleurs ? Enregistre ici l’acompte déjà reçu, sans rien envoyer au client.
-          </p>
-        )}
       </section>
 
-      {/* ── Solde : rien à réclamer tant que l’acompte n’est pas encaissé,
-             la production n’étant pas lancée. ── */}
-      {pay.depositPaid && (
+      {/* ── Solde. Plus de verrou sur l'acompte encaissé : il empêchait de
+             déclarer un solde reçu quand le premier versement était arrivé
+             hors de l'app, et fermait la carte sur un cul-de-sac. ── */}
+      {(!inFull || order.balance_amount) && (
         <section className="space-y-2 border-t border-[var(--line)] pt-4">
           {balanceAmount ? (
             <PaymentLine
@@ -101,7 +123,11 @@ export default function AdminCustomPayments({
               pendingLabel={order.balance_payment_url ? 'demande envoyée, en attente' : 'pas encore réclamé'}
             />
           ) : (
-            <p className="text-[13px] text-ink-3">Solde : rien à réclamer après l’acompte.</p>
+            <p className="text-[13px] text-ink-3">
+              {order.total_amount
+                ? 'Solde : rien à réclamer après l’acompte.'
+                : 'Solde : montant à saisir, aucun total n’est enregistré.'}
+            </p>
           )}
 
           {!pay.balancePaid && <BalanceRequest order={order} onChange={onChange} />}
@@ -112,26 +138,65 @@ export default function AdminCustomPayments({
             received={pay.balancePaid}
             declared={!!pay.balancePaidAt}
             defaultAmount={balanceAmount}
+            suggestions={suggestionsFor(order, 'balance')}
             onChange={onChange}
           />
         </section>
       )}
-
-      {/* ── Récapitulatif ── */}
-      {order.total_amount && (
-        <div className="space-y-1 border-t border-dashed pt-3" style={{ borderColor: 'var(--line-amber)' }}>
-          <div className="flex items-baseline justify-between">
-            <span className="text-ink-2">Encaissé</span>
-            <span className="font-mono font-semibold text-ink-0">{formatPrice(pay.amountPaid)}</span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="font-semibold text-amber">Total du devis</span>
-            <span className="font-mono text-base font-bold text-amber">{formatPrice(order.total_amount)}</span>
-          </div>
-        </div>
-      )}
     </div>
   )
+}
+
+/** Ligne du récapitulatif de tête. */
+function Row({
+  label, value, tone = 'plain', strong,
+}: {
+  label: string
+  value: string
+  tone?: 'plain' | 'muted' | 'ok' | 'due'
+  strong?: boolean
+}) {
+  const color =
+    tone === 'ok' ? 'text-emerald-400' :
+    tone === 'due' ? 'text-amber' :
+    tone === 'muted' ? 'text-ink-3' : 'text-ink-1'
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className={strong ? 'font-semibold text-ink-1' : 'text-ink-2'}>{label}</span>
+      <span className={['shrink-0 font-mono', strong ? 'text-base font-bold' : 'font-semibold', color].join(' ')}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Montants proposés en un clic dans le formulaire de déclaration.
+ *
+ * Sans eux, l'admin devait retaper un chiffre qui existe déjà sur la fiche, et
+ * le champ restait vide quand le devis venait d'être enregistré au-dessus.
+ */
+function suggestionsFor(order: CustomOrder, kind: 'deposit' | 'balance'): Suggestion[] {
+  const out: Suggestion[] = []
+  if (kind === 'deposit') {
+    if (order.deposit_amount) out.push({ label: 'Acompte prévu', value: order.deposit_amount })
+    if (order.total_amount && order.total_amount !== order.deposit_amount) {
+      out.push({ label: 'Total, réglé en une fois', value: order.total_amount })
+    }
+    return out
+  }
+  const due = computeBalance(order)
+  if (due) out.push({ label: 'Reste dû', value: due })
+  if (order.total_amount && order.total_amount !== due) {
+    out.push({ label: 'Total du projet', value: order.total_amount })
+  }
+  return out
+}
+
+interface Suggestion {
+  label: string
+  /** En centimes. */
+  value: number
 }
 
 /**
@@ -148,10 +213,7 @@ function BalanceRequest({
 }) {
   const router = useRouter()
   const [open, setOpen]       = useState(false)
-  const [amount, setAmount]   = useState(() => {
-    const due = computeBalance(order)
-    return due ? String(due / 100) : ''
-  })
+  const [amount, setAmount]   = useState('')
   const [mode, setMode]       = useState<QuotePaymentMode>('stripe')
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
@@ -205,7 +267,13 @@ function BalanceRequest({
         )}
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            // Relu à l'ouverture : le total peut venir d'être enregistré dans
+            // la carte « Devis », au-dessus.
+            const due = computeBalance(order)
+            setAmount(due ? String(due / 100) : '')
+            setOpen(true)
+          }}
           className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--line-2)] px-3 py-2 text-[12px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
         >
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -299,7 +367,7 @@ function PaymentLine({
 
 /** Déclaration (ou annulation) d'un encaissement reçu hors Stripe. */
 function Receipt({
-  order, kind, received, declared, defaultAmount, onChange,
+  order, kind, received, declared, defaultAmount, suggestions, onChange,
 }: {
   order: CustomOrder
   kind: 'deposit' | 'balance'
@@ -307,18 +375,24 @@ function Receipt({
   /** Vrai si la date d'encaissement existe : sans elle, rien à annuler. */
   declared: boolean
   defaultAmount: number | null
+  /** Montants déjà connus de la fiche, remplissables en un clic. */
+  suggestions: Suggestion[]
   onChange: (order: CustomOrder) => void
 }) {
   const router = useRouter()
   const [open, setOpen]     = useState(false)
-  const [amount, setAmount] = useState(defaultAmount ? String(defaultAmount / 100) : '')
+  const [amount, setAmount] = useState('')
   const [total, setTotal]   = useState('')
   const [date, setDate]     = useState(today())
   const [method, setMethod] = useState<PaymentMethod>('transfer')
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState<string | null>(null)
 
-  const what = kind === 'deposit' ? 'acompte' : 'solde'
+  // Élision : « l'acompte » mais « le solde ». Un seul mot pour les deux
+  // produisait « Déclarer l'solde reçu » à l'écran.
+  const what = kind === 'deposit'
+    ? { bare: 'acompte', article: 'l’acompte', of: 'de l’acompte' }
+    : { bare: 'solde',   article: 'le solde',  of: 'du solde' }
   // Demande négociée hors de l'app : la carte « Devis » n'a rien produit, donc
   // personne n'a dit ce que vaut le projet, et sans ce chiffre le solde comme la
   // facture restent aveugles. Champ masqué dès qu'un total existe : les deux
@@ -368,7 +442,7 @@ function Receipt({
         disabled={saving}
         className="cursor-pointer text-[11px] text-ink-3 underline-offset-2 transition-colors hover:text-red-400 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {saving ? 'Annulation…' : `Annuler l’encaissement de l’${what}`}
+        {saving ? 'Annulation…' : `Annuler l’encaissement ${what.of}`}
       </button>
     )
   }
@@ -377,13 +451,15 @@ function Receipt({
     return (
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        // Le montant se relit à l'ouverture, pas au montage : un devis
+        // enregistré juste au-dessus laissait sinon le champ vide.
+        onClick={() => { setAmount(defaultAmount ? String(defaultAmount / 100) : ''); setOpen(true) }}
         className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--line-2)] px-3 py-2 text-[12px] font-medium text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
       >
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 7l4 4 8-8" />
         </svg>
-        Déclarer l’{what} reçu
+        Déclarer {what.article} reçu
       </button>
     )
   }
@@ -391,7 +467,7 @@ function Receipt({
   return (
     <div className="space-y-2.5 rounded-xl border border-[var(--line-2)] bg-bg-2/50 p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-3">
-        {what} reçu hors Stripe
+        {what.bare} reçu hors Stripe
       </p>
 
       <div>
@@ -403,6 +479,20 @@ function Receipt({
           placeholder="150"
           className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
         />
+        {suggestions.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {suggestions.map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => setAmount((s.value / 100).toFixed(2))}
+                className="cursor-pointer rounded-pill border border-[var(--line-2)] px-2.5 py-0.5 text-[11px] text-ink-2 transition-colors hover:border-[var(--line-amber)] hover:text-amber"
+              >
+                {s.label} : {formatPrice(s.value)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {needsTotal && (

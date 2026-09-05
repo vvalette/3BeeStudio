@@ -80,6 +80,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ or
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
   }
 
+  // Un acompte supérieur au total casserait `computeBalance` (solde négatif,
+  // donc `null`) et la facture. Le composeur de devis l'interdit déjà, mais il
+  // écrit maintenant les deux montants : la règle appartient au serveur.
+  const { deposit_amount: nextDeposit, total_amount: nextTotal } = parsed.data
+  if (nextDeposit !== undefined || nextTotal !== undefined) {
+    const { data: current } = await supabaseAdmin
+      .from('custom_orders')
+      .select('deposit_amount, total_amount')
+      .eq('id', orderId)
+      .single()
+
+    const deposit = nextDeposit ?? current?.deposit_amount ?? null
+    const total   = nextTotal ?? current?.total_amount ?? null
+    if (deposit && total && deposit > total) {
+      return NextResponse.json(
+        { error: 'L\'acompte dépasse le total du projet.' },
+        { status: 422 },
+      )
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('custom_orders')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })

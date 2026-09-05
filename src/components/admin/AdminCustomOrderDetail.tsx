@@ -279,6 +279,7 @@ export default function AdminCustomOrderDetail({ order: initialOrder }: { order:
                 {quoteMode === 'compose' ? (
                   <AdminQuoteComposer
                     order={order}
+                    onSaved={setOrder}
                     onSent={(patch) => {
                       setQuoteSent(true)
                       setOrder((o) => ({ ...o, ...patch }))
