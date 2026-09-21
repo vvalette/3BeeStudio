@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { buildAlternates } from '@/lib/seo'
+import { buildAlternates, SITE_URL } from '@/lib/seo'
 import { localBusinessSchema } from '@/lib/schema'
+import { getPathname } from '@/i18n/navigation'
 import JsonLd from '@/components/seo/JsonLd'
 import type { Locale } from '@/i18n/routing'
 import { supabase } from '@/lib/supabase'
@@ -25,6 +26,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t('title'),
     description: t('description'),
     alternates: buildAlternates('/', locale),
+    // Sans ça, la carte de partage héritait du titre et de l'accroche du layout,
+    // rédigés en français : un lien vers /en s'annonçait en français.
+    // L'image, elle, vient de `opengraph-image.tsx` dans ce même dossier.
+    openGraph: {
+      type: 'website',
+      title: t('title'),
+      description: t('description'),
+      url: SITE_URL + getPathname({ href: '/', locale }),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('title'),
+      description: t('description'),
+    },
   }
 }
 

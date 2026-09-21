@@ -47,7 +47,7 @@ export async function generateMetadata({
   const description = plainSummary((isEn && data.description_en) ? data.description_en : data.description)
 
   return {
-    title: `${name} — Boutique 3BeeStudio`,
+    title: `${name} · Boutique 3BeeStudio`,
     description,
     alternates: buildAlternates(`/boutique/${slug}`, locale),
     // Sans ça, la carte de partage montrait la bonne photo produit mais gardait
