@@ -45,13 +45,13 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     url: siteUrl,
     siteName: '3BeeStudio',
-    title: "3BeeStudio — Studio d'impression 3D français",
+    title: "3BeeStudio · Studio d'impression 3D français",
     description: 'Porte-clés NFC personnalisés, objets de série et créations sur-mesure imprimés en France.',
   },
   twitter: {
     card: 'summary_large_image',
     title: '3BeeStudio',
-    description: "Studio d'impression 3D français — NFC B2B, série et sur-mesure.",
+    description: "Studio d'impression 3D français : NFC B2B, série et sur-mesure.",
   },
   robots: { index: true, follow: true },
 }

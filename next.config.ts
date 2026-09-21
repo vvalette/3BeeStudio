@@ -38,6 +38,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // L'image de partage de la home lit le logo sur le disque (src/app/[locale]/
+  // opengraph-image.tsx). La route est servie à la demande, et le contenu de
+  // `public/` n'entre pas dans le bundle d'une fonction : sans cette trace, le
+  // logo manquait à l'appel en production, sans la moindre erreur.
+  outputFileTracingIncludes: {
+    '/[locale]/opengraph-image': ['./public/images/logo.png'],
+  },
   // Routes typées : les Link/router next (admin, 404) sont vérifiés à la compilation.
   // Les liens publics passent par @/i18n/navigation (non concernés par ce typage).
   typedRoutes: true,
