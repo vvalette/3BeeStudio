@@ -293,3 +293,42 @@ export function balanceAnomaly(order: PaymentFields): BalanceAnomaly | null {
     paidByStripe: !!order.balance_paid_at && order.balance_method === 'stripe',
   }
 }
+
+export type CustomPaymentStatusKey = 'paid' | 'unpaid' | 'balance_due' | 'awaiting_deposit'
+
+export interface CustomPaymentStatus {
+  key: CustomPaymentStatusKey
+  label: string
+  /** Reste à encaisser, en centimes. `null` quand tout est réglé. */
+  amount: number | null
+}
+
+/** Pièce partie de l'atelier : l'argent qui manque encore est un impayé, plus un solde à venir. */
+const GONE_STATUSES: CustomOrderStatus[] = ['shipped', 'delivered']
+
+/**
+ * Statut de paiement, distinct du statut de production : « Livré » dit où en
+ * est la pièce, pas si l'argent est rentré. Une demande livrée avec 100 € de
+ * solde jamais réclamé sortait de « À traiter » et disparaissait de la vue.
+ *
+ * `null` = rien à dire (demande annulée, ou pas encore chiffrée).
+ */
+export function customPaymentStatus(order: PaymentFields): CustomPaymentStatus | null {
+  if (order.status === 'cancelled') return null
+  const pay = paymentState(order)
+  if (pay.fullyPaid) return { key: 'paid', label: 'Payé', amount: null }
+  if (!pay.outstanding) return null
+  if (GONE_STATUSES.includes(order.status)) {
+    return { key: 'unpaid', label: 'Impayé', amount: pay.outstanding }
+  }
+  if (pay.amountPaid > 0 || pay.depositPaid) {
+    return { key: 'balance_due', label: 'Solde dû', amount: pay.outstanding }
+  }
+  return { key: 'awaiting_deposit', label: 'Acompte attendu', amount: pay.outstanding }
+}
+
+/** Argent à aller chercher : impayé, ou solde restant une fois la production lancée. */
+export function hasMoneyDue(order: PaymentFields): boolean {
+  const key = customPaymentStatus(order)?.key
+  return key === 'unpaid' || key === 'balance_due'
+}

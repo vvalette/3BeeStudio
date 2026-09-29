@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Order, OrderStatus } from '@/types/order'
-import type { CustomOrder, CustomOrderStatus } from '@/types/custom-order'
+import { customPaymentStatus, hasMoneyDue, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import type { ShopOrder, ShopOrderStatus } from '@/types/shop-order'
 import {
   STATUS_ACCENT, STATUS_SHORT_LABELS, ALL_STATUSES,
@@ -23,7 +23,7 @@ export type Section         = 'nfc' | 'custom' | 'boutique' | 'digital'
 export type Period          = 'week' | 'month' | 'year' | 'all'
 export type SortKey         = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'amount_desc'
 export type NfcFilterKey    = 'all' | 'active' | 'no_label' | OrderStatus
-export type CustomFilterKey = 'all' | 'active' | CustomOrderStatus
+export type CustomFilterKey = 'all' | 'active' | 'money_due' | CustomOrderStatus
 export type ShopFilterKey   = 'all' | 'active' | ShopOrderStatus
 export type DigitalFilterKey = 'all' | 'active' | 'pending_payment' | 'confirmed' | 'cancelled'
 
@@ -68,8 +68,10 @@ const CUSTOM_STATUSES: CustomOrderStatus[] = [
 ]
 
 export const CUSTOM_FILTERS: FilterDef<CustomOrder, CustomFilterKey>[] = [
-  { key: 'active', label: 'À traiter', match: (o) => o.status !== 'delivered' && o.status !== 'cancelled' },
+  // Une demande livrée mais pas payée reste à traiter : c'est l'argent qu'il faut aller chercher.
+  { key: 'active', label: 'À traiter', match: (o) => (o.status !== 'delivered' && o.status !== 'cancelled') || customPaymentStatus(o)?.key === 'unpaid' },
   { key: 'all',    label: 'Toutes',    match: () => true },
+  { key: 'money_due', label: 'Argent à récupérer', dot: '#f87171', match: hasMoneyDue },
   ...CUSTOM_STATUSES.map((s) => ({
     key: s as CustomFilterKey,
     label: CUSTOM_STATUS_SHORT_LABELS[s],

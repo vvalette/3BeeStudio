@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { balanceAnomaly, computeBalance, paymentState, type CustomOrder } from './custom-order'
+import { balanceAnomaly, computeBalance, customPaymentStatus, hasMoneyDue, paymentState, type CustomOrder } from './custom-order'
 
 /** Demande type : devis de 35 €, acompte de 17,50 €. */
 function order(overrides: Partial<CustomOrder> = {}): CustomOrder {
@@ -143,5 +143,41 @@ describe('balanceAnomaly', () => {
       balance_amount: 3500, balance_paid_at: '2026-09-29T00:00:00Z', balance_method: 'stripe',
     }))
     expect(a?.paidByStripe).toBe(true)
+  })
+})
+
+describe('customPaymentStatus', () => {
+  it('livrée avec un solde jamais réclamé : impayé, argent à récupérer', () => {
+    // Cas réel 77c017bb : total 223,45 €, acompte 123,45 € reçu par virement, 100 € jamais réclamés.
+    const o = order({
+      status: 'delivered', total_amount: 22345, deposit_amount: 12345,
+      deposit_paid_at: '2026-09-04T00:00:00Z', deposit_method: 'transfer',
+    })
+    expect(customPaymentStatus(o)).toEqual({ key: 'unpaid', label: 'Impayé', amount: 10000 })
+    expect(hasMoneyDue(o)).toBe(true)
+  })
+
+  it('en production après l’acompte : solde dû', () => {
+    const o = order({ status: 'in_production', deposit_paid_at: '2026-08-16T12:00:00Z' })
+    expect(customPaymentStatus(o)).toMatchObject({ key: 'balance_due', amount: 1750 })
+    expect(hasMoneyDue(o)).toBe(true)
+  })
+
+  it('devis envoyé, rien reçu : acompte attendu, pas encore de l’argent à récupérer', () => {
+    const o = order({ status: 'quote_sent' })
+    expect(customPaymentStatus(o)?.key).toBe('awaiting_deposit')
+    expect(hasMoneyDue(o)).toBe(false)
+  })
+
+  it('réglé en une fois ou solde encaissé : payé', () => {
+    expect(customPaymentStatus(order({ status: 'delivered', deposit_amount: 3500 }))?.key).toBe('paid')
+    expect(customPaymentStatus(order({
+      status: 'delivered', balance_amount: 1750, balance_paid_at: '2026-08-21T09:00:00Z',
+    }))?.key).toBe('paid')
+  })
+
+  it('annulée ou non chiffrée : pas de statut', () => {
+    expect(customPaymentStatus(order({ status: 'cancelled' }))).toBeNull()
+    expect(customPaymentStatus(order({ status: 'pending_quote', total_amount: null, deposit_amount: null }))).toBeNull()
   })
 })
