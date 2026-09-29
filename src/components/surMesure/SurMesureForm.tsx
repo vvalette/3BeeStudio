@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useDropzone, type FileRejection } from 'react-dropzone'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -94,6 +94,13 @@ export default function SurMesureForm() {
   })
 
   const projectType = watch('project_type')
+
+  // `?type=nfc` (depuis la page porte-clé connecté) présélectionne le type de
+  // projet. Lu au montage plutôt que par useSearchParams : la page reste statique.
+  useEffect(() => {
+    const type = new URLSearchParams(window.location.search).get('type')
+    if (type && PROJECT_TYPES.some((p) => p.value === type)) setValue('project_type', type)
+  }, [setValue])
 
   async function nextStep() {
     const fields: (keyof FormData)[][] = [

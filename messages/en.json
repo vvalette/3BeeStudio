@@ -27,8 +27,7 @@
       "title": "CONNECTED KEYCHAIN",
       "discover": "Discover the product",
       "how": "How it works",
-      "pricing": "Pricing & quotes",
-      "order": "Order"
+      "order": "Request a quote"
     },
     "custom": {
       "title": "CUSTOM ORDERS",
@@ -73,7 +72,7 @@
     "urlCaption": "EXAMPLE: your instagram page",
     "tapBadge": "Opens in 1 tap",
     "mock": {
-      "bio": "3D Studio · Lyon 🇫🇷",
+      "bio": "3D Studio · Lyon",
       "posts": "posts",
       "followers": "followers",
       "following": "following",
@@ -88,8 +87,7 @@
       "other": "Any other link"
     },
     "destinationsTitle": "Point it to whatever you want",
-    "orderCta": "Order my connected keychain",
-    "priceLine": "From <amber>€1.70</amber> per unit · minimum order 5 · free shipping from 100",
+    "orderCta": "Request a quote",
     "demoButton": "Watch the connected keychain demo",
     "features": {
       "noApp": "No app",
@@ -215,22 +213,22 @@
   "nfcPage": {
     "meta": {
       "title": "Custom NFC keychains for business",
-      "description": "Custom NFC keychains with your company logo, 3D printed in France. Programmed chip (website, vCard, socials), from 5 units. Free shipping from 100."
+      "description": "Custom NFC keychains with your company logo, 3D printed in France. Chip programmed to your website, contact card or socials. Quote on request."
     },
     "heading": "<honey>NFC connected</honey> keychain",
     "subtitle": "3D printed · Custom logo · Programmed NFC chip",
     "trust": {
       "france": "Made in France",
-      "payment": "Secure Stripe payment",
-      "validation": "Validation within 24h",
-      "delivery": "Delivered in 5–10 business days"
+      "noApp": "No app needed",
+      "noBattery": "No battery",
+      "quote": "Quote within 48h"
     },
     "faq": {
       "heading": "Frequently asked questions",
       "items": [
         {
-          "q": "What is the minimum order quantity?",
-          "a": "Orders start at 5 keychains. The unit price decreases with volume, down to €1.70 per unit from 250 pieces."
+          "q": "How do I order?",
+          "a": "Describe your project through the request form: your logo, the quantity you need and where the chip should point. We get back to you with a quote within 48 hours."
         },
         {
           "q": "Which logo formats do you accept?",
@@ -249,233 +247,19 @@
           "a": "Almost all recent smartphones: iPhone (XS and newer, automatic reading) and NFC-enabled Android devices. No app to install."
         },
         {
-          "q": "What are the delivery times?",
-          "a": "Keychains are 3D printed in France. Allow 5 to 10 business days. Shipping is free from 100 units."
+          "q": "What are the lead times?",
+          "a": "Keychains are 3D printed in France. Lead time depends on quantity and is stated in your quote."
         },
         {
           "q": "Does the keychain need a battery?",
           "a": "No, no battery is required. NFC (Near Field Communication) technology is passive: the chip is powered by the electromagnetic field emitted by the phone when it reads it. The keychain works indefinitely, with no maintenance or charging."
         }
       ]
-    }
-  },
-  "nfcForm": {
-    "next": "Next",
-    "back": "Back",
-    "edit": "Edit",
-    "errors": {
-      "upload": "Upload error",
-      "order": "Error while ordering",
-      "destinationRequired": "Enter a destination",
-      "destinationInvalid": "Invalid destination",
-      "vcardTooLong": "Contact card too long for the NFC chip — shorten it",
-      "quantityRequired": "Quantity required",
-      "quantityMin": "Minimum 5 keychains",
-      "nameRequired": "Name required",
-      "emailInvalid": "Invalid email",
-      "phoneInvalid": "Invalid phone number",
-      "sectorRequired": "Sector required",
-      "addressRequired": "Address required",
-      "cityRequired": "City required",
-      "postalInvalid": "Invalid postal code",
-      "countryRequired": "Country required"
     },
-    "progress": {
-      "logo": "Logo",
-      "quantity": "Quantity",
-      "contact": "Contact",
-      "payment": "Payment",
-      "back": "Return to this step"
-    },
-    "pricing": {
-      "title": "Pricing",
-      "fromQty": "from {qty}",
-      "perUnit": "per unit",
-      "pickHint": "Tap a tier to pick your quantity.",
-      "saved": "Quantity saved: {qty} keychains. Add your logo and link below to continue.",
-      "selected": "Quantity saved: {qty} keychains.",
-      "vat": "Incl. tax · VAT not applicable",
-      "minOrder": "Orders start at {qty} keychains.",
-      "shipping": "Shipping {price}, free from {free} keychains.",
-      "example": "Example: {qty} keychains, {subtotal} + {shipping} shipping, that is"
-    },
-    "config": {
-      "title": "Configuration",
-      "sub": "Your logo and the NFC chip destination",
-      "logoTitle": "Your logo",
-      "logoHint": "SVG file — required for 3D modelling",
-      "rejectTooLarge": "File too large (max 2 MB). Re-export your SVG from your design software.",
-      "rejectType": "This format isn't supported here. Only have a PNG or JPG? Write to us at contact@3beestudio.fr and we'll vectorise it for you.",
-      "rejectGeneric": "File rejected. Make sure it's a .svg file (max 2 MB).",
-      "previewAlt": "Logo preview",
-      "uploaded": "Logo added",
-      "clickToChange": "Click to change",
-      "uploading": "Uploading...",
-      "dropHere": "Drop your logo here",
-      "dropPrompt": "Drag & drop or click",
-      "maxSize": "Max 2 MB",
-      "noSvg": "No SVG?",
-      "svgInfo": "We can create one from your PNG or JPG image. Write to us at <mail>contact@3beestudio.fr</mail>.",
-      "linkTitle": "Your link",
-      "linkHint": "What opens when a phone is tapped against the keychain",
-      "formatLabel": "Your logo in SVG format · max 2 MB"
-    },
-    "quantity": {
-      "title": "Quantity",
-      "sub": "The price per keychain drops automatically with volume",
-      "label": "Number of keychains",
-      "popular": "Popular",
-      "or": "or enter",
-      "customPlaceholder": "Other quantity (min. 5)",
-      "unitPrice": "Unit price",
-      "subtotal": "Subtotal ({qty} keychains)",
-      "shipping": "Shipping",
-      "free": "Free",
-      "total": "Total to pay",
-      "freeShippingHint": "Only <amber>{count}</amber> more keychains for free shipping"
-    },
-    "contact": {
-      "title": "Contact & delivery",
-      "sub": "Your details and where to send your order",
-      "coordsTitle": "Your details",
-      "coordsHint": "To confirm the order",
-      "company": "Company name",
-      "companyPlaceholder": "Your company name",
-      "email": "Business email",
-      "phone": "Phone",
-      "sector": "Industry",
-      "sectorPlaceholder": "Choose an industry",
-      "addressTitle": "Delivery address",
-      "addressHint": "Where to send your order",
-      "recipient": "Recipient name",
-      "recipientPlaceholder": "First name Last name or company name",
-      "address": "Address",
-      "addressPlaceholder": "Street number and name",
-      "address2": "Additional info (optional)",
-      "address2Placeholder": "Building, floor, entry code…",
-      "postalCode": "Postal code",
-      "city": "City",
-      "country": "Country",
-      "countryPlaceholder": "Choose a country",
-      "recipientFirstName": "Recipient first name",
-      "recipientLastName": "Recipient last name",
-      "recipientFirstNamePlaceholder": "John",
-      "recipientLastNamePlaceholder": "Smith"
-    },
-    "sectors": {
-      "restaurant": "Restaurant / Food",
-      "beauty": "Hair salon / Beauty",
-      "wellness": "Wellness / Spa",
-      "realEstate": "Real estate",
-      "craftsman": "Craftsman / Construction",
-      "retail": "Retail",
-      "agency": "Communications agency",
-      "other": "Other"
-    },
-    "recap": {
-      "title": "Summary",
-      "sub": "One last look before secure payment",
-      "orderTitle": "Your order",
-      "logoAlt": "Your logo",
-      "logoValidated": "Logo validated",
-      "productName": "NFC connected keychain",
-      "productDesc": "3D printed with your logo · programmed chip",
-      "contactTitle": "Contact",
-      "shippingTitle": "Delivery",
-      "subtotal": "Subtotal",
-      "newsletterDiscount": "-10% first order (subscriber)",
-      "trackedShipping": "Tracked shipping",
-      "vat": "VAT not applicable<br></br>art. 293 B of the French Tax Code",
-      "securePayment": "Secure Stripe payment · Card, Apple Pay, Google Pay",
-      "redirecting": "Redirecting...",
-      "pay": "Pay {amount}",
-      "consent": "By confirming, you accept our <cgv>Terms of Sale</cgv>. No right of withdrawal (Art. L221-28)."
-    }
-  },
-  "nfcLink": {
-    "phoneInvalid": "Invalid phone number",
-    "emailInvalid": "Invalid email",
-    "required": "required",
-    "finalLink": "Final link:",
-    "types": {
-      "instagram": {
-        "label": "Instagram",
-        "placeholder": "yourhandle or full URL",
-        "help": [
-          "Open the Instagram app on your profile",
-          "Tap the menu ☰ (top right)",
-          "\"Share this profile\" → \"Copy link\"",
-          "Paste the link here — the handle will be extracted automatically"
-        ]
-      },
-      "tiktok": {
-        "label": "TikTok",
-        "placeholder": "yourhandle or full URL",
-        "help": [
-          "Open your TikTok profile",
-          "Tap the \"Share\" button (arrow)",
-          "\"Copy link\"",
-          "Paste it here"
-        ]
-      },
-      "linkedin": {
-        "label": "LinkedIn",
-        "placeholder": "your-profile or full URL",
-        "help": [
-          "Open your LinkedIn profile",
-          "Click \"More\" then \"Copy link to profile\"",
-          "Paste it here"
-        ]
-      },
-      "website": {
-        "label": "Website",
-        "placeholder": "mysite.com",
-        "help": [
-          "Paste the full address of your site (e.g. mysite.com)",
-          "No need for https:// — it's added automatically"
-        ]
-      },
-      "contact": {
-        "label": "Contact card",
-        "placeholder": "",
-        "help": [
-          "Fill in the name and at least one contact (phone or email)",
-          "When tapped with a phone, an \"Add to contacts\" window opens",
-          "The customer saves everything in one tap — no typing, no typos"
-        ]
-      },
-      "other": {
-        "label": "Other link",
-        "placeholder": "https://...",
-        "help": [
-          "Paste any link starting with https://"
-        ]
-      }
-    },
-    "contact": {
-      "firstName": "First name",
-      "lastName": "Last name or company",
-      "phone": "Phone",
-      "email": "Email",
-      "guidance": "Enter the name and at least one contact — phone or email."
-    },
-    "help": {
-      "contactToggle": "What's in the contact card?",
-      "linkToggle": "How do I get my {label} link?"
-    },
-    "meter": {
-      "label": "Size on the NFC chip",
-      "bytes": "{bytes} / {limit} bytes",
-      "over": "Too much information for the chip. The NFC chip (NTAG213) only stores ~{limit} bytes: shorten the name, or keep just one contact method (phone <em>or</em> email).",
-      "under": "The NFC chip has limited memory (~{limit} bytes). As long as the bar isn't full, everything fits."
-    },
-    "verify": {
-      "loading": "Verifying…",
-      "okWebsite": "Site reachable",
-      "okAccount": "Account found",
-      "notFoundWebsite": "Site not found — check the address",
-      "notFoundAccount": "Account not found — check the handle",
-      "impossible": "Automatic verification not possible"
+    "cta": {
+      "title": "A keychain project with your logo?",
+      "text": "Tell us what you have in mind: we reply with a quote within 48 hours.",
+      "button": "Request a quote"
     }
   },
   "customPage": {
@@ -556,6 +340,7 @@
       "upload": "Error uploading the file"
     },
     "projectTypes": {
+      "nfc": "NFC connected keychain",
       "cadeau": "Personalised gift",
       "deco": "Decor / design object",
       "prototype": "Product prototype",

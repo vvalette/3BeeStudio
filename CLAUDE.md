@@ -21,11 +21,10 @@ Studio d'impression 3D français (micro-entreprise) vendant des objets physiques
 ## État du projet (juin 2026)
 Trois flux de commande **complets et fonctionnels** :
 
-**NFC (porte-clés connectés)**
-- Formulaire multi-step (logo upload → lien NFC → contact → récap → Stripe Checkout)
-- Webhook Stripe + sync fallback sur la page suivi
-- Email de confirmation automatique (Resend, domaine vérifié)
-- Page suivi `/suivi/[orderId]` avec timeline et "Prochaines étapes"
+**NFC (porte-clés connectés) : sur devis uniquement (septembre 2026)**
+- **Plus de commande en ligne** : le formulaire multi-step et `/api/nfc/order` ont été retirés (aucune commande par ce parcours, toutes les demandes arrivaient par le sur-mesure). `/nfc` présente le produit **sans aucun prix, quantité minimale ni délai chiffré** et renvoie vers `/custom?type=nfc`, qui présélectionne le type de projet `nfc` du formulaire sur-mesure
+- Les commandes NFC déjà passées restent gérées : webhook Stripe (branche `order_id`), emails, page suivi `/suivi/[orderId]`, admin `/admin/nfc` (`DestinationIcon` extrait dans `src/components/nfc/`)
+- JSON-LD `/nfc` en `Service` (pas de `Product` : Google le signale en erreur sans offre)
 
 **Sur-mesure**
 - Formulaire multi-step `/custom` (type projet → description → budget/délai → contact → adresse). `project_type` stocke le **slug** (`deco`), jamais le libellé : tout affichage passe par `projectTypeLabel()`
@@ -95,7 +94,7 @@ Pages **placeholder** (Phase 2) : `/portfolio`, `/contact`
    - Le renoncement au droit de rétractation (art. L221-28 3°) est **obligatoire** au checkout et horodaté (`shop_orders.digital_waiver_at`) — sans lui la commande est refusée côté serveur
    - Panier mixte : le port se calcule sur la part **physique** seule (`splitCart`) ; un panier 100 % fichiers passe en `delivery_mode = 'digital'` (pas d'adresse collectée)
    - CA à déclarer séparément : les fichiers sont une **prestation de service**, pas une vente de marchandise (plafonds et abattements différents) — colonne « Catégorie fiscale » dans l'export CSV
-5. Flux Stripe NFC = **paiement intégral** (Checkout Session) — pas d'acompte sur le flux actuel
+5. Porte-clés NFC = **sur devis** via le sur-mesure (acompte + solde) : ne jamais réafficher de prix ni de parcours de commande sur `/nfc` sans que l'utilisateur le demande
 6. **i18n implémentée** (next-intl) : FR par défaut + EN (`localePrefix: 'as-needed'` → `/` FR, `/en/` EN). Toute chaîne visible passe par `messages/fr.json` + `messages/en.json` — ne jamais hardcoder de texte non-extractible
 7. **`cursor-pointer`** obligatoire sur tous les éléments interactifs (boutons, sélecteurs, options)
 8. **Navbar `fixed h-[72px]`** — le `<main>` du layout a `pt-[72px]`, ne jamais doubler dans les pages

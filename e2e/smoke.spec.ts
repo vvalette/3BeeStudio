@@ -17,12 +17,21 @@ test.describe('Landing', () => {
   })
 })
 
-test.describe('Flux NFC', () => {
-  test('la page /nfc affiche le formulaire multi-step', async ({ page }) => {
+test.describe('Porte-clé NFC', () => {
+  test('la page /nfc présente le produit et renvoie vers une demande de devis', async ({ page }) => {
     await page.goto('/nfc')
     await expect(page.getByRole('heading', { level: 1 })).toContainText('NFC')
-    // Le formulaire de commande est présent avec son bouton Suivant
-    await expect(page.getByRole('button', { name: 'Suivant' }).first()).toBeVisible()
+    // Plus de commande en ligne ni de prix : la page mène au formulaire sur-mesure
+    await expect(page.getByRole('button', { name: 'Suivant' })).toHaveCount(0)
+    await expect(page.getByText('€')).toHaveCount(0)
+
+    await page.getByRole('link', { name: 'Demander un devis' }).last().click()
+    await expect(page).toHaveURL(/\/custom\?type=nfc/)
+    // Le type « Porte-clé connecté NFC » arrive présélectionné
+    await page.getByRole('textbox').first().fill('Cinquante porte-clés à notre logo pour un salon.')
+    await page.getByRole('button', { name: /^Continuer →$/ }).click()
+    // Sans type choisi, l'étape 1 refuserait d'avancer : on arrive aux coordonnées
+    await expect(page.getByText('Prénom').first()).toBeVisible()
   })
 })
 

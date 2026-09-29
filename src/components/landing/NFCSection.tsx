@@ -175,24 +175,31 @@ function PhoneMockup() {
   )
 }
 
-export default function NFCSection() {
+/**
+ * Présentation du porte-clé connecté. `page` : sur /nfc, sous le titre de la
+ * page, donc sans en-tête propre (il doublerait le h1).
+ */
+export default function NFCSection({ variant = 'home' }: { variant?: 'home' | 'page' }) {
   const t = useTranslations('nfcSection')
   const [videoOpen, setVideoOpen] = useState(false)
+  const isPage = variant === 'page'
 
   return (
-    <section className="py-20 lg:py-28 border-t border-[var(--line)]">
+    <section className={isPage ? 'py-6 lg:py-10' : 'py-20 lg:py-28 border-t border-[var(--line)]'}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
 
         {/* Header */}
-        <Reveal className="mb-12 max-w-2xl">
-          <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
-          <h2 className="font-sans font-bold text-ink-0 mb-4" style={{ fontSize: 'clamp(1.875rem, 4vw, 3rem)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
-            {t.rich('heading', { br: () => <br /> })}
-          </h2>
-          <p className="text-ink-2" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.15rem)', lineHeight: 1.55 }}>
-            {t.rich('subtitle', { br: () => <br /> })}
-          </p>
-        </Reveal>
+        {!isPage && (
+          <Reveal className="mb-12 max-w-2xl">
+            <div className="mb-3"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
+            <h2 className="font-sans font-bold text-ink-0 mb-4" style={{ fontSize: 'clamp(1.875rem, 4vw, 3rem)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
+              {t.rich('heading', { br: () => <br /> })}
+            </h2>
+            <p className="text-ink-2" style={{ fontSize: 'clamp(1rem, 1.3vw, 1.15rem)', lineHeight: 1.55 }}>
+              {t.rich('subtitle', { br: () => <br /> })}
+            </p>
+          </Reveal>
+        )}
 
         <Reveal delay={120} className="grid gap-6 lg:grid-cols-2 lg:gap-8 items-stretch">
 
@@ -204,11 +211,11 @@ export default function NFCSection() {
             {/* Hex pattern */}
             <svg aria-hidden className="absolute inset-0 w-full h-full opacity-[0.18]">
               <defs>
-                <pattern id="nfc-hex" x="0" y="0" width="44" height="50" patternUnits="userSpaceOnUse">
+                <pattern id="nfc-section-hex" x="0" y="0" width="44" height="50" patternUnits="userSpaceOnUse">
                   <path d="M22 1 L42 12 L42 36 L22 47 L2 36 L2 12 Z" fill="none" stroke="rgba(245,158,11,0.3)" strokeWidth="0.5" />
                 </pattern>
               </defs>
-              <rect width="100%" height="100%" fill="url(#nfc-hex)" />
+              <rect width="100%" height="100%" fill="url(#nfc-section-hex)" />
             </svg>
             {/* Glow */}
             <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 40% 42%, rgba(245,158,11,0.20), transparent 62%)' }} />
@@ -342,15 +349,12 @@ export default function NFCSection() {
 
             <div className="flex flex-col gap-2.5">
               <Link
-                href="/nfc#commander"
+                href={{ pathname: '/custom', query: { type: 'nfc' } }}
                 className="flex h-[54px] w-full items-center justify-center gap-2 rounded-pill font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
                 style={{ background: 'var(--btn-primary-bg)', boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset' }}
               >
                 {t('orderCta')} <ArrowIcon />
               </Link>
-              <p className="text-center font-mono text-ink-3" style={{ fontSize: 11, letterSpacing: '0.04em' }}>
-                {t.rich('priceLine', { amber: (chunks) => <span className="text-amber-soft">{chunks}</span> })}
-              </p>
             </div>
 
             <button

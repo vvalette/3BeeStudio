@@ -5,7 +5,7 @@ import { ORDER_STATUS_STEPS, formatDestination, calcOrder, type Order, type Orde
 import { formatPrice } from '@/lib/utils'
 import { resolveTracking } from '@/lib/tracking'
 import { STATUS_PILL } from '@/lib/status-ui'
-import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
+import DestinationIcon from '@/components/nfc/DestinationIcon'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'

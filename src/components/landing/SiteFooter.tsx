@@ -57,8 +57,8 @@ const columns = [
     links: [
       { labelKey: 'nfc.discover', href: '/nfc' },
       { labelKey: 'nfc.how',      href: '/nfc' },
-      { labelKey: 'nfc.pricing',  href: '/nfc' },
-      { labelKey: 'nfc.order',    href: '/nfc#commander' },
+      // Plus de commande en ligne : les porte-clés se font sur devis.
+      { labelKey: 'nfc.order',    href: '/custom?type=nfc' },
     ],
   },
   {
