@@ -42,6 +42,12 @@
       "mentions": "Mentions légales",
       "cgv": "CGV",
       "privacy": "Politique de confidentialité"
+    },
+    "partner": {
+      "eyebrow": "PARTENAIRE",
+      "tagline": "L'actu tech, soigneusement choisie. Gratuite.",
+      "badgeAlt": "Disponible sur Google Play",
+      "aria": "Appy Geek, l'appli d'actu tech, sur Google Play (partenaire, nouvel onglet)"
     }
   },
   "hero": {

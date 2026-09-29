@@ -42,6 +42,12 @@
       "mentions": "Legal notice",
       "cgv": "Terms of sale",
       "privacy": "Privacy policy"
+    },
+    "partner": {
+      "eyebrow": "PARTNER",
+      "tagline": "Tech news, carefully curated. Free.",
+      "badgeAlt": "Get it on Google Play",
+      "aria": "Appy Geek, the tech news app, on Google Play (partner, new tab)"
     }
   },
   "hero": {

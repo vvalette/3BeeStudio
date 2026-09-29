@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import Tooltip from '@/components/ui/Tooltip'
 import { GOOGLE_REVIEWS_URL } from '@/lib/links'
+import PartnerCard from './PartnerCard'
 
 /* ── Social SVG icons ── */
 function TikTokIcon() {
@@ -115,6 +116,8 @@ export default function SiteFooter() {
                 </Tooltip>
               ))}
             </div>
+
+            <PartnerCard />
           </div>
 
           {/* Nav columns */}
