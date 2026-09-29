@@ -5,12 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useConfirm } from '@/components/ui/ConfirmModal'
 import { ORDER_STATUS_LABELS, formatDestination, type Order, type OrderStatus } from '@/types/order'
-import { CUSTOM_STATUS_LABELS, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
+import { CUSTOM_STATUS_LABELS, customPaymentStatus, hasMoneyDue, paymentState, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import { SHOP_STATUS_LABELS, type ShopOrder, type ShopOrderStatus } from '@/types/shop-order'
 import { formatPrice } from '@/lib/utils'
 import {
   STATUS_PILL, STATUS_ACCENT,
-  CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT,
+  CUSTOM_STATUS_PILL, CUSTOM_STATUS_ACCENT, CUSTOM_PAYMENT_PILL,
   SHOP_STATUS_PILL, SHOP_STATUS_ACCENT,
   isShopOrderActionable,
 } from '@/lib/status-ui'
@@ -99,7 +99,6 @@ export default function AdminOrdersList({
   // ── Stats ──
   const stats = useMemo(() => {
     const nfcPaid    = periodNfc.filter((o) => o.status !== 'pending_payment')
-    const customPaid = periodCustom.filter((o) => ['deposit_paid', 'in_production', 'shipped', 'delivered'].includes(o.status))
     const shopPaid    = periodShop.filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
     const digitalPaid = periodDigital.filter((o) => o.status !== 'pending_payment' && o.status !== 'cancelled')
     return {
@@ -109,8 +108,11 @@ export default function AdminOrdersList({
       nfcProduction: periodNfc.filter((o) => ['confirmed', 'processing'].includes(o.status)).length,
       nfcNoLabel:    periodNfc.filter((o) => o.status === 'processing' && !o.boxtal_order_id).length,
       // Custom
-      customRevenue:    customPaid.reduce((s, o) => s + (o.deposit_amount ?? 0), 0),
-      customTotal:      periodCustom.length,
+      // Acomptes ET soldes encaissés : ne compter que l'acompte laissait le solde
+      // hors du CA affiché.
+      customRevenue:    periodCustom.reduce((s, o) => s + (o.status === 'cancelled' ? 0 : paymentState(o).amountPaid), 0),
+      customMoneyDue:   periodCustom.filter(hasMoneyDue).reduce((s, o) => s + (paymentState(o).outstanding ?? 0), 0),
+      customMoneyDueCount: periodCustom.filter(hasMoneyDue).length,
       customPending:    periodCustom.filter((o) => o.status === 'pending_quote').length,
       customProduction: periodCustom.filter((o) => ['deposit_paid', 'in_production'].includes(o.status)).length,
       // Boutique (colis : physique pur ou mixte)
@@ -131,7 +133,7 @@ export default function AdminOrdersList({
       // Combiné
       totalAll:   periodNfc.length + periodCustom.length + periodShop.length + periodDigital.length,
       revenueAll: nfcPaid.reduce((s, o) => s + o.total_amount, 0)
-                + customPaid.reduce((s, o) => s + (o.deposit_amount ?? 0), 0)
+                + periodCustom.reduce((s, o) => s + (o.status === 'cancelled' ? 0 : paymentState(o).amountPaid), 0)
                 + shopPaid.reduce((s, o) => s + o.total_amount, 0)
                 + digitalPaid.reduce((s, o) => s + o.total_amount, 0),
     }
@@ -250,8 +252,8 @@ export default function AdminOrdersList({
             { label: 'En production',      value: String(stats.nfcProduction),     accent: '#fb923c', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" /></svg> },
             { label: 'Étiquettes à faire', value: String(stats.nfcNoLabel),        accent: '#a3e635', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8.6 1.5H14v5.4l-7 7-5.4-5.4 7-7z" /><circle cx="11" cy="4.6" r="1" fill="currentColor" stroke="none" /></svg> },
           ] : section === 'custom' ? [
-            { label: 'CA acomptes reçus',  value: formatPrice(stats.customRevenue), accent: '#F59E0B', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
-            { label: 'Demandes totales',   value: String(stats.customTotal),        accent: 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8z" /></svg> },
+            { label: 'CA encaissé',        value: formatPrice(stats.customRevenue), accent: '#F59E0B', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11.5 4.5a4.5 4.5 0 100 7M2.5 6.8h6M2.5 9.2h6" /></svg> },
+            { label: stats.customMoneyDueCount ? `À récupérer · ${stats.customMoneyDueCount} demande${stats.customMoneyDueCount > 1 ? 's' : ''}` : 'Rien à récupérer', value: formatPrice(stats.customMoneyDue), accent: stats.customMoneyDue ? '#f87171' : 'var(--ink-1)', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 4.8v3.6M8 10.8v.2" /></svg> },
             { label: 'Devis à envoyer',    value: String(stats.customPending),      accent: '#fbbf24', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H3a1 1 0 00-1 1v10l3-2h8a1 1 0 001-1V3a1 1 0 00-1-1z" /></svg> },
             { label: 'En production',      value: String(stats.customProduction),   accent: '#fb923c', icon: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6V2.5h8V6M4 11H2.5V6h11v5H12M4 9.5h8V14H4V9.5z" /></svg> },
           ] : section === 'digital' ? [
@@ -705,6 +707,7 @@ function CustomList({
     <div className="space-y-2">
       {orders.map((order) => {
         const status = order.status as CustomOrderStatus
+        const payStatus = customPaymentStatus(order)
         const created = new Date(order.created_at)
         const isSelected = selected.has(order.id)
         return (
@@ -744,6 +747,11 @@ function CustomList({
 
               <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-col sm:items-end sm:gap-1.5">
                 <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-semibold', CUSTOM_STATUS_PILL[status]].join(' ')}>{CUSTOM_STATUS_LABELS[status]}</span>
+                {payStatus && (
+                  <span className={['rounded-pill px-2.5 py-0.5 text-[11px] font-semibold', CUSTOM_PAYMENT_PILL[payStatus.key]].join(' ')}>
+                    {payStatus.label}{payStatus.amount ? ` · ${formatPrice(payStatus.amount)}` : ''}
+                  </span>
+                )}
                 {order.deposit_amount
                   ? <span className="font-mono text-sm font-semibold text-ink-0">{formatPrice(order.deposit_amount)}</span>
                   : <span className="font-mono text-xs text-ink-3">— €</span>}

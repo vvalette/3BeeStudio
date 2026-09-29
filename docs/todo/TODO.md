@@ -55,6 +55,9 @@
 - [x] `src/app/admin/commandes/page.tsx` — Dashboard combiné NFC + sur-mesure (stats, tabs, filtres, tri, bulk delete) ✅
 - [x] `src/app/admin/commandes/[id]/page.tsx` — Détail NFC + changement statut + Boxtal ✅
 - [x] `src/app/admin/custom/[orderId]/page.tsx` — Détail sur-mesure + changement statut + envoi devis Stripe ✅
+- [ ] **Sur-mesure : total modifié après un solde déclaré reçu** (remonté le 29/09/26 sur Hôtel Le Capricorne : total relevé de 30 €, solde resté à 294,45 €, 30 € de reste dû ; corrigé à la main en annulant puis redéclarant le solde). Ne **pas** recalculer le solde encaissé tout seul : c'est le montant du relevé bancaire, repris dans l'export CSV, et le client n'a pas forcément payé la différence. À faire :
+  - bouton « Corriger le montant » sur un encaissement déclaré (garde date et moyen, même plafond `total − acompte` côté serveur) au lieu d'annuler puis redéclarer
+  - quand le total change alors que le solde est déjà reçu : le signaler dans la carte « Paiements » avec deux gestes, « Le client a réglé le nouveau montant » (corrige l'encaissement) ou « Réclamer la différence » (lève aussi la garde « solde déjà réglé » de `/api/custom/[orderId]/balance`)
 
 ## 📧 Sur-mesure — Emails
 

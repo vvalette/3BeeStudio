@@ -1,5 +1,5 @@
 import type { OrderStatus } from '@/types/order'
-import type { CustomOrderStatus } from '@/types/custom-order'
+import type { CustomOrderStatus, CustomPaymentStatusKey } from '@/types/custom-order'
 import type { ShopOrderStatus } from '@/types/shop-order'
 
 // ── NFC orders ────────────────────────────────────────────────────────────────
@@ -45,6 +45,14 @@ export const CUSTOM_STATUS_PILL: Record<CustomOrderStatus, string> = {
   shipped:        'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20',
   delivered:      'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20',
   cancelled:      'bg-red-500/15 text-red-400 border border-red-500/20',
+}
+
+/** Statut de paiement sur-mesure, en regard du statut de production. */
+export const CUSTOM_PAYMENT_PILL: Record<CustomPaymentStatusKey, string> = {
+  paid:             'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  unpaid:           'bg-red-500/15 text-red-400 border border-red-500/30',
+  balance_due:      'bg-amber/15 text-amber border border-amber/30',
+  awaiting_deposit: 'bg-zinc-500/10 text-ink-3 border border-zinc-500/20',
 }
 
 export const CUSTOM_STATUS_ACCENT: Record<CustomOrderStatus, string> = {
