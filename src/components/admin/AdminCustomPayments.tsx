@@ -3,9 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Select from '@/components/ui/Select'
+import { useConfirm } from '@/components/ui/ConfirmModal'
 import PaymentModeToggle, { type QuotePaymentMode } from './PaymentModeToggle'
 import { formatPrice } from '@/lib/utils'
 import {
+  balanceAnomaly,
+  balanceCap,
   computeBalance,
   paymentState,
   MANUAL_PAYMENT_METHODS,
@@ -52,10 +55,18 @@ export default function AdminCustomPayments({
 }) {
   const pay = paymentState(order)
   const balanceDue = computeBalance(order)
-  const balanceAmount = order.balance_amount ?? balanceDue
+  const cap = balanceCap(order)
+  const anomaly = balanceAnomaly(order)
+  // Un solde encaissé s'affiche pour ce qu'il a rapporté ; sinon, pour ce qui
+  // reste réclamable, jamais au-delà de `total − acompte`.
+  const balanceAmount = pay.balancePaid ? order.balance_amount ?? balanceDue : balanceDue
   // Acompte égal au total : le client a tout réglé d'un coup. Continuer à
   // appeler ça un « acompte » ferait chercher un solde qui n'existe pas.
   const inFull = !!order.deposit_amount && order.deposit_amount === order.total_amount
+  // Solde à 0 : ni ligne ni bouton, sauf s'il reste quelque chose à corriger
+  // ou un encaissement à pouvoir annuler.
+  const showBalance = pay.balancePaid || !!anomaly || cap !== 0
+  const balanceOpen = !pay.balancePaid && cap !== null && !!balanceDue
 
   return (
     <div className="space-y-4 text-sm">
@@ -111,9 +122,11 @@ export default function AdminCustomPayments({
       {/* ── Solde. Plus de verrou sur l'acompte encaissé : il empêchait de
              déclarer un solde reçu quand le premier versement était arrivé
              hors de l'app, et fermait la carte sur un cul-de-sac. ── */}
-      {(!inFull || order.balance_amount) && (
+      {showBalance && (
         <section className="space-y-2 border-t border-[var(--line)] pt-4">
-          {balanceAmount ? (
+          {anomaly && <PhantomBalance order={order} onChange={onChange} />}
+
+          {(pay.balancePaid || balanceOpen) && balanceAmount ? (
             <PaymentLine
               label="Solde"
               amount={balanceAmount}
@@ -122,25 +135,26 @@ export default function AdminCustomPayments({
               method={pay.balanceMethod}
               pendingLabel={order.balance_payment_url ? 'demande envoyée, en attente' : 'pas encore réclamé'}
             />
-          ) : (
+          ) : cap === null ? (
+            // Sans total, rien ne borne le solde : ni réclamation ni déclaration.
             <p className="text-[13px] text-ink-3">
-              {order.total_amount
-                ? 'Solde : rien à réclamer après l’acompte.'
-                : 'Solde : montant à saisir, aucun total n’est enregistré.'}
+              Solde : renseigne d’abord le total du projet dans la carte « Devis ».
             </p>
+          ) : null}
+
+          {balanceOpen && <BalanceRequest order={order} onChange={onChange} />}
+
+          {(pay.balancePaid || balanceOpen) && (
+            <Receipt
+              order={order}
+              kind="balance"
+              received={pay.balancePaid}
+              declared={!!pay.balancePaidAt}
+              defaultAmount={balanceAmount}
+              suggestions={suggestionsFor(order, 'balance')}
+              onChange={onChange}
+            />
           )}
-
-          {!pay.balancePaid && <BalanceRequest order={order} onChange={onChange} />}
-
-          <Receipt
-            order={order}
-            kind="balance"
-            received={pay.balancePaid}
-            declared={!!pay.balancePaidAt}
-            defaultAmount={balanceAmount}
-            suggestions={suggestionsFor(order, 'balance')}
-            onChange={onChange}
-          />
         </section>
       )}
     </div>
@@ -185,11 +199,10 @@ function suggestionsFor(order: CustomOrder, kind: 'deposit' | 'balance'): Sugges
     }
     return out
   }
+  // Rien au-delà du reste dû : le serveur refuserait tout montant qui ferait
+  // dépasser l'encaissé au total.
   const due = computeBalance(order)
   if (due) out.push({ label: 'Reste dû', value: due })
-  if (order.total_amount && order.total_amount !== due) {
-    out.push({ label: 'Total du projet', value: order.total_amount })
-  }
   return out
 }
 
@@ -222,6 +235,11 @@ function BalanceRequest({
     const value = cents(amount)
     if (!value) {
       setError('Montant du solde requis')
+      return
+    }
+    const cap = balanceCap(order)
+    if (cap !== null && value > cap) {
+      setError(`Le solde ne peut dépasser ${formatPrice(cap)} (total moins acompte). Mets le total à jour dans la carte « Devis » si le projet a évolué.`)
       return
     }
     setError(null)
@@ -299,9 +317,8 @@ function BalanceRequest({
           className="w-full rounded-lg border border-[var(--line-2)] bg-bg-2 px-3 py-2 font-mono text-sm text-ink-0 placeholder:text-ink-3 focus:border-amber/50 focus:outline-none"
         />
         <p className="mt-1 text-[11px] leading-relaxed text-ink-3">
-          {computeBalance(order)
-            ? 'Pré-rempli avec le total du devis moins l’acompte. Ajustable si le projet a évolué.'
-            : 'Renseigne le total dans la carte « Devis » pour un pré-remplissage automatique.'}
+          Pré-rempli avec le total du devis moins l’acompte, qui est aussi le maximum.
+          Si le projet a évolué, mets d’abord le total à jour dans la carte « Devis ».
         </p>
       </div>
 
@@ -327,6 +344,83 @@ function BalanceRequest({
           Annuler
         </button>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Solde incohérent avec le total : montant stocké au-delà de `total − acompte`,
+ * ou encaissé supérieur au total. Seul un solde réglé par Stripe ne s'efface
+ * pas : l'argent est arrivé, il se rembourse depuis Stripe.
+ */
+function PhantomBalance({
+  order,
+  onChange,
+}: {
+  order: CustomOrder
+  onChange: (order: CustomOrder) => void
+}) {
+  const router = useRouter()
+  const { confirm, modal } = useConfirm()
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState<string | null>(null)
+  const anomaly = balanceAnomaly(order)
+  if (!anomaly) return null
+
+  const why = anomaly.kind === 'overpaid'
+    ? `L’encaissé (${formatPrice(anomaly.amountPaid)}) dépasse le total du projet.`
+    : anomaly.cap === 0
+      ? `Un solde de ${formatPrice(anomaly.stored)} est enregistré alors que l’acompte couvre déjà le total.`
+      : `Un solde de ${formatPrice(anomaly.stored)} est enregistré, au-delà du maximum de ${formatPrice(anomaly.cap)} (total moins acompte).`
+
+  async function clear() {
+    const ok = await confirm({
+      title: 'Supprimer le solde ?',
+      message: 'Le montant du solde, son lien de paiement et sa déclaration d’encaissement éventuelle sont effacés. L’acompte n’est pas touché.',
+      confirmLabel: 'Supprimer le solde',
+      variant: 'danger',
+    })
+    if (!ok) return
+    setError(null)
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/custom/${order.id}/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'balance', clear: true }),
+      })
+      const json = await res.json().catch(() => null) as (CustomOrder & { error?: string }) | null
+      if (!res.ok) throw new Error(json?.error ?? `Erreur ${res.status}`)
+      if (json) onChange(json)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-xl border border-red-500/30 bg-red-500/5 p-3">
+      <p className="text-[12px] leading-relaxed text-ink-2">
+        <span className="font-semibold text-red-400">Solde incohérent.</span> {why}
+      </p>
+      {anomaly.paidByStripe ? (
+        <p className="text-[11px] leading-relaxed text-ink-3">
+          Ce solde a été réglé par carte : l’argent est arrivé. Rembourse l’excédent depuis Stripe.
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={clear}
+          disabled={saving}
+          className="flex w-full cursor-pointer items-center justify-center rounded-lg border border-red-500/40 px-3 py-2 text-[12px] font-medium text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? 'Suppression…' : 'Supprimer le solde'}
+        </button>
+      )}
+      {error && <p className="text-[11px] text-red-400">{error}</p>}
+      {modal}
     </div>
   )
 }

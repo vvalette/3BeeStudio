@@ -163,16 +163,34 @@ export const DEADLINES = [
 export const BUDGET_KEYS = ['under50', '50to200', '200to500', '500to1000', 'over1000'] as const
 export const DEADLINE_KEYS = ['urgent', 'month', 'quarter', 'flexible'] as const
 
+type BalanceFields = Pick<CustomOrder, 'total_amount' | 'deposit_amount' | 'balance_amount'>
+
 /**
- * Reste à régler après l'acompte. `balance_amount` fait foi une fois la demande
- * de solde émise (l'admin peut l'avoir ajusté) ; avant ça, c'est la différence
- * entre le total estimé et l'acompte. `null` = rien à réclamer.
+ * Plafond du solde : total moins acompte, jamais négatif. `null` quand aucun
+ * total n'est enregistré, faute de quoi rien ne borne le solde.
  */
-export function computeBalance(order: Pick<CustomOrder, 'total_amount' | 'deposit_amount' | 'balance_amount'>): number | null {
-  if (order.balance_amount) return order.balance_amount
-  if (!order.total_amount || !order.deposit_amount) return null
-  const rest = order.total_amount - order.deposit_amount
-  return rest > 0 ? rest : null
+export function balanceCap(order: Pick<CustomOrder, 'total_amount' | 'deposit_amount'>): number | null {
+  if (!order.total_amount) return null
+  return Math.max(0, order.total_amount - (order.deposit_amount ?? 0))
+}
+
+/**
+ * Reste à régler après l'acompte, `null` = rien à réclamer.
+ *
+ * Toujours borné par le total : un `balance_amount` stocké au-delà de
+ * `total − acompte` (acompte relevé après coup, solde réclamé en trop) est un
+ * solde fantôme. Le prendre tel quel affichait « Reste 40 € » sur un devis réglé
+ * en une fois, et laissait déclarer 80 € encaissés pour un projet à 40 €. Un
+ * montant stocké plus bas que le plafond reste valable (geste commercial).
+ *
+ * Sans total, seul un montant déjà réclamé fait foi.
+ */
+export function computeBalance(order: BalanceFields): number | null {
+  const cap = balanceCap(order)
+  if (cap === null) return order.balance_amount || null
+  if (cap === 0) return null
+  if (order.balance_amount && order.balance_amount <= cap) return order.balance_amount
+  return cap
 }
 
 /** Statuts à partir desquels l'acompte est nécessairement encaissé. */
@@ -186,12 +204,16 @@ export interface CustomPaymentState {
   balancePaidAt: string | null
   balancePaid: boolean
   balanceMethod: PaymentMethod | null
-  /** Reste à encaisser, `null` si rien n'est dû. */
+  /** Reste à encaisser sur le total, `null` si rien n'est dû. */
   outstanding: number | null
   /** Encaissé à ce jour. */
   amountPaid: number
   fullyPaid: boolean
 }
+
+type PaymentFields = Pick<CustomOrder,
+  'status' | 'deposit_amount' | 'deposit_paid_at' | 'deposit_method' |
+  'total_amount' | 'balance_amount' | 'balance_paid_at' | 'balance_method'>
 
 /**
  * État de paiement d'une demande sur-mesure, partagé par la fiche admin et la
@@ -200,23 +222,33 @@ export interface CustomPaymentState {
  * L'acompte se déduit du statut autant que de la date : les demandes payées
  * avant l'ajout de `deposit_paid_at` n'ont pas d'horodatage, mais leur statut
  * dit bien que l'argent est arrivé.
+ *
+ * `outstanding` est `total − encaissé` dès qu'un total existe : le badge de la
+ * carte et la ligne « Reste dû » lisent ainsi le même chiffre.
  */
-export function paymentState(
-  order: Pick<CustomOrder,
-    'status' | 'deposit_amount' | 'deposit_paid_at' | 'deposit_method' |
-    'total_amount' | 'balance_amount' | 'balance_paid_at' | 'balance_method'>,
-): CustomPaymentState {
+export function paymentState(order: PaymentFields): CustomPaymentState {
   const depositPaid = !!order.deposit_paid_at || PAID_STATUSES.includes(order.status)
   const balancePaid = !!order.balance_paid_at
   const balanceDue = computeBalance(order)
 
+  // Un solde encaissé compte pour ce qu'il vaut réellement, même au-delà du
+  // plafond : c'est de l'argent reçu, `balanceAnomaly` se charge de le signaler.
   const amountPaid =
     (depositPaid ? order.deposit_amount ?? 0 : 0) +
     (balancePaid ? order.balance_amount ?? balanceDue ?? 0 : 0)
 
-  // Soldé : le solde est encaissé, ou il n'y avait rien à réclamer après
-  // l'acompte (devis réglé en une fois).
-  const fullyPaid = balancePaid || (depositPaid && balanceDue === null && !!order.deposit_amount)
+  let fullyPaid: boolean
+  let outstanding: number | null
+  if (order.total_amount) {
+    const rest = Math.max(0, order.total_amount - amountPaid)
+    fullyPaid = amountPaid > 0 && rest === 0
+    outstanding = rest > 0 ? rest : null
+  } else {
+    // Sans total : soldé si le solde est encaissé, ou si rien n'était à
+    // réclamer après un acompte reçu.
+    fullyPaid = balancePaid || (depositPaid && balanceDue === null && !!order.deposit_amount)
+    outstanding = fullyPaid ? null : balanceDue
+  }
 
   return {
     depositPaidAt: order.deposit_paid_at,
@@ -225,8 +257,39 @@ export function paymentState(
     balancePaidAt: order.balance_paid_at,
     balancePaid,
     balanceMethod: order.balance_method ?? null,
-    outstanding: fullyPaid ? null : balanceDue,
+    outstanding,
     amountPaid,
     fullyPaid,
+  }
+}
+
+export interface BalanceAnomaly {
+  /** `phantom` : solde stocké au-delà de `total − acompte`. `overpaid` : encaissé > total. */
+  kind: 'phantom' | 'overpaid'
+  /** Solde stocké, en centimes. */
+  stored: number
+  /** Ce que le solde devrait valoir au plus. */
+  cap: number
+  amountPaid: number
+  /** Solde encaissé par Stripe : de l'argent réel, à rembourser, jamais à effacer. */
+  paidByStripe: boolean
+}
+
+/**
+ * Solde incohérent avec le total : repéré par le script de nettoyage et par la
+ * fiche admin (bouton « Supprimer le solde »). `null` = rien à corriger.
+ */
+export function balanceAnomaly(order: PaymentFields): BalanceAnomaly | null {
+  const cap = balanceCap(order)
+  if (cap === null || !order.balance_amount) return null
+  const { amountPaid } = paymentState(order)
+  const overpaid = amountPaid > order.total_amount!
+  if (order.balance_amount <= cap && !overpaid) return null
+  return {
+    kind: overpaid ? 'overpaid' : 'phantom',
+    stored: order.balance_amount,
+    cap,
+    amountPaid,
+    paidByStripe: !!order.balance_paid_at && order.balance_method === 'stripe',
   }
 }

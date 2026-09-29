@@ -44,6 +44,8 @@ const { supabaseMock, state } = vi.hoisted(() => {
 
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: supabaseMock, supabase: supabaseMock }))
 vi.mock('@/lib/auth', () => ({ isAuthenticated: vi.fn(async () => true) }))
+const sessionExpire = vi.hoisted(() => vi.fn(async () => ({})))
+vi.mock('@/lib/stripe', () => ({ stripe: { checkout: { sessions: { expire: sessionExpire } } } }))
 
 import { POST } from './route'
 import { isAuthenticated } from '@/lib/auth'
@@ -75,6 +77,7 @@ function lastWrite() {
 
 beforeEach(() => {
   state.reset()
+  sessionExpire.mockClear()
   vi.mocked(isAuthenticated).mockResolvedValue(true)
 })
 
@@ -181,5 +184,103 @@ describe('POST /api/admin/custom/[orderId]/payment', () => {
     expect(write.balance_paid_at).toBeTruthy()
     // Le solde ne touche pas au statut : c'est l'expédition qui avance la timeline.
     expect(write).not.toHaveProperty('status')
+  })
+
+  describe('l’encaissé ne dépasse jamais le total', () => {
+    // Cas réel 79e3707b : total 40 €, acompte 40 € reçu, puis « Déclarer le solde
+    // reçu » avait porté l'encaissé à 80 €.
+    const inFull = {
+      ...ORDER, status: 'delivered', total_amount: 4000, deposit_amount: 4000, balance_amount: 4000,
+    }
+
+    it('refuse de déclarer un solde quand l’acompte couvre déjà le total', async () => {
+      state.queue('custom_orders', { data: inFull, error: null })
+      const res = await POST(request({ kind: 'balance', method: 'transfer' }), { params })
+      expect(res.status).toBe(422)
+      expect(state.writes).toHaveLength(0)
+    })
+
+    it('refuse un solde supérieur à total − acompte', async () => {
+      state.queue('custom_orders', { data: { ...ORDER, status: 'in_production' }, error: null })
+      const res = await POST(request({ kind: 'balance', amount: 17501 }), { params })
+      expect(res.status).toBe(422)
+      expect(state.writes).toHaveLength(0)
+    })
+
+    it('refuse un solde tant qu’aucun total n’est enregistré', async () => {
+      state.queue('custom_orders', { data: { ...ORDER, status: 'in_production', total_amount: null }, error: null })
+      const res = await POST(request({ kind: 'balance', amount: 5000 }), { params })
+      expect(res.status).toBe(422)
+      expect((await res.json() as { error: string }).error).toContain('total du projet')
+    })
+
+    it('acompte = 0 : le solde peut valoir tout le total, pas plus', async () => {
+      const noDeposit = { ...ORDER, status: 'in_production', deposit_amount: 0 }
+      state.queue('custom_orders', { data: noDeposit, error: null }, { data: noDeposit, error: null })
+      const ok = await POST(request({ kind: 'balance' }), { params })
+      expect(ok.status).toBe(200)
+      expect(lastWrite().balance_amount).toBe(35000)
+
+      state.queue('custom_orders', { data: noDeposit, error: null })
+      const tooMuch = await POST(request({ kind: 'balance', amount: 35001 }), { params })
+      expect(tooMuch.status).toBe(422)
+    })
+
+    it('refuse un acompte qui, ajouté au solde déjà reçu, dépasserait le total', async () => {
+      state.queue('custom_orders', {
+        data: { ...ORDER, balance_amount: 17500, balance_paid_at: '2026-08-21T09:00:00Z', balance_method: 'transfer' },
+        error: null,
+      })
+      const res = await POST(request({ kind: 'deposit', amount: 20000 }), { params })
+      expect(res.status).toBe(422)
+      expect(state.writes).toHaveLength(0)
+    })
+  })
+
+  describe('suppression d’un solde fantôme', () => {
+    it('efface le solde sans toucher à l’acompte', async () => {
+      const phantom = {
+        ...ORDER, status: 'delivered', total_amount: 4000, deposit_amount: 4000, deposit_method: 'transfer',
+        deposit_paid_at: '2026-08-22T10:00:00Z', balance_amount: 4000,
+      }
+      state.queue('custom_orders', { data: phantom, error: null }, { data: phantom, error: null })
+
+      const res = await POST(request({ kind: 'balance', clear: true }), { params })
+      expect(res.status).toBe(200)
+
+      const write = lastWrite()
+      expect(write.balance_amount).toBeNull()
+      expect(write.balance_paid_at).toBeNull()
+      expect(Object.keys(write).some((k) => k.startsWith('deposit_'))).toBe(false)
+    })
+
+    it('expire un lien de solde Stripe encore ouvert', async () => {
+      state.queue('custom_orders',
+        { data: { ...ORDER, status: 'delivered', deposit_amount: 35000, balance_amount: 35000, balance_session_id: 'cs_1' }, error: null },
+        { data: ORDER, error: null },
+      )
+      await POST(request({ kind: 'balance', clear: true }), { params })
+      expect(sessionExpire).toHaveBeenCalledWith('cs_1')
+    })
+
+    it('refuse de supprimer un solde cohérent', async () => {
+      state.queue('custom_orders', { data: { ...ORDER, balance_amount: 17500 }, error: null })
+      const res = await POST(request({ kind: 'balance', clear: true }), { params })
+      expect(res.status).toBe(409)
+      expect(state.writes).toHaveLength(0)
+    })
+
+    it('refuse d’effacer un solde réglé par Stripe', async () => {
+      state.queue('custom_orders', {
+        data: {
+          ...ORDER, status: 'delivered', deposit_amount: 35000,
+          balance_amount: 35000, balance_paid_at: '2026-09-01T10:00:00Z', balance_method: 'stripe',
+        },
+        error: null,
+      })
+      const res = await POST(request({ kind: 'balance', clear: true }), { params })
+      expect(res.status).toBe(409)
+      expect(state.writes).toHaveLength(0)
+    })
   })
 })

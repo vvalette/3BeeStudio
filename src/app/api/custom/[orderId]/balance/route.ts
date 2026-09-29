@@ -15,7 +15,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { Resend } from 'resend'
-import { computeBalance, type CustomOrder } from '@/types/custom-order'
+import { balanceCap, computeBalance, type CustomOrder } from '@/types/custom-order'
 import { render } from 'react-email'
 import CustomBalance from '@/emails/CustomBalance'
 
@@ -76,10 +76,26 @@ export async function POST(
     )
   }
 
-  const amount = parsed.data.balance_amount ?? computeBalance(order)
-  if (!amount || amount <= 0) {
+  // Tout se refuse avant Stripe et avant l'email : un solde à 0 ou au-delà du
+  // total ne doit ni ouvrir de lien de paiement ni partir chez le client.
+  const cap = balanceCap(order)
+  if (cap === null) {
     return NextResponse.json(
-      { error: 'Aucun solde à réclamer — renseignez le total estimé ou saisissez un montant.' },
+      { error: 'Renseigne d\'abord le total du projet : sans lui, le solde n\'a pas de référence.' },
+      { status: 422 },
+    )
+  }
+  if (cap === 0) {
+    return NextResponse.json(
+      { error: 'Aucun solde à réclamer : l\'acompte couvre déjà le total du projet.' },
+      { status: 422 },
+    )
+  }
+
+  const amount = parsed.data.balance_amount ?? computeBalance(order)!
+  if (amount > cap) {
+    return NextResponse.json(
+      { error: `Le solde ne peut dépasser ${(cap / 100).toFixed(2).replace('.', ',')} € (total moins acompte). Mets le total à jour dans la carte « Devis » si le projet a évolué.` },
       { status: 422 },
     )
   }
