@@ -8,10 +8,11 @@ import type { Locale } from '@/i18n/routing'
 import { supabase } from '@/lib/supabase'
 import type { ShopProductCard } from '@/types/shop-product'
 import Hero            from '@/components/landing/Hero'
-import NFCSection      from '@/components/landing/NFCSection'
-import VideoStrip      from '@/components/landing/VideoStrip'
+// Sections masquées pour alléger la home : décommenter ici et dans le rendu.
+// import NFCSection      from '@/components/landing/NFCSection'
+// import VideoStrip      from '@/components/landing/VideoStrip'
 import CustomCTA       from '@/components/landing/CustomCTA'
-import Portfolio       from '@/components/landing/Portfolio'
+// import Portfolio       from '@/components/landing/Portfolio'
 import ProductsGrid    from '@/components/landing/ProductsGrid'
 import Testimonials    from '@/components/landing/Testimonials'
 import NewsletterBlock from '@/components/landing/NewsletterBlock'
@@ -82,12 +83,10 @@ export default async function HomePage({ params }: Props) {
       <Hero />
       <ProductsGrid products={products} popular={hasFeatured} />
       <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
-      <NFCSection />
-      <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
+      {/* <NFCSection /> + séparateur */}
       <CustomCTA />
-      <div aria-hidden style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.35) 30%, rgba(245,158,11,0.35) 70%, transparent)' }} />
-      <VideoStrip />
-      <Portfolio />
+      {/* séparateur + <VideoStrip /> */}
+      {/* <Portfolio /> */}
       <Testimonials />
       <NewsletterBlock />
       <SiteFooter />
