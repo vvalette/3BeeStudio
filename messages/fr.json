@@ -27,8 +27,7 @@
       "title": "PORTE-CLÉ CONNECTÉ",
       "discover": "Découvrir le produit",
       "how": "Comment ça marche",
-      "pricing": "Tarifs & devis",
-      "order": "Commander"
+      "order": "Demander un devis"
     },
     "custom": {
       "title": "SUR-MESURE",
@@ -73,7 +72,7 @@
     "urlCaption": "EXEMPLE : votre page instagram",
     "tapBadge": "Ouvert en 1 tap",
     "mock": {
-      "bio": "Studio 3D · Lyon 🇫🇷",
+      "bio": "Studio 3D · Lyon",
       "posts": "posts",
       "followers": "abonnés",
       "following": "suivis",
@@ -88,8 +87,7 @@
       "other": "Tout autre lien"
     },
     "destinationsTitle": "Pointe vers ce que vous voulez",
-    "orderCta": "Commander mon porte-clé connecté",
-    "priceLine": "Dès <amber>1,70 €</amber> l'unité · commande minimum 5 · livraison offerte dès 100",
+    "orderCta": "Demander un devis",
     "demoButton": "Voir la démo du porte-clé connecté",
     "features": {
       "noApp": "Sans application",
@@ -215,22 +213,22 @@
   "nfcPage": {
     "meta": {
       "title": "Porte-clé NFC personnalisé entreprise",
-      "description": "Porte-clés NFC personnalisés au logo de votre entreprise, imprimés en 3D en France. Puce programmée (site, vCard, réseaux), dès 5 unités. Livraison offerte dès 100."
+      "description": "Porte-clés NFC personnalisés au logo de votre entreprise, imprimés en 3D en France. Puce programmée vers votre site, votre fiche contact ou vos réseaux. Sur devis."
     },
     "heading": "Porte-clé <honey>connecté NFC</honey>",
     "subtitle": "Imprimé en 3D · Logo personnalisé · Puce NFC programmée",
     "trust": {
       "france": "Fabriqué en France",
-      "payment": "Paiement sécurisé Stripe",
-      "validation": "Validation sous 24h",
-      "delivery": "Livré en 5–10 j ouvrés"
+      "noApp": "Sans application",
+      "noBattery": "Sans pile",
+      "quote": "Devis sous 48 h"
     },
     "faq": {
       "heading": "Questions fréquentes",
       "items": [
         {
-          "q": "Quelle est la quantité minimum de commande ?",
-          "a": "La commande démarre à 5 porte-clés. Le prix à l'unité est dégressif selon le volume, jusqu'à 1,70 € l'unité dès 250 pièces."
+          "q": "Comment commander ?",
+          "a": "Décrivez votre projet via le formulaire de demande : votre logo, la quantité souhaitée et la destination de la puce. Nous revenons vers vous avec un devis sous 48 h."
         },
         {
           "q": "Quels formats de logo acceptez-vous ?",
@@ -249,233 +247,19 @@
           "a": "La quasi-totalité des smartphones récents : iPhone (XS et plus, lecture automatique) et Android équipés du NFC. Aucune application à installer."
         },
         {
-          "q": "Quels sont les délais de livraison ?",
-          "a": "Les porte-clés sont imprimés en 3D en France. Comptez 5 à 10 jours ouvrés. La livraison est offerte dès 100 unités."
+          "q": "Quels sont les délais ?",
+          "a": "Les porte-clés sont imprimés en 3D en France. Le délai dépend de la quantité et vous est précisé dans le devis."
         },
         {
           "q": "Le porte-clé a-t-il besoin d'une pile ?",
           "a": "Non, aucune pile ni batterie n'est nécessaire. La technologie NFC (Near Field Communication) est passive : la puce s'alimente grâce au champ électromagnétique émis par le téléphone lors de la lecture. Le porte-clé fonctionne donc indéfiniment, sans entretien ni recharge."
         }
       ]
-    }
-  },
-  "nfcForm": {
-    "next": "Suivant",
-    "back": "Retour",
-    "edit": "Modifier",
-    "errors": {
-      "upload": "Erreur upload",
-      "order": "Erreur lors de la commande",
-      "destinationRequired": "Renseignez une destination",
-      "destinationInvalid": "Destination invalide",
-      "vcardTooLong": "Fiche contact trop longue pour la puce NFC — raccourcissez-la",
-      "quantityRequired": "Quantité requise",
-      "quantityMin": "Minimum 5 porte-clés",
-      "nameRequired": "Nom requis",
-      "emailInvalid": "Email invalide",
-      "phoneInvalid": "Téléphone invalide",
-      "sectorRequired": "Secteur requis",
-      "addressRequired": "Adresse requise",
-      "cityRequired": "Ville requise",
-      "postalInvalid": "Code postal invalide",
-      "countryRequired": "Pays requis"
     },
-    "progress": {
-      "logo": "Logo",
-      "quantity": "Quantité",
-      "contact": "Contact",
-      "payment": "Paiement",
-      "back": "Revenir à cette étape"
-    },
-    "pricing": {
-      "title": "Tarifs",
-      "fromQty": "dès {qty}",
-      "perUnit": "l'unité",
-      "pickHint": "Cliquez un palier pour choisir votre quantité.",
-      "saved": "Quantité retenue : {qty} porte-clés. Ajoutez votre logo et votre lien ci-dessous pour continuer.",
-      "selected": "Quantité retenue : {qty} porte-clés.",
-      "vat": "Prix TTC · TVA non applicable",
-      "minOrder": "Commande à partir de {qty} porte-clés.",
-      "shipping": "Livraison {price}, offerte dès {free} porte-clés.",
-      "example": "Exemple : {qty} porte-clés, {subtotal} + {shipping} de livraison, soit"
-    },
-    "config": {
-      "title": "Configuration",
-      "sub": "Votre logo et la destination de la puce NFC",
-      "logoTitle": "Votre logo",
-      "logoHint": "Fichier SVG — requis pour la modélisation 3D",
-      "rejectTooLarge": "Fichier trop lourd (max 2 Mo). Exportez à nouveau votre SVG depuis votre logiciel de design.",
-      "rejectType": "Ce format n'est pas pris en charge ici. Vous n'avez qu'un PNG ou JPG ? Écrivez-nous à contact@3beestudio.fr, on le vectorise pour vous.",
-      "rejectGeneric": "Fichier refusé. Vérifiez que c'est bien un fichier .svg (max 2 Mo).",
-      "previewAlt": "Aperçu du logo",
-      "uploaded": "Logo ajouté",
-      "clickToChange": "Cliquer pour changer",
-      "uploading": "Upload en cours...",
-      "dropHere": "Déposez votre logo ici",
-      "dropPrompt": "Glisser-déposer ou cliquer",
-      "maxSize": "Max 2 Mo",
-      "noSvg": "Pas de SVG ?",
-      "svgInfo": "On peut le créer à partir de votre image PNG ou JPG. Écrivez-nous à <mail>contact@3beestudio.fr</mail>.",
-      "linkTitle": "Votre lien",
-      "linkHint": "Ce qui s'ouvre quand on approche le téléphone du porte-clé",
-      "formatLabel": "Votre logo au format SVG · max 2 Mo"
-    },
-    "quantity": {
-      "title": "Quantité",
-      "sub": "Le prix au porte-clé baisse automatiquement selon le volume",
-      "label": "Nombre de porte-clés",
-      "popular": "Populaire",
-      "or": "ou saisir",
-      "customPlaceholder": "Autre quantité (min. 5)",
-      "unitPrice": "Prix unitaire",
-      "subtotal": "Sous-total ({qty} porte-clés)",
-      "shipping": "Livraison",
-      "free": "Offerte",
-      "total": "Total à payer",
-      "freeShippingHint": "Plus que <amber>{count}</amber> porte-clés pour la livraison offerte"
-    },
-    "contact": {
-      "title": "Contact & livraison",
-      "sub": "Vos coordonnées et où envoyer votre commande",
-      "coordsTitle": "Vos coordonnées",
-      "coordsHint": "Pour confirmer la commande",
-      "company": "Nom de l'entreprise",
-      "companyPlaceholder": "Nom de votre entreprise",
-      "email": "Email professionnel",
-      "phone": "Téléphone",
-      "sector": "Secteur d'activité",
-      "sectorPlaceholder": "Choisir un secteur",
-      "addressTitle": "Adresse de livraison",
-      "addressHint": "Où envoyer votre commande",
-      "recipient": "Nom du destinataire",
-      "recipientPlaceholder": "Prénom Nom ou raison sociale",
-      "address": "Adresse",
-      "addressPlaceholder": "Numéro et nom de rue",
-      "address2": "Complément (optionnel)",
-      "address2Placeholder": "Bâtiment, étage, digicode…",
-      "postalCode": "Code postal",
-      "city": "Ville",
-      "country": "Pays",
-      "countryPlaceholder": "Choisir un pays",
-      "recipientFirstName": "Prénom du destinataire",
-      "recipientLastName": "Nom du destinataire",
-      "recipientFirstNamePlaceholder": "Jean",
-      "recipientLastNamePlaceholder": "Dupont"
-    },
-    "sectors": {
-      "restaurant": "Restaurant / Food",
-      "beauty": "Salon de coiffure / Beauté",
-      "wellness": "Bien-être / Spa",
-      "realEstate": "Immobilier",
-      "craftsman": "Artisan / BTP",
-      "retail": "Commerce de détail",
-      "agency": "Agence de communication",
-      "other": "Autre"
-    },
-    "recap": {
-      "title": "Récapitulatif",
-      "sub": "Un dernier coup d'œil avant le paiement sécurisé",
-      "orderTitle": "Votre commande",
-      "logoAlt": "Votre logo",
-      "logoValidated": "Logo validé",
-      "productName": "Porte-clé connecté NFC",
-      "productDesc": "Imprimé en 3D à votre logo · puce programmée",
-      "contactTitle": "Contact",
-      "shippingTitle": "Livraison",
-      "subtotal": "Sous-total",
-      "newsletterDiscount": "-10% 1ère commande abonné",
-      "trackedShipping": "Livraison suivie",
-      "vat": "TVA non applicable<br></br>art. 293 B du CGI",
-      "securePayment": "Paiement sécurisé Stripe · CB, Apple Pay, Google Pay",
-      "redirecting": "Redirection...",
-      "pay": "Payer {amount}",
-      "consent": "En validant, vous acceptez nos <cgv>CGV</cgv>. Pas de droit de rétractation (Art. L221-28)."
-    }
-  },
-  "nfcLink": {
-    "phoneInvalid": "Numéro de téléphone invalide",
-    "emailInvalid": "Email invalide",
-    "required": "requis",
-    "finalLink": "Lien final :",
-    "types": {
-      "instagram": {
-        "label": "Instagram",
-        "placeholder": "votrecompte ou URL complète",
-        "help": [
-          "Ouvrez l'app Instagram sur votre profil",
-          "Touchez le menu ☰ (en haut à droite)",
-          "« Partager ce profil » → « Copier le lien »",
-          "Collez le lien ici — l'identifiant sera extrait automatiquement"
-        ]
-      },
-      "tiktok": {
-        "label": "TikTok",
-        "placeholder": "votrecompte ou URL complète",
-        "help": [
-          "Ouvrez votre profil TikTok",
-          "Touchez le bouton « Partager » (flèche)",
-          "« Copier le lien »",
-          "Collez-le ici"
-        ]
-      },
-      "linkedin": {
-        "label": "LinkedIn",
-        "placeholder": "votre-profil ou URL complète",
-        "help": [
-          "Ouvrez votre profil LinkedIn",
-          "Cliquez sur « Plus » puis « Copier le lien du profil »",
-          "Collez-le ici"
-        ]
-      },
-      "website": {
-        "label": "Site web",
-        "placeholder": "monsite.fr",
-        "help": [
-          "Collez l'adresse complète de votre site (ex : monsite.fr)",
-          "Pas besoin du https:// — il est ajouté automatiquement"
-        ]
-      },
-      "contact": {
-        "label": "Fiche contact",
-        "placeholder": "",
-        "help": [
-          "Remplissez le nom et au moins un contact (téléphone ou email)",
-          "Au contact du téléphone, une fenêtre « Ajouter aux contacts » s'ouvre",
-          "Le client enregistre tout d'un seul geste — zéro saisie, zéro faute de frappe"
-        ]
-      },
-      "other": {
-        "label": "Autre lien",
-        "placeholder": "https://...",
-        "help": [
-          "Collez n'importe quel lien commençant par https://"
-        ]
-      }
-    },
-    "contact": {
-      "firstName": "Prénom",
-      "lastName": "Nom ou entreprise",
-      "phone": "Téléphone",
-      "email": "Email",
-      "guidance": "Indiquez le nom et au moins un contact — téléphone ou email."
-    },
-    "help": {
-      "contactToggle": "Que contient la fiche contact ?",
-      "linkToggle": "Comment récupérer mon lien {label} ?"
-    },
-    "meter": {
-      "label": "Taille sur la puce NFC",
-      "bytes": "{bytes} / {limit} octets",
-      "over": "Trop d'informations pour la puce. La puce NFC (NTAG213) ne stocke que ~{limit} octets : raccourcissez le nom, ou ne gardez qu'un seul moyen de contact (téléphone <em>ou</em> email).",
-      "under": "La puce NFC a une mémoire limitée (~{limit} octets). Tant que la barre n'est pas pleine, tout rentre."
-    },
-    "verify": {
-      "loading": "Vérification…",
-      "okWebsite": "Site accessible",
-      "okAccount": "Compte trouvé",
-      "notFoundWebsite": "Site introuvable — vérifiez l'adresse",
-      "notFoundAccount": "Compte introuvable — vérifiez l'identifiant",
-      "impossible": "Vérification automatique impossible"
+    "cta": {
+      "title": "Un projet de porte-clés à votre logo ?",
+      "text": "Dites-nous ce que vous imaginez : nous vous répondons avec un devis sous 48 h.",
+      "button": "Demander un devis"
     }
   },
   "customPage": {
@@ -556,6 +340,7 @@
       "upload": "Erreur lors de l'envoi du fichier"
     },
     "projectTypes": {
+      "nfc": "Porte-clé connecté NFC",
       "cadeau": "Cadeau personnalisé",
       "deco": "Objet déco / design",
       "prototype": "Prototype produit",

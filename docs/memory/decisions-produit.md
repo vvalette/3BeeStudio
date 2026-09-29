@@ -7,9 +7,11 @@ Modifier la destination après fabrication = option payante hébergée (Phase 3)
 
 Ne jamais laisser entendre sur le site ou dans les emails que le client pourra changer son lien librement.
 
-## Flux de paiement NFC = intégral, pas d'acompte
+## NFC = sur devis, plus de commande en ligne (29/09/2026)
 
-Le flux NFC utilise un **paiement intégral** via Stripe Checkout Session.
+Le parcours de commande en ligne (formulaire multi-step, paiement intégral Stripe) a été **retiré** : aucune commande n'est passée par lui, toutes les demandes de badges arrivaient par le sur-mesure. La page `/nfc` présente le produit **sans prix, quantité minimale ni délai chiffré**, et renvoie vers `/custom?type=nfc` (type de projet `nfc` présélectionné). Devis, acompte et solde suivent donc le flux sur-mesure.
+
+Les commandes NFC passées avant le retrait restent gérées (webhook, suivi, admin).
 
 ## Flux de paiement Sur-mesure = acompte 50%
 

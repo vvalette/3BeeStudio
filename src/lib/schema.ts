@@ -41,30 +41,22 @@ export function localBusinessSchema() {
   }
 }
 
-/** Produit phare NFC — affiché sur /nfc. `description` localisée. */
-export function nfcProductSchema(name: string, description: string) {
+/**
+ * Porte-clé NFC — affiché sur /nfc. `description` localisée.
+ *
+ * `Service` et non `Product` : il se commande sur devis, sans prix public, et
+ * Google signale en erreur un `Product` sans offre ni avis.
+ */
+export function nfcServiceSchema(name: string, description: string) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'Product',
+    '@type': 'Service',
     name,
     description,
     image: LOGO_URL,
-    brand: { '@type': 'Brand', name: '3BeeStudio' },
-    category: 'Porte-clés NFC personnalisés',
-    offers: {
-      '@type': 'AggregateOffer',
-      priceCurrency: 'EUR',
-      // Prix au porte-clé, dégressif par palier de quantité : voir getUnitPrice()
-      // dans src/types/order.ts. `offerCount` = le nombre de paliers, soit bien
-      // le nombre d'offres agrégées ici ; Search Console le réclame sur tout
-      // AggregateOffer. À tenir à jour si un palier bouge.
-      lowPrice: '1.70',
-      highPrice: '2.90',
-      offerCount: 6,
-      availability: 'https://schema.org/InStock',
-      seller: { '@id': BUSINESS_ID },
-      areaServed: { '@type': 'Country', name: 'France' },
-    },
+    serviceType: 'Porte-clés NFC personnalisés',
+    provider: { '@id': BUSINESS_ID },
+    areaServed: { '@type': 'Country', name: 'France' },
   }
 }
 

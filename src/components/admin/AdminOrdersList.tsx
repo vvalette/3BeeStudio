@@ -14,7 +14,7 @@ import {
   SHOP_STATUS_PILL, SHOP_STATUS_ACCENT,
   isShopOrderActionable,
 } from '@/lib/status-ui'
-import { DestinationIcon } from '@/components/nfc/NfcLinkPicker'
+import DestinationIcon from '@/components/nfc/DestinationIcon'
 import Select from '@/components/ui/Select'
 import Tooltip from '@/components/ui/Tooltip'
 import {

@@ -122,6 +122,9 @@ export const CUSTOM_STATUS_STEPS: CustomOrderStatus[] = [
 ]
 
 export const PROJECT_TYPES = [
+  // Les porte-clés NFC passent par une demande sur-mesure depuis que la commande
+  // en ligne a été retirée (aucune commande par ce parcours, toutes par devis).
+  { value: 'nfc',         label: 'Porte-clé connecté NFC' },
   { value: 'cadeau',      label: 'Cadeau personnalisé' },
   { value: 'deco',        label: 'Objet déco / design' },
   { value: 'prototype',   label: 'Prototype produit' },
