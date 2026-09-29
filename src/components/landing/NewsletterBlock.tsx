@@ -27,7 +27,7 @@ export default function NewsletterBlock() {
   }
 
   return (
-    <section className="py-20 lg:py-28 border-t border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
+    <section className="py-14 lg:py-20 border-t border-[var(--line)]" style={{ background: 'var(--bg-1)' }}>
       <div className="mx-auto max-w-3xl px-5 sm:px-8 text-center">
         <div className="mb-4 flex justify-center"><Eyebrow>{t('eyebrow')}</Eyebrow></div>
         <h2 className="font-sans font-bold text-ink-0 mb-4" style={{ fontSize: 'clamp(1.875rem, 4vw, 3rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}>

@@ -98,7 +98,8 @@ export default function AdminQuoteComposer({
   // Enregistrer n'exige pas d'acompte : un devis peut se chiffrer avant qu'on
   // sache ce qu'on demande à la commande.
   const savable = payload.length > 0 && total > 0 && !tooBig
-  const ready = savable && depositCents > 0
+  // Acompte encaissé : un renvoi ouvrirait un second lien d'acompte (refusé côté serveur).
+  const ready = savable && depositCents > 0 && !order.deposit_paid_at
 
   function setItem(index: number, patch: Partial<ItemDraft>) {
     setSaved(false)
@@ -186,7 +187,7 @@ export default function AdminQuoteComposer({
     setError(null)
     setSending(true)
     try {
-      const res = await fetch(`/api/custom/${order.id}/quote`, {
+      const res = await fetch(`/api/admin/custom/${order.id}/quote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -355,6 +356,12 @@ export default function AdminQuoteComposer({
       </div>
 
       <PaymentModeToggle value={mode} onChange={setMode} />
+
+      {order.deposit_paid_at && (
+        <p className="text-xs text-ink-2">
+          Acompte encaissé : le devis ne se renvoie plus. « Enregistrer sans envoyer » met à jour les montants sans rien envoyer au client.
+        </p>
+      )}
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 

@@ -3,6 +3,15 @@ import createNextIntlPlugin from 'next-intl/plugin'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
+// Hôte du projet Supabase, lu dans l'env du build (dev et prod peuvent différer).
+const supabaseHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').hostname
+  } catch {
+    return 'localhost'
+  }
+})()
+
 const nextConfig: NextConfig = {
   // NEXT_BUILD_DIR permet de lancer `next build` dans un dossier séparé
   // sans conflit avec le serveur `next dev` qui utilise .next en parallèle.
@@ -20,9 +29,13 @@ const nextConfig: NextConfig = {
     // 3840 ne servait qu'aux écrans 4K, pour les transformations les plus lourdes.
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     remotePatterns: [
+      // Seulement notre projet Supabase, et seulement ses fichiers publics : un
+      // joker `*.supabase.co` laissait n'importe quel projet Supabase consommer nos
+      // transformations d'images (facturées).
       {
         protocol: 'https',
-        hostname: '*.supabase.co',
+        hostname: supabaseHost,
+        pathname: '/storage/v1/object/public/**',
       },
       {
         protocol: 'https',

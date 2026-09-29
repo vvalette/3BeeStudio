@@ -66,7 +66,7 @@ export async function DELETE(
 /**
  * Mise à jour partielle d'une demande. Ne déclenche jamais d'envoi : le devis
  * s'enregistre ici (montants, objet, numéro) sans email ni lien de paiement,
- * l'envoi restant l'affaire de POST /api/custom/[orderId]/quote.
+ * l'envoi restant l'affaire de POST /api/admin/custom/[orderId]/quote.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   if (!(await isAuthenticated())) {

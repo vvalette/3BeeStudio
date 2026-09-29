@@ -56,7 +56,7 @@ Formulaire multi-step : type de projet → description → budget → délai →
 | `POST /api/nfc/verify-link` | Vérifie URL/profil NFC (best-effort) |
 | `POST /api/upload/logo` | Upload logo vers Supabase Storage (bucket `logos`) |
 | `POST /api/custom/order` | Crée demande sur-mesure Supabase + emails confirmation/admin |
-| `POST /api/custom/[orderId]/quote` | Admin : crée session Stripe acompte + email client (auth header `x-admin-password`) |
+| `POST /api/admin/custom/[orderId]/quote` | Admin : crée session Stripe acompte + email client (auth cookie) |
 | `POST /api/admin/custom/[orderId]/payment` | Déclare (ou annule) un encaissement reçu hors Stripe : acompte ou solde, montant, date, moyen |
 | `POST/DELETE /api/admin/custom/[orderId]/quote-file` | Téléverse ou retire un devis PDF importé (bucket privé `quotes`, auth cookie) |
 | `GET/POST /api/admin/custom/[orderId]/quote-pdf` | Devis envoyé (ou PDF importé) / aperçu du brouillon (auth cookie) |

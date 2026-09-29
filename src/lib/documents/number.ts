@@ -12,6 +12,23 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 const PREFIX = 'DEV'
 
+/**
+ * Numéro suivant le plus grand déjà émis sous ce préfixe.
+ *
+ * Le maximum se calcule sur la valeur numérique, jamais par un tri de la base :
+ * en texte, `…-1000` passe avant `…-999`, et la séquence resterait bloquée sur
+ * 1000 dès le millième document de l'année. Les numéros qui ne se terminent pas
+ * par un entier (référence saisie à la main sur un devis importé) sont ignorés.
+ */
+export function nextInSequence(prefix: string, numbers: Array<string | null>): string {
+  let last = 0
+  for (const n of numbers) {
+    const tail = n?.startsWith(prefix) ? n.slice(prefix.length) : ''
+    if (/^\d+$/.test(tail)) last = Math.max(last, Number(tail))
+  }
+  return `${prefix}${String(last + 1).padStart(3, '0')}`
+}
+
 export function quoteNumberPrefix(year = new Date().getFullYear()): string {
   return `${PREFIX}-${year}-`
 }
@@ -24,16 +41,10 @@ export async function nextQuoteNumber(year = new Date().getFullYear()): Promise<
     .from('custom_orders')
     .select('quote_number')
     .like('quote_number', `${prefix}%`)
-    .order('quote_number', { ascending: false })
-    .limit(1)
 
   if (error) throw new Error(`Numérotation du devis indisponible : ${error.message}`)
 
-  const last = data?.[0]?.quote_number
-  const lastIndex = last ? Number.parseInt(last.slice(prefix.length), 10) : 0
-  const next = Number.isFinite(lastIndex) ? lastIndex + 1 : 1
-
-  return `${prefix}${String(next).padStart(3, '0')}`
+  return nextInSequence(prefix, (data ?? []).map((r) => r.quote_number))
 }
 
 /** Vrai si l'erreur Supabase est la violation de l'unicité du numéro de devis. */
@@ -53,16 +64,10 @@ export async function nextInvoiceNumber(year = new Date().getFullYear()): Promis
     .from('invoices')
     .select('number')
     .like('number', `${prefix}%`)
-    .order('number', { ascending: false })
-    .limit(1)
 
   if (error) throw new Error(`Numérotation de facture indisponible : ${error.message}`)
 
-  const last = data?.[0]?.number
-  const lastIndex = last ? Number.parseInt(last.slice(prefix.length), 10) : 0
-  const next = Number.isFinite(lastIndex) ? lastIndex + 1 : 1
-
-  return `${prefix}${String(next).padStart(3, '0')}`
+  return nextInSequence(prefix, (data ?? []).map((r) => r.number))
 }
 
 /** Vrai si l'erreur Supabase est une violation d'unicité sur les factures. */

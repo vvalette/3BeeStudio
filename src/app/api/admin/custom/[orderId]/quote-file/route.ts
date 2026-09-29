@@ -5,7 +5,7 @@
  *  - DELETE : le retire — la demande repasse au devis composé dans l'app.
  *
  * Le fichier n'est pas envoyé au client ici : il attend dans le bucket privé
- * jusqu'à ce que l'admin déclenche l'envoi (POST /api/custom/[orderId]/quote).
+ * jusqu'à ce que l'admin déclenche l'envoi (POST /api/admin/custom/[orderId]/quote).
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'

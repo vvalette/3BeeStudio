@@ -25,10 +25,10 @@ const { supabaseMock, state } = vi.hoisted(() => {
           record.op = op
           record.values = args[0]
         }
-        if (op === 'eq') record.filters.push([args[0] as string, args[1]])
+        if (op === 'eq' || op === 'is') record.filters.push([args[0] as string, args[1]])
         return proxy
       }
-    for (const op of ['update', 'insert', 'delete', 'select', 'eq', 'in', 'maybeSingle', 'single', 'order']) {
+    for (const op of ['update', 'insert', 'delete', 'select', 'eq', 'is', 'in', 'maybeSingle', 'single', 'order']) {
       proxy[op] = chain(op)
     }
     proxy.then = (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) => {
@@ -161,18 +161,104 @@ describe('POST /api/stripe/webhook', () => {
     expect(sendCriticalAlert).toHaveBeenCalledOnce()
   })
 
-  it('acompte sur-mesure payé → custom_orders passe en deposit_paid', async () => {
-    state.queue('custom_orders', { data: null, error: null })
-    const res = await POST(
-      webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' })),
-    )
+  describe('sur-mesure', () => {
+    const unpaid = {
+      id: 'cu_1', status: 'quote_sent',
+      deposit_paid_at: null, deposit_method: null, stripe_checkout_session_id: 'cs_test',
+      balance_paid_at: null, balance_method: null, balance_session_id: null,
+    }
 
-    expect(res.status).toBe(200)
-    expect(state.writes[0]).toMatchObject({
-      table: 'custom_orders',
-      op: 'update',
-      values: { status: 'deposit_paid' },
-      filters: [['id', 'cu_1'], ['status', 'quote_sent']],
+    it('acompte payé → deposit_paid + encaissement horodaté', async () => {
+      state.queue('custom_orders', { data: unpaid, error: null }, { data: null, error: null })
+      const res = await POST(
+        webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' })),
+      )
+
+      expect(res.status).toBe(200)
+      expect(state.writes[0]).toMatchObject({
+        table: 'custom_orders',
+        op: 'update',
+        values: { status: 'deposit_paid', deposit_method: 'stripe' },
+        filters: [['id', 'cu_1'], ['deposit_paid_at', null]],
+      })
+      expect((state.writes[0].values as { deposit_paid_at: string }).deposit_paid_at).toBeTruthy()
+    })
+
+    it('acompte payé alors que la demande a déjà avancé → encaissement posé, statut intact', async () => {
+      state.queue('custom_orders', { data: { ...unpaid, status: 'in_production' }, error: null }, { data: null, error: null })
+      await POST(webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' })))
+
+      expect(state.writes[0].values).not.toHaveProperty('status')
+      expect(state.writes[0].values).toHaveProperty('deposit_paid_at')
+    })
+
+    it('échec DB sur l\'acompte → 500 pour que Stripe retente + alerte', async () => {
+      state.queue('custom_orders', { data: unpaid, error: null }, { data: null, error: { message: 'boom' } })
+      const res = await POST(
+        webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' })),
+      )
+
+      expect(res.status).toBe(500)
+      expect(sendCriticalAlert).toHaveBeenCalled()
+    })
+
+    it('rejeu du même paiement → rien d\'écrit, aucune alerte', async () => {
+      state.queue('custom_orders', { data: { ...unpaid, deposit_paid_at: '2026-09-01', deposit_method: 'stripe' }, error: null })
+      const res = await POST(
+        webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' })),
+      )
+
+      expect(res.status).toBe(200)
+      expect(state.writes).toHaveLength(0)
+      expect(sendCriticalAlert).not.toHaveBeenCalled()
+    })
+
+    it('second acompte payé sur un autre lien → alerte remboursement, rien d\'écrasé', async () => {
+      state.queue('custom_orders', {
+        data: { ...unpaid, deposit_paid_at: '2026-09-01', deposit_method: 'transfer' },
+        error: null,
+      })
+      const res = await POST(
+        webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' })),
+      )
+
+      expect(res.status).toBe(200)
+      expect(state.writes).toHaveLength(0)
+      expect(sendCriticalAlert).toHaveBeenCalledWith(expect.stringContaining('deux fois'), expect.anything())
+    })
+
+    it('solde payé → balance_paid_at sans toucher au statut', async () => {
+      state.queue('custom_orders', { data: { ...unpaid, status: 'in_production', balance_session_id: 'cs_test' }, error: null }, { data: null, error: null })
+      await POST(webhookRequest(completedSession({ custom_order_id: 'cu_1', type: 'custom_balance' })))
+
+      expect(state.writes[0]).toMatchObject({
+        values: { balance_method: 'stripe' },
+        filters: [['id', 'cu_1'], ['balance_paid_at', null]],
+      })
+      expect(state.writes[0].values).not.toHaveProperty('status')
+    })
+
+    it('paiement différé confirmé (async_payment_succeeded) → acompte enregistré', async () => {
+      state.queue('custom_orders', { data: unpaid, error: null }, { data: null, error: null })
+      await POST(webhookRequest({
+        ...completedSession({ custom_order_id: 'cu_1', type: 'custom_deposit' }),
+        type: 'checkout.session.async_payment_succeeded',
+      }))
+
+      expect(state.writes[0].values).toMatchObject({ status: 'deposit_paid' })
+    })
+
+    it('payment_intent.succeeded → retrouve l\'acompte via la session', async () => {
+      stripeMock.checkout.sessions.list.mockResolvedValueOnce({
+        data: [{ id: 'cs_test', metadata: { custom_order_id: 'cu_1', type: 'custom_deposit' } }],
+      } as never)
+      state.queue('custom_orders', { data: unpaid, error: null }, { data: null, error: null })
+      await POST(webhookRequest({
+        type: 'payment_intent.succeeded',
+        data: { object: { id: 'pi_1', metadata: {} } },
+      }))
+
+      expect(state.writes[0].values).toMatchObject({ status: 'deposit_paid' })
     })
   })
 

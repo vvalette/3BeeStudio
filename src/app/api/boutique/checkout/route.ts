@@ -18,7 +18,8 @@ const schema = z.object({
     color:               z.string().max(50).optional(),
     custom_field_values: z.record(z.string().max(200)).optional(),
   })).min(1).max(20),
-  email:         z.string().email(),
+  // Minuscules : la newsletter se retrouve par email, `Jean@` et `jean@` sont la même personne.
+  email:         z.string().trim().toLowerCase().email(),
   name:          z.string().min(2),
   phone:         z.string().min(8).optional(),
   delivery_mode: z.enum(['delivery', 'pickup', 'relay', 'digital']).default('delivery'),
@@ -382,12 +383,20 @@ export async function POST(req: Request) {
       .eq('id', newsletterSub.id)
   }
 
+  // Tout ce qui suit parle à Stripe. Un échec ici laisserait une commande sans
+  // session, donc sans webhook d'expiration pour la nettoyer : le code promo et
+  // les −10 % du client resteraient consommés pour une commande jamais payable.
+  try {
+
   // Coupon Stripe one-shot — au plus un par session (Stripe n'en accepte pas deux).
   // « Livraison offerte » n'en crée aucun : il agit sur shipping_options.
   let stripeDiscounts: { coupon: string }[] = []
   if (useNewsletter) {
+    // `amount_off`, même raison que pour les codes promo ci-dessous : le montant
+    // débité doit être au centime près celui enregistré en base.
     const coupon = await stripe.coupons.create({
-      percent_off: 10,
+      amount_off: newsletterDiscount,
+      currency: 'eur',
       duration: 'once',
       name: 'Newsletter −10%',
       metadata: { source: 'newsletter', email: d.email, shop_order_id: order.id },
@@ -505,6 +514,18 @@ export async function POST(req: Request) {
     .eq('id', order.id)
 
   return NextResponse.json({ checkout_url: session.url, order_id: order.id })
+
+  } catch (err) {
+    if (appliedPromo) await supabaseAdmin.rpc('release_promo_code', { p_order_id: order.id })
+    if (useNewsletter && newsletterSub) {
+      await supabaseAdmin
+        .from('newsletter_subscriptions')
+        .update({ promo_used: false })
+        .eq('id', newsletterSub.id)
+    }
+    await supabaseAdmin.from('shop_orders').delete().eq('id', order.id).eq('status', 'pending_payment')
+    throw err // alerte et 500 plus bas
+  }
 
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)

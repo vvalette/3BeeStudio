@@ -3,7 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { z } from 'zod'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
-const schema = z.object({ email: z.string().email() })
+// Minuscules, comme à l'inscription : sinon `Jean@` ne retrouverait pas `jean@`.
+const schema = z.object({ email: z.string().trim().toLowerCase().email() })
 
 export async function GET(req: Request) {
   // Anti énumération d'abonnés : 20 requêtes / 10 min / IP
