@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import Eyebrow from '@/components/ui/Eyebrow'
 import Reveal from '@/components/ui/Reveal'
@@ -18,6 +18,11 @@ export default async function ProductsGrid({ products, popular = false }: Props)
   const displaySubtitle = popular ? t('popularSubtitle') : t('subtitle')
 
   if (products.length === 0) return null
+
+  const locale = await getLocale()
+  // Lignes complètes sur desktop (4 colonnes) : un 5ᵉ objet seul sur sa ligne
+  // faisait trou. Sous 4 objets, on montre tout.
+  const shown = products.length >= 4 ? products.slice(0, products.length - (products.length % 4)) : products
 
   return (
     <section className="pt-12 pb-12 lg:pt-16 lg:pb-16" style={{ background: 'var(--bg-0)' }}>
@@ -46,7 +51,7 @@ export default async function ProductsGrid({ products, popular = false }: Props)
         </Reveal>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-          {products.map((p) => <BoutiqueProductCard key={p.id} product={p} />)}
+          {shown.map((p) => <BoutiqueProductCard key={p.id} product={p} locale={locale} />)}
         </div>
 
       </div>

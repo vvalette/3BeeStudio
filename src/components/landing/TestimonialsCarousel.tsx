@@ -22,14 +22,6 @@ export interface Testimonial {
 /** Cartes affichées d'emblée sur desktop : 2 rangées × 3 colonnes. */
 const VISIBLE_ON_DESKTOP = 6
 
-const COUNTRY_FLAGS: Record<string, string> = {
-  France: '🇫🇷',
-  Belgique: '🇧🇪',
-  Suisse: '🇨🇭',
-  Luxembourg: '🇱🇺',
-  Canada: '🇨🇦',
-}
-
 function StarIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 10 10" fill="#FBBF24" aria-hidden>
@@ -82,7 +74,7 @@ function TestimonialCard({ name, role, body, avatar_gradient, source, rating, av
           <div className="min-w-0">
             <div className="text-[14px] font-semibold text-ink-0 truncate">{name}</div>
             <div className="font-mono text-ink-2 mt-0.5" style={{ fontSize: 10, letterSpacing: '0.04em' }}>
-              {role} {country && <span>· {COUNTRY_FLAGS[country] ?? country}</span>}
+              {role} {country && country !== 'France' && <span>· {country}</span>}
             </div>
           </div>
         </div>

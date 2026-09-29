@@ -199,12 +199,12 @@ export default function BoutiqueProductCard({
 
       {/* Infos */}
       <div className="p-4">
-        <h2 className="font-semibold text-ink-0 leading-tight">{displayName}</h2>
+        <h2 className="line-clamp-2 font-semibold text-ink-0 leading-tight">{displayName}</h2>
         {displaySubtitle && (
-          <p className="mt-0.5 font-mono text-[12px] tracking-[0.05em] text-ink-1 leading-snug">{displaySubtitle}</p>
+          <p className="mt-1 line-clamp-1 text-[13px] text-ink-2 leading-snug">{displaySubtitle}</p>
         )}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="font-mono font-bold text-amber">
               {formatPrice(product.sale_price ?? product.price)}
             </span>
@@ -212,7 +212,9 @@ export default function BoutiqueProductCard({
               <span className="font-mono text-[12px] text-ink-3 line-through">{formatPrice(product.price)}</span>
             )}
           </div>
-          <span className="text-[11px] text-ink-3">
+          {/* Masqué en mobile : sur 2 colonnes il se tassait contre le prix barré.
+              La rupture reste signalée par le voile sur la photo. */}
+          <span className="hidden shrink-0 text-[11px] text-ink-3 sm:inline">
             {isDigitalProduct
               ? t('digitalBadge')
               : product.stock !== null ? (product.stock > 0 ? t('available', { count: product.stock }) : t('outOfStock')) : t('inStock')}

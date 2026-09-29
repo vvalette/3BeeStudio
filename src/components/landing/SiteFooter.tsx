@@ -65,7 +65,7 @@ const columns = [
     links: [
       { labelKey: 'custom.start',     href: '/custom' },
       { labelKey: 'custom.process',   href: '/custom' },
-      { labelKey: 'custom.portfolio', href: '/portfolio' },
+      // { labelKey: 'custom.portfolio', href: '/portfolio' }, // masqué avec la section
       { labelKey: 'custom.contact',   href: '/contact' },
     ],
   },
@@ -95,7 +95,7 @@ export default function SiteFooter() {
 
             <p className="text-ink-2 mb-6 leading-relaxed" style={{ fontSize: 14, maxWidth: 260 }}>
               {t('tagline1')}<br />
-              {t('tagline2')} 🇫🇷
+              {t('tagline2')}
             </p>
 
             {/* Social icons */}

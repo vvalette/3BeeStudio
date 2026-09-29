@@ -20,7 +20,8 @@ const navLinks = [
   { href: '/custom',    key: 'custom',    shortKey: null },
   { href: '/boutique',  key: 'boutique',  shortKey: null },
   { href: '/designs',   key: 'designs',   shortKey: null },
-  { href: '/portfolio', key: 'portfolio', shortKey: null },
+  // Portfolio masqué tant qu'il n'y a pas de projets à montrer.
+  // { href: '/portfolio', key: 'portfolio', shortKey: null },
 ] as const
 
 type Props = {

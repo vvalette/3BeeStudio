@@ -65,7 +65,7 @@ export default function Hero() {
       </svg>
 
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 min-h-screen pt-[88px] pb-16 lg:min-h-screen lg:pt-[72px] lg:pb-0">
+        <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 pt-[104px] pb-10 lg:min-h-screen lg:pt-[72px] lg:pb-0">
 
           {/* ─── Left: copy ─── */}
           <div className="max-w-2xl">
@@ -94,17 +94,17 @@ export default function Hero() {
             </p>
 
             {/* CTAs */}
-            <div className="fade-up mt-10 flex flex-col gap-3 sm:flex-row">
+            <div className="fade-up mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
-                href="/nfc"
-                className="flex h-[60px] items-center justify-center gap-2 rounded-pill px-10 font-sans font-semibold text-[16px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
+                href="/boutique"
+                className="flex h-[60px] items-center justify-center gap-2 whitespace-nowrap rounded-pill px-6 font-sans font-semibold text-[15px] text-[#1A1300] transition-all active:scale-[0.97] hover:brightness-105"
                 style={{ background: 'var(--btn-primary-bg)', boxShadow: 'var(--btn-primary-shadow)' }}
               >
                 {t('ctaPrimary')} <ArrowIcon />
               </Link>
               <Link
-                href="/boutique"
-                className="flex h-[60px] items-center justify-center rounded-pill px-10 font-sans font-semibold text-[16px] text-ink-0 border border-[var(--line-2)] bg-bg-3 transition-all active:scale-[0.97] hover:bg-bg-4"
+                href="/nfc"
+                className="flex h-[60px] items-center justify-center whitespace-nowrap rounded-pill px-6 font-sans font-semibold text-[15px] text-ink-0 border border-[var(--line-2)] bg-bg-3 transition-all active:scale-[0.97] hover:bg-bg-4"
               >
                 {t('ctaSecondary')}
               </Link>
