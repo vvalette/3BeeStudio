@@ -40,6 +40,24 @@ export function getAdminEmails(): string[] {
   return raw.split(',').map((e) => e.trim()).filter(Boolean)
 }
 
+/**
+ * Destinataire(s) des demandes entrantes : demande sur-mesure et message du
+ * formulaire de contact. `ADMIN_EMAIL_LEADS` ajoute des adresses à celles
+ * d'`ADMIN_EMAIL` (une boîte perso, par exemple) sans toucher aux notifications
+ * de commande NFC et boutique, qui restent sur `ADMIN_EMAIL` seul.
+ *
+ * Ces notifications gardent `replyTo` sur l'email du client : « Répondre »
+ * depuis n'importe laquelle de ces boîtes écrit directement au client, ce qui
+ * est le geste voulu.
+ */
+export function getLeadEmails(): string[] {
+  const extra = (process.env.ADMIN_EMAIL_LEADS ?? '')
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean)
+  return [...new Set([...getAdminEmails(), ...extra])]
+}
+
 export async function sendOrderConfirmation(order: Order): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
   const from = getFrom()
@@ -99,7 +117,7 @@ export async function sendCustomOrderAdminNotification(order: CustomOrder): Prom
   const { data, error } = await resend.emails.send({
     from,
     replyTo: order.email,
-    to: getAdminEmails(),
+    to: getLeadEmails(),
     subject: `🔔 Nouvelle demande sur-mesure #${order.id.slice(0, 8).toUpperCase()} · ${order.name}`,
     html,
   })
@@ -530,7 +548,7 @@ export async function sendContactMessage(input: {
   const { data, error } = await resend.emails.send({
     from,
     replyTo: input.email, // répondre au mail = répondre directement au client
-    to: getAdminEmails(),
+    to: getLeadEmails(),
     subject: `✉️ Contact : ${input.subject}`,
     html,
   })
