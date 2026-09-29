@@ -1,3 +1,4 @@
+import 'server-only'
 import Stripe from 'stripe'
 
 // apiVersion épinglée sur celle du SDK (stripe@17.7.0) — évite tout changement

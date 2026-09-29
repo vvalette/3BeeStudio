@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { sendNfcOrderEmails } from '@/lib/resend'
 import { sendCriticalAlert } from '@/lib/alert'
 import { confirmShopOrder } from '@/lib/confirm-shop-order'
+import { confirmCustomPayment } from '@/lib/confirm-custom-payment'
 import { snapshotAbandonedCart } from '@/lib/abandoned-cart'
 import type { Order } from '@/types/order'
 import Stripe from 'stripe'
@@ -44,6 +45,63 @@ async function releaseExpiredCheckout(session: Stripe.Checkout.Session) {
   console.info('[webhook]', JSON.stringify({ event: 'checkout_expired', shopOrderId, orderId, promoReleased: !!promoEmail, codeReleased }))
 }
 
+type Metadata = Stripe.Metadata | null | undefined
+
+function failed() {
+  return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
+}
+
+// Commande NFC payée : statut confirmé puis emails. Idempotent — sur un rejeu,
+// le filtre status ne matche plus rien et aucun email ne repart.
+async function confirmNfcOrder(orderId: string, via: string): Promise<{ error?: true }> {
+  const { data: updatedOrder, error } = await supabaseAdmin
+    .from('orders')
+    .update({ status: 'confirmed' })
+    .eq('id', orderId)
+    .eq('status', 'pending_payment')
+    .select()
+    .maybeSingle() // rejeu → 0 ligne sans erreur (single() aurait renvoyé PGRST116)
+
+  if (error) {
+    console.error(`[webhook] Erreur Supabase update NFC (${via}):`, error)
+    await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
+      orderId,
+      via,
+      erreur: error.message,
+      consequence: 'Commande payée potentiellement bloquée en pending_payment',
+    })
+    return { error: true }
+  }
+
+  console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed', orderId, via }))
+  if (updatedOrder) await sendNfcOrderEmails(updatedOrder as Order)
+  return {}
+}
+
+// Aiguillage d'un paiement confirmé vers sa commande, selon la metadata posée à
+// la création de la session. `sessionId` sert au sur-mesure : il distingue un
+// rejeu d'un second paiement sur un autre lien.
+async function confirmFromMetadata(metadata: Metadata, sessionId: string, via: string) {
+  let result: { error?: true } = {}
+
+  if (metadata?.shop_order_id) {
+    result = await confirmShopOrder(metadata.shop_order_id)
+  } else if (metadata?.custom_order_id && metadata.type === 'custom_deposit') {
+    result = await confirmCustomPayment(metadata.custom_order_id, 'deposit', sessionId)
+  } else if (metadata?.custom_order_id && metadata.type === 'custom_balance') {
+    // Solde : ne touche pas au statut, c'est l'expédition qui fait avancer la timeline.
+    result = await confirmCustomPayment(metadata.custom_order_id, 'balance', sessionId)
+  } else if (metadata?.order_id) {
+    result = await confirmNfcOrder(metadata.order_id, via)
+  }
+
+  return result.error ? failed() : NextResponse.json({ received: true })
+}
+
+function confirmFromSession(session: Stripe.Checkout.Session, via: string) {
+  return confirmFromMetadata(session.metadata, session.id, via)
+}
+
 export async function POST(req: Request) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
@@ -70,162 +128,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true })
     }
 
-    if (event.type === 'checkout.session.completed') {
+    // `async_payment_succeeded` : paiement différé (SEPA…) confirmé après coup.
+    // La session arrive alors en `paid`, même traitement qu'un paiement immédiat.
+    if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const session = event.data.object as Stripe.Checkout.Session
-      const orderId = session.metadata?.order_id
-
-      // Commande boutique
-      const shopOrderId = session.metadata?.shop_order_id
-      if (shopOrderId && session.metadata?.type === 'shop_order') {
-        if (session.payment_status === 'paid') {
-          const result = await confirmShopOrder(shopOrderId)
-          if (result.error) return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-        }
+      if (session.payment_status !== 'paid') {
+        // Paiement asynchrone — on attend async_payment_succeeded / payment_intent.succeeded
+        console.info('[webhook]', JSON.stringify({ event: 'session_awaiting_payment', sessionId: session.id, paymentStatus: session.payment_status }))
         return NextResponse.json({ received: true })
       }
-
-      // Acompte sur-mesure
-      const customOrderId = session.metadata?.custom_order_id
-      if (customOrderId && session.metadata?.type === 'custom_deposit') {
-        if (session.payment_status === 'paid') {
-          const { error } = await supabaseAdmin
-            .from('custom_orders')
-            .update({ status: 'deposit_paid', deposit_paid_at: new Date().toISOString(), deposit_method: 'stripe' })
-            .eq('id', customOrderId)
-            .eq('status', 'quote_sent')
-          if (error) {
-            console.error('[webhook] Erreur custom_orders update:', error)
-            await sendCriticalAlert('Webhook Stripe — échec confirmation acompte sur-mesure', {
-              customOrderId,
-              erreur: error.message,
-              consequence: 'Acompte payé mais statut non mis à jour',
-            })
-          } else console.info('[webhook]', JSON.stringify({ event: 'custom_deposit_paid', customOrderId }))
-        }
+      if (!session.metadata?.order_id && !session.metadata?.shop_order_id && !session.metadata?.custom_order_id) {
+        console.error('[webhook] session payée sans commande dans metadata', session.id)
         return NextResponse.json({ received: true })
       }
-
-      // Solde sur-mesure — second encaissement, après l'acompte. Ne touche pas au
-      // statut : c'est l'expédition qui fait avancer la timeline.
-      if (customOrderId && session.metadata?.type === 'custom_balance') {
-        if (session.payment_status === 'paid') {
-          const { error } = await supabaseAdmin
-            .from('custom_orders')
-            .update({ balance_paid_at: new Date().toISOString(), balance_method: 'stripe' })
-            .eq('id', customOrderId)
-            .is('balance_paid_at', null) // rejeu du webhook → aucune ligne touchée
-          if (error) {
-            console.error('[webhook] Erreur custom_orders solde:', error)
-            await sendCriticalAlert('Webhook Stripe — échec confirmation solde sur-mesure', {
-              customOrderId,
-              erreur: error.message,
-              consequence: 'Solde payé mais non enregistré — vérifier avant expédition',
-            })
-          } else console.info('[webhook]', JSON.stringify({ event: 'custom_balance_paid', customOrderId }))
-        }
-        return NextResponse.json({ received: true })
-      }
-
-      if (!orderId) {
-        console.error('[webhook] checkout.session.completed sans order_id dans metadata', session.id)
-        return NextResponse.json({ received: true })
-      }
-
-      if (session.payment_status === 'paid') {
-        const { data: updatedOrder, error } = await supabaseAdmin
-          .from('orders')
-          .update({ status: 'confirmed' })
-          .eq('id', orderId)
-          .eq('status', 'pending_payment')
-          .select()
-          .maybeSingle() // rejeu → 0 ligne sans erreur (single() aurait renvoyé PGRST116)
-
-        if (error) {
-          console.error('[webhook] Erreur Supabase update:', error)
-          await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
-            orderId,
-            erreur: error.message,
-            consequence: 'Commande payée potentiellement bloquée en pending_payment',
-          })
-          return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-        }
-
-        console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed', orderId }))
-
-        if (updatedOrder) {
-          await sendNfcOrderEmails(updatedOrder as Order)
-        }
-      } else {
-        // Paiement asynchrone (virement, etc.) — on attend payment_intent.succeeded
-        console.info('[webhook]', JSON.stringify({ event: 'session_awaiting_payment', orderId, paymentStatus: session.payment_status }))
-      }
+      return await confirmFromSession(session, event.type)
     }
 
-    // Fallback : payment_intent.succeeded (ex. paiements asynchrones ou checkout sans metadata)
+    // Fallback : payment_intent.succeeded (paiements asynchrones, ou checkout dont
+    // la metadata n'est portée que par la session)
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object as Stripe.PaymentIntent
-      const orderId = pi.metadata?.order_id
-      const shopOrderId = pi.metadata?.shop_order_id
-
-      if (shopOrderId) {
-        const result = await confirmShopOrder(shopOrderId)
-        if (result.error) return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-      } else if (orderId) {
-        const { data: updatedOrder, error } = await supabaseAdmin
-          .from('orders')
-          .update({ status: 'confirmed' })
-          .eq('id', orderId)
-          .eq('status', 'pending_payment') // n'écraser que si encore en attente
-          .select()
-          .maybeSingle() // rejeu → 0 ligne sans erreur
-
-        if (error) {
-          console.error('[webhook] Erreur Supabase payment_intent update:', error)
-          await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
-            orderId,
-            via: 'payment_intent.succeeded',
-            erreur: error.message,
-          })
-          return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-        }
-        console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed_via_pi', orderId }))
-        if (updatedOrder) {
-          await sendNfcOrderEmails(updatedOrder as Order)
-        }
-      } else {
-        // Chercher via stripe_checkout_session_id associée au payment intent
-        const sessions = await stripe.checkout.sessions.list({ payment_intent: pi.id, limit: 1 })
-        const session = sessions.data[0]
-        const sessionOrderId = session?.metadata?.order_id
-        const sessionShopOrderId = session?.metadata?.shop_order_id
-
-        if (sessionShopOrderId) {
-          const result = await confirmShopOrder(sessionShopOrderId)
-          if (result.error) return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-        } else if (sessionOrderId) {
-          const { data: updatedOrder, error } = await supabaseAdmin
-            .from('orders')
-            .update({ status: 'confirmed' })
-            .eq('id', sessionOrderId)
-            .eq('status', 'pending_payment')
-            .select()
-            .maybeSingle() // rejeu → 0 ligne sans erreur (single() aurait renvoyé PGRST116)
-
-          if (error) {
-            console.error('[webhook] Erreur Supabase (via session lookup):', error)
-            await sendCriticalAlert('Webhook Stripe — échec confirmation commande NFC', {
-              orderId: sessionOrderId,
-              via: 'session lookup',
-              erreur: error.message,
-            })
-            return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
-          }
-          console.info('[webhook]', JSON.stringify({ event: 'nfc_order_confirmed_via_session_lookup', orderId: sessionOrderId }))
-          if (updatedOrder) {
-            await sendNfcOrderEmails(updatedOrder as Order)
-          }
-        }
+      if (pi.metadata?.shop_order_id || pi.metadata?.order_id) {
+        return await confirmFromMetadata(pi.metadata, pi.id, 'payment_intent.succeeded')
       }
+      // Chercher la session Checkout associée au payment intent
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: pi.id, limit: 1 })
+      const session = sessions.data[0]
+      if (session) return await confirmFromSession(session, 'session lookup')
     }
   } catch (err) {
     console.error('[webhook] Erreur inattendue:', err)

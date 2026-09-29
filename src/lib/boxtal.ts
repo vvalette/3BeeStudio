@@ -397,7 +397,7 @@ export async function createShopBoxtalShipment(order: ShopOrder): Promise<Boxtal
     shipping_country: order.shipping_country,
     totalAmount: order.total_amount,
     pkg: estimateShopPackage(order.items),
-    description: 'Objets imprimés en 3D — 3BeeStudio',
+    description: 'Objets imprimés en 3D · 3BeeStudio',
     mode: order.delivery_mode,
     pickupPointCode: order.pickup_point_code,
   })

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { sendCriticalAlert } from '@/lib/alert'
+import type Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { calcOrder, formatDestination, isVCard, byteLength, NFC_CHIP_BYTE_LIMIT } from '@/types/order'
@@ -7,7 +9,8 @@ import { z } from 'zod'
 
 const schema = z.object({
   company: z.string().min(2),
-  email: z.string().email(),
+  // Minuscules : la newsletter se retrouve par email, `Jean@` et `jean@` sont la même personne.
+  email: z.string().trim().toLowerCase().email(),
   phone: z.string().min(8),
   sector: z.string().min(2),
   quantity: z.number().int().min(5),
@@ -97,69 +100,88 @@ export async function POST(req: Request) {
 
   // 2. Session Stripe Checkout — paiement intégral
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    locale: 'fr',
-    submit_type: 'pay',
-    customer_email: data.email,
-    line_items: [
-      {
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: 'Porte-clé connecté NFC personnalisé',
-            description: hasNewsletterDiscount
-              ? `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)} · ✨ -10% abonné`
-              : `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)}`,
-            images: [data.logo_url],
+  // Sans session, aucun webhook d'expiration ne viendra nettoyer la commande :
+  // on la retire ici et on rend les −10 % au client.
+  let session: Stripe.Checkout.Session
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      locale: 'fr',
+      submit_type: 'pay',
+      customer_email: data.email,
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Porte-clé connecté NFC personnalisé',
+              description: hasNewsletterDiscount
+                ? `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)} · ✨ -10% abonné`
+                : `Logo « ${data.company} » · Destination : ${formatDestination(data.nfc_url)}`,
+              images: [data.logo_url],
+            },
+            // Prix unitaire déjà réduit → Stripe affiche le bon montant par ligne
+            unit_amount: hasNewsletterDiscount ? Math.round(unitPrice * 0.9) : unitPrice,
           },
-          // Prix unitaire déjà réduit → Stripe affiche le bon montant par ligne
-          unit_amount: hasNewsletterDiscount ? Math.round(unitPrice * 0.9) : unitPrice,
+          quantity: data.quantity,
         },
-        quantity: data.quantity,
-      },
-    ],
-    payment_intent_data: {
-      shipping: {
-        name: data.shipping_name,
-        address: {
-          line1: data.shipping_address,
-          line2: data.shipping_address2 || '',
-          city: data.shipping_city,
-          postal_code: data.shipping_postal_code,
-          country: data.shipping_country,
-        },
-      },
-    },
-    shipping_options: [
-      {
-        shipping_rate_data: {
-          type: 'fixed_amount',
-          fixed_amount: { amount: shipping, currency: 'eur' },
-          display_name: shipping === 0 ? 'Livraison offerte' : 'Livraison suivie',
-          delivery_estimate: {
-            minimum: { unit: 'business_day', value: 5 },
-            maximum: { unit: 'business_day', value: 10 },
+      ],
+      payment_intent_data: {
+        shipping: {
+          name: data.shipping_name,
+          address: {
+            line1: data.shipping_address,
+            line2: data.shipping_address2 || '',
+            city: data.shipping_city,
+            postal_code: data.shipping_postal_code,
+            country: data.shipping_country,
           },
         },
       },
-    ],
-    custom_text: {
-      submit: {
-        message:
-          'Vos porte-clés sont imprimés en 3D et programmés à la main après confirmation. Délai indicatif : 5 à 10 jours ouvrés.',
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: { amount: shipping, currency: 'eur' },
+            display_name: shipping === 0 ? 'Livraison offerte' : 'Livraison suivie',
+            delivery_estimate: {
+              minimum: { unit: 'business_day', value: 5 },
+              maximum: { unit: 'business_day', value: 10 },
+            },
+          },
+        },
+      ],
+      custom_text: {
+        submit: {
+          message:
+            'Vos porte-clés sont imprimés en 3D et programmés à la main après confirmation. Délai indicatif : 5 à 10 jours ouvrés.',
+        },
       },
-    },
-    success_url: `${appUrl}/suivi/${order.id}?payment=success`,
-    cancel_url: `${appUrl}/nfc?cancelled=true`,
-    // Expire après 30 min (minimum Stripe) — au-delà, checkout.session.expired
-    // nettoie la commande fantôme et libère la promo newsletter (cf. webhook).
-    expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-    metadata: {
-      order_id: order.id,
-      ...(hasNewsletterDiscount ? { newsletter_promo_email: data.email } : {}),
-    },
-  })
+      success_url: `${appUrl}/suivi/${order.id}?payment=success`,
+      cancel_url: `${appUrl}/nfc?cancelled=true`,
+      // Expire après 30 min (minimum Stripe) — au-delà, checkout.session.expired
+      // nettoie la commande fantôme et libère la promo newsletter (cf. webhook).
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      metadata: {
+        order_id: order.id,
+        ...(hasNewsletterDiscount ? { newsletter_promo_email: data.email } : {}),
+      },
+    })
+  } catch (err) {
+    if (hasNewsletterDiscount && sub) {
+      await supabaseAdmin
+        .from('newsletter_subscriptions')
+        .update({ promo_used: false })
+        .eq('id', sub.id)
+    }
+    await supabaseAdmin.from('orders').delete().eq('id', order.id).eq('status', 'pending_payment')
+    console.error('[nfc/order] Session Stripe non créée:', err instanceof Error ? err.message : err)
+    await sendCriticalAlert('Commande NFC — session Stripe non créée', {
+      erreur: err instanceof Error ? err.message : String(err),
+      consequence: 'Un client n\'a pas pu payer — vérifier Stripe',
+    })
+    return NextResponse.json({ error: 'Paiement indisponible pour le moment, réessayez dans un instant.' }, { status: 502 })
+  }
 
   // 3. Stocker l'ID de session Stripe
   await supabaseAdmin

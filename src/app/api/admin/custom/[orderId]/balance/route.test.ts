@@ -47,11 +47,13 @@ const sendMock = vi.hoisted(() => vi.fn(async () => ({ data: { id: 'email_1' }, 
 const sessionCreate = vi.hoisted(() =>
   vi.fn(async () => ({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1' })),
 )
+const closeMock = vi.hoisted(() => vi.fn(async (): Promise<'closed' | 'paid'> => 'closed'))
 
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: supabaseMock, supabase: supabaseMock }))
 vi.mock('@/lib/auth', () => ({ isAuthenticated: vi.fn(async () => true) }))
 vi.mock('@/lib/stripe', () => ({ stripe: { checkout: { sessions: { create: sessionCreate } } } }))
 vi.mock('resend', () => ({ Resend: class { emails = { send: sendMock } } }))
+vi.mock('@/lib/checkout-session', () => ({ closePreviousCheckout: closeMock }))
 
 import { POST } from './route'
 
@@ -70,7 +72,7 @@ const ORDER = {
 const params = Promise.resolve({ orderId: ORDER.id })
 
 function request(body: unknown) {
-  return new Request('http://localhost/api/custom/x/balance', {
+  return new Request('http://localhost/api/admin/custom/x/balance', {
     method: 'POST',
     body: JSON.stringify(body),
   })
@@ -87,10 +89,27 @@ beforeEach(() => {
   state.reset()
   sendMock.mockClear()
   sessionCreate.mockClear()
+  closeMock.mockReset()
+  closeMock.mockResolvedValue('closed')
   process.env.RESEND_FROM_EMAIL = 'studio@exemple.fr'
 })
 
-describe('POST /api/custom/[orderId]/balance', () => {
+describe('POST /api/admin/custom/[orderId]/balance', () => {
+  it('une demande renvoyée ferme le lien de la précédente', async () => {
+    state.queue('custom_orders', { data: { ...ORDER, balance_session_id: 'cs_old' }, error: null }, { data: null, error: null })
+    const res = await POST(request({ payment_mode: 'transfer' }), { params })
+    expect(res.status).toBe(200)
+    expect(closeMock).toHaveBeenCalledWith('cs_old')
+  })
+
+  it('refuse si le client vient de régler le lien précédent', async () => {
+    closeMock.mockResolvedValueOnce('paid')
+    state.queue('custom_orders', { data: { ...ORDER, balance_session_id: 'cs_old' }, error: null })
+    const res = await POST(request({}), { params })
+    expect(res.status).toBe(409)
+    expectNothingSent()
+  })
+
   it('acompte < total : réclame total − acompte par défaut', async () => {
     state.queue('custom_orders', { data: ORDER, error: null }, { data: null, error: null })
     const res = await POST(request({}), { params })

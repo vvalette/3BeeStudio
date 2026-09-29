@@ -245,7 +245,7 @@ function BalanceRequest({
     setError(null)
     setLoading(true)
     try {
-      const res = await fetch(`/api/custom/${order.id}/balance`, {
+      const res = await fetch(`/api/admin/custom/${order.id}/balance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ balance_amount: value, payment_mode: mode }),

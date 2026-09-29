@@ -57,7 +57,7 @@
 - [x] `src/app/admin/custom/[orderId]/page.tsx` — Détail sur-mesure + changement statut + envoi devis Stripe ✅
 - [ ] **Sur-mesure : total modifié après un solde déclaré reçu** (remonté le 29/09/26 sur Hôtel Le Capricorne : total relevé de 30 €, solde resté à 294,45 €, 30 € de reste dû ; corrigé à la main en annulant puis redéclarant le solde). Ne **pas** recalculer le solde encaissé tout seul : c'est le montant du relevé bancaire, repris dans l'export CSV, et le client n'a pas forcément payé la différence. À faire :
   - bouton « Corriger le montant » sur un encaissement déclaré (garde date et moyen, même plafond `total − acompte` côté serveur) au lieu d'annuler puis redéclarer
-  - quand le total change alors que le solde est déjà reçu : le signaler dans la carte « Paiements » avec deux gestes, « Le client a réglé le nouveau montant » (corrige l'encaissement) ou « Réclamer la différence » (lève aussi la garde « solde déjà réglé » de `/api/custom/[orderId]/balance`)
+  - quand le total change alors que le solde est déjà reçu : le signaler dans la carte « Paiements » avec deux gestes, « Le client a réglé le nouveau montant » (corrige l'encaissement) ou « Réclamer la différence » (lève aussi la garde « solde déjà réglé » de `/api/admin/custom/[orderId]/balance`)
 
 ## 📧 Sur-mesure — Emails
 
@@ -67,7 +67,7 @@
 ## 🔌 Sur-mesure — API
 
 - [x] `POST /api/custom/order` — Crée demande Supabase + emails ✅
-- [x] `POST /api/custom/[orderId]/quote` — Crée session Stripe acompte + email client ✅
+- [x] `POST /api/admin/custom/[orderId]/quote` — Crée session Stripe acompte + email client ✅
 - [x] `PATCH /api/admin/custom/[orderId]` — Mise à jour statut/notes/suivi ✅
 - [x] `DELETE /api/admin/custom/[orderId]` — Suppression ✅
 - [ ] Appliquer migration `006_create_custom_orders.sql` dans Supabase SQL editor (table `custom_orders`)

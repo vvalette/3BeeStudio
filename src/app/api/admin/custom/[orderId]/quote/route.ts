@@ -1,5 +1,5 @@
 /**
- * POST /api/custom/[orderId]/quote
+ * POST /api/admin/custom/[orderId]/quote
  * Appelé par l'admin pour envoyer le devis au client : PDF en pièce jointe,
  * lien de paiement Stripe pour l'acompte, et bascule en `quote_sent`.
  *
@@ -24,7 +24,8 @@ import CustomQuote from '@/emails/CustomQuote'
 import { nextQuoteNumber, isQuoteNumberConflict } from '@/lib/documents/number'
 import { fallbackQuoteItems, fallbackQuoteObject, quoteItemSchema } from '@/lib/documents/input'
 import { downloadQuotePdf } from '@/lib/documents/quote-file'
-import type { CustomOrder } from '@/types/custom-order'
+import { closePreviousCheckout } from '@/lib/checkout-session'
+import { projectTypeLabel, type CustomOrder } from '@/types/custom-order'
 
 const schema = z.object({
   deposit_amount: z.number().int().positive(), // en centimes
@@ -90,6 +91,16 @@ export async function POST(
 
   const order = orderRaw as CustomOrder
 
+  // Acompte déjà encaissé : renvoyer le devis remettrait la demande en
+  // `quote_sent` et enverrait au client un second lien d'acompte. Le total peut
+  // toujours être corrigé par « Enregistrer sans envoyer ».
+  if (order.deposit_paid_at) {
+    return NextResponse.json(
+      { error: 'L\'acompte est déjà encaissé : le devis ne se renvoie plus. Corrigez les montants avec « Enregistrer sans envoyer ».' },
+      { status: 409 },
+    )
+  }
+
   const imported = parsed.data.use_imported_pdf === true
   const transfer = parsed.data.payment_mode === 'transfer'
 
@@ -150,6 +161,25 @@ export async function POST(
   let quoteNumber = manualNumber ?? order.quote_number
   let updateError: { code?: string; message?: string } | null = null
 
+  // Le lien du précédent envoi est fermé avant d'en émettre un autre, y compris
+  // quand on passe au virement : sinon il reste payable à côté du nouveau.
+  let previous: 'closed' | 'paid'
+  try {
+    previous = await closePreviousCheckout(order.stripe_checkout_session_id)
+  } catch (err) {
+    console.error('[custom/quote] fermeture de l\'ancien lien impossible:', err)
+    return NextResponse.json(
+      { error: 'Impossible de fermer le lien de paiement précédent : réessayez dans un instant.' },
+      { status: 502 },
+    )
+  }
+  if (previous === 'paid') {
+    return NextResponse.json(
+      { error: 'Le client vient de régler l\'acompte avec le lien précédent : rechargez la fiche avant tout renvoi.' },
+      { status: 409 },
+    )
+  }
+
   // Checkout Stripe pour l'acompte. Rien à créer si le client règle par
   // virement : un lien de paiement laissé ouvert finirait par être cliqué, et
   // l'acompte serait encaissé deux fois.
@@ -162,8 +192,8 @@ export async function POST(
         currency: 'eur',
         unit_amount: deposit_amount,
         product_data: {
-          name: `Acompte — Projet sur-mesure #${orderId.slice(0, 8).toUpperCase()}`,
-          description: order.project_type,
+          name: `Acompte · Projet sur-mesure #${orderId.slice(0, 8).toUpperCase()}`,
+          description: projectTypeLabel(order.project_type),
         },
       },
       quantity: 1,
@@ -246,7 +276,7 @@ export async function POST(
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `Votre devis ${quoteNumber} — 3BeeStudio`,
+    subject: `Votre devis ${quoteNumber} · 3BeeStudio`,
     attachments: [{
       filename: attachmentName,
       content: Buffer.from(pdf).toString('base64'),

@@ -54,6 +54,7 @@ const sendMock = vi.hoisted(() =>
 const sessionCreate = vi.hoisted(() =>
   vi.fn(async () => ({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1' })),
 )
+const closeMock = vi.hoisted(() => vi.fn(async (): Promise<'closed' | 'paid'> => 'closed'))
 const downloadMock = vi.hoisted(() =>
   vi.fn(async () => Buffer.from('%PDF-1.7 devis importe')),
 )
@@ -61,6 +62,7 @@ const downloadMock = vi.hoisted(() =>
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: supabaseMock, supabase: supabaseMock }))
 vi.mock('@/lib/stripe', () => ({ stripe: { checkout: { sessions: { create: sessionCreate } } } }))
 vi.mock('@/lib/auth', () => ({ isAuthenticated: vi.fn(async () => true) }))
+vi.mock('@/lib/checkout-session', () => ({ closePreviousCheckout: closeMock }))
 vi.mock('resend', () => ({ Resend: class { emails = { send: sendMock } } }))
 // Le devis importé vit dans Supabase Storage : seul son contenu compte ici.
 vi.mock('@/lib/documents/quote-file', () => ({ downloadQuotePdf: downloadMock }))
@@ -84,7 +86,7 @@ const ORDER = {
 const params = Promise.resolve({ orderId: ORDER.id })
 
 function request(body: unknown) {
-  return new Request('http://localhost/api/custom/x/quote', {
+  return new Request('http://localhost/api/admin/custom/x/quote', {
     method: 'POST',
     body: JSON.stringify(body),
   })
@@ -100,10 +102,43 @@ beforeEach(() => {
   sendMock.mockClear()
   sessionCreate.mockClear()
   downloadMock.mockClear()
+  closeMock.mockReset()
+  closeMock.mockResolvedValue('closed')
   vi.mocked(isAuthenticated).mockResolvedValue(true)
 })
 
-describe('POST /api/custom/[orderId]/quote', () => {
+describe('POST /api/admin/custom/[orderId]/quote', () => {
+  it('refuse de renvoyer un devis dont l’acompte est encaissé', async () => {
+    state.queue('custom_orders', { data: { ...ORDER, deposit_paid_at: '2026-09-01T10:00:00Z' }, error: null })
+
+    const res = await POST(request({ deposit_amount: 1750, quote_items: ITEMS }), { params })
+    expect(res.status).toBe(409)
+    expect(sessionCreate).not.toHaveBeenCalled()
+    expect(sendMock).not.toHaveBeenCalled()
+    expect(state.writes).toHaveLength(0)
+  })
+
+  it('ferme le lien du précédent envoi avant d’en ouvrir un autre', async () => {
+    state.queue('custom_orders',
+      { data: { ...ORDER, quote_number: 'DEV-2026-004', stripe_checkout_session_id: 'cs_old' }, error: null },
+      { data: null, error: null },
+    )
+
+    const res = await POST(request({ deposit_amount: 1750, quote_items: ITEMS }), { params })
+    expect(res.status).toBe(200)
+    expect(closeMock).toHaveBeenCalledWith('cs_old')
+  })
+
+  it('refuse le renvoi si le client vient de payer le lien précédent', async () => {
+    closeMock.mockResolvedValueOnce('paid')
+    state.queue('custom_orders', { data: { ...ORDER, stripe_checkout_session_id: 'cs_old' }, error: null })
+
+    const res = await POST(request({ deposit_amount: 1750, quote_items: ITEMS }), { params })
+    expect(res.status).toBe(409)
+    expect(sessionCreate).not.toHaveBeenCalled()
+    expect(sendMock).not.toHaveBeenCalled()
+  })
+
   it('refuse un appel non authentifié', async () => {
     vi.mocked(isAuthenticated).mockResolvedValue(false)
     const res = await POST(request({ deposit_amount: 1750 }), { params })

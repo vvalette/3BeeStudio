@@ -1,5 +1,5 @@
 /**
- * POST /api/custom/[orderId]/balance
+ * POST /api/admin/custom/[orderId]/balance
  * Réclame le solde d'un projet sur-mesure : envoie la demande au client, avec
  * un second lien de paiement Stripe, ou sans lien si le règlement se fait par
  * virement. Appelé par l'admin quand la pièce est prête,
@@ -15,7 +15,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { stripe } from '@/lib/stripe'
 import { isAuthenticated } from '@/lib/auth'
 import { Resend } from 'resend'
-import { balanceCap, computeBalance, type CustomOrder } from '@/types/custom-order'
+import { balanceCap, computeBalance, projectTypeLabel, type CustomOrder } from '@/types/custom-order'
+import { closePreviousCheckout } from '@/lib/checkout-session'
 import { render } from 'react-email'
 import CustomBalance from '@/emails/CustomBalance'
 
@@ -103,6 +104,25 @@ export async function POST(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://3beestudio.fr'
   const transfer = parsed.data.payment_mode === 'transfer'
 
+  // Une demande de solde renvoyée ferme le lien de la précédente : les deux
+  // resteraient sinon payables en même temps.
+  let previous: 'closed' | 'paid'
+  try {
+    previous = await closePreviousCheckout(order.balance_session_id)
+  } catch (err) {
+    console.error('[custom/balance] fermeture de l\'ancien lien impossible:', err)
+    return NextResponse.json(
+      { error: 'Impossible de fermer le lien de paiement précédent : réessayez dans un instant.' },
+      { status: 502 },
+    )
+  }
+  if (previous === 'paid') {
+    return NextResponse.json(
+      { error: 'Le client vient de régler le solde avec le lien précédent : rechargez la fiche.' },
+      { status: 409 },
+    )
+  }
+
   // Pas de lien laissé ouvert quand le règlement se fait par virement : il
   // finirait par être cliqué, et le solde serait encaissé deux fois.
   const session = transfer ? null : await stripe.checkout.sessions.create({
@@ -114,8 +134,8 @@ export async function POST(
         currency: 'eur',
         unit_amount: amount,
         product_data: {
-          name: `Solde — Projet sur-mesure #${orderId.slice(0, 8).toUpperCase()}`,
-          description: order.project_type,
+          name: `Solde · Projet sur-mesure #${orderId.slice(0, 8).toUpperCase()}`,
+          description: projectTypeLabel(order.project_type),
         },
       },
       quantity: 1,
@@ -152,7 +172,7 @@ export async function POST(
     from,
     replyTo: 'contact@3beestudio.fr',
     to: order.email,
-    subject: `Votre projet est prêt — solde à régler #${orderId.slice(0, 8).toUpperCase()}`,
+    subject: `Votre projet est prêt : solde à régler #${orderId.slice(0, 8).toUpperCase()}`,
     html,
   })
 

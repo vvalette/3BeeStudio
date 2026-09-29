@@ -57,7 +57,8 @@ export default function AdminQuoteImport({
 
   const totalCents   = cents(total)
   const depositCents = cents(deposit)
-  const ready = !!order.quote_pdf_path && totalCents > 0 && depositCents > 0 && depositCents <= totalCents
+  // Acompte encaissé : un renvoi ouvrirait un second lien d'acompte (refusé côté serveur).
+  const ready = !!order.quote_pdf_path && totalCents > 0 && depositCents > 0 && depositCents <= totalCents && !order.deposit_paid_at
   // Enregistrer ne demande pas d'acompte : un devis déjà réglé en une fois n'en a pas.
   const savable = totalCents > 0 && depositCents <= totalCents
 
@@ -145,7 +146,7 @@ export default function AdminQuoteImport({
     setError(null)
     setSending(true)
     try {
-      const res = await fetch(`/api/custom/${order.id}/quote`, {
+      const res = await fetch(`/api/admin/custom/${order.id}/quote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -321,6 +322,12 @@ export default function AdminQuoteImport({
       </div>
 
       <PaymentModeToggle value={mode} onChange={setMode} />
+
+      {order.deposit_paid_at && (
+        <p className="text-xs text-ink-2">
+          Acompte encaissé : le devis ne se renvoie plus. « Enregistrer sans envoyer » met à jour les montants sans rien envoyer au client.
+        </p>
+      )}
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 

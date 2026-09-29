@@ -5,7 +5,8 @@ import { addToNewsletterAudience, sendNewsletterWelcome } from '@/lib/resend'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 const schema = z.object({
-  email:  z.string().email(),
+  // Minuscules : la newsletter se retrouve par email, `Jean@` et `jean@` sont la même personne.
+  email:  z.string().trim().toLowerCase().email(),
   locale: z.enum(['fr', 'en']).optional().default('fr'),
 })
 
