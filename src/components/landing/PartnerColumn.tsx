@@ -27,12 +27,24 @@ export default function PartnerColumn() {
         aria-label={t('aria')}
         className="group flex cursor-pointer flex-col items-start gap-3"
       >
-        <span>
-          <span className="block font-semibold text-ink-1 transition-colors group-hover:text-amber" style={{ fontSize: 14 }}>
-            Appy Geek
-          </span>
-          <span className="mt-1 block leading-relaxed text-ink-2" style={{ fontSize: 14, maxWidth: 220 }}>
-            {t('tagline')}
+        <span className="flex items-start gap-3">
+          {/* Capture de l'appli, détourée selon le cadre du téléphone */}
+          <Image
+            src="/images/partners/appy-geek-phone.webp"
+            alt=""
+            aria-hidden
+            width={250}
+            height={411}
+            sizes="76px"
+            className="w-[76px] shrink-0 drop-shadow-lg transition-transform duration-300 group-hover:-translate-y-1"
+          />
+          <span className="min-w-0 pt-1">
+            <span className="block font-semibold text-ink-1 transition-colors group-hover:text-amber" style={{ fontSize: 14 }}>
+              Appy Geek
+            </span>
+            <span className="mt-1 block leading-relaxed text-ink-2" style={{ fontSize: 13 }}>
+              {t('tagline')}
+            </span>
           </span>
         </span>
         <Image
