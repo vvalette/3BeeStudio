@@ -28,9 +28,10 @@ export default function PartnerColumn() {
         className="group flex cursor-pointer flex-col items-start gap-3"
       >
         <span className="flex items-start gap-3">
-          {/* Capture de l'appli, détourée selon le cadre du téléphone */}
+          {/* Capture de l'appli, détourée selon le cadre du téléphone. Nom de fichier
+              à changer à chaque nouvelle image : l'optimiseur garde 31 jours en cache. */}
           <Image
-            src="/images/partners/appy-geek-phone.webp"
+            src="/images/partners/appy-geek-list.webp"
             alt=""
             aria-hidden
             width={250}
