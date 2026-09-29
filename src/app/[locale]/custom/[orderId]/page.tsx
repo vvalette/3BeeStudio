@@ -2,7 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getTranslations, getLocale } from 'next-intl/server'
-import { CUSTOM_STATUS_STEPS, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS, PROJECT_TYPES, paymentState, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
+import { CUSTOM_STATUS_STEPS, BUDGET_RANGES, DEADLINES, BUDGET_KEYS, DEADLINE_KEYS, PROJECT_TYPES, paymentState, computeBalance, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
 import { formatPrice } from '@/lib/utils'
 import { resolveTracking } from '@/lib/tracking'
 
@@ -51,7 +51,10 @@ export default async function SuiviMesurePage({
   // le règlement pouvant se faire par virement), soldé quand la date arrive.
   // Pas de statut dédié — la timeline reste pilotée par la production et
   // l'expédition.
-  const balanceDue  = (o.balance_amount || o.balance_payment_url) && !o.balance_paid_at
+  // Montant toujours borné par `total − acompte` : un solde fantôme stocké en
+  // base ne doit jamais s'afficher ni se réclamer chez le client.
+  const balanceAmount = computeBalance(o)
+  const balanceDue  = (o.balance_amount || o.balance_payment_url) && !o.balance_paid_at && !!balanceAmount
   const pay = paymentState(o)
   const payDate = (iso: string) => new Date(iso).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
     day: '2-digit', month: 'long', year: 'numeric',
@@ -166,7 +169,7 @@ export default async function SuiviMesurePage({
             <p className="text-sm font-semibold text-ink-0 mb-1">{t('balanceAction.title')}</p>
             <p className="text-xs text-ink-2 mb-1">{t('balanceAction.desc')}</p>
             <p className="text-xs text-ink-3 mb-4">
-              {o.balance_amount && <>{t('balanceAction.amount')} <span className="text-ink-1 font-mono">{formatPrice(o.balance_amount)}</span></>}
+              {balanceAmount && <>{t('balanceAction.amount')} <span className="text-ink-1 font-mono">{formatPrice(balanceAmount)}</span></>}
               {o.deposit_amount && <> — {t('balanceAction.deposit')} <span className="text-ink-1 font-mono">{formatPrice(o.deposit_amount)}</span></>}
             </p>
             {o.balance_payment_url ? (
@@ -295,10 +298,10 @@ export default async function SuiviMesurePage({
                   received
                 />
               )}
-              {(o.balance_amount || pay.outstanding) && (
+              {(pay.balancePaid || balanceAmount) && (
                 <PaymentRow
                   label={t('payments.balance')}
-                  amount={formatPrice(o.balance_amount ?? pay.outstanding ?? 0)}
+                  amount={formatPrice(pay.balancePaid ? o.balance_amount ?? balanceAmount ?? 0 : balanceAmount ?? 0)}
                   note={pay.balancePaid
                     ? (pay.balancePaidAt
                         ? t('payments.received', { date: payDate(pay.balancePaidAt) })

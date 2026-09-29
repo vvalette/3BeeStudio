@@ -13,12 +13,28 @@
  * `received: false` annule la déclaration (erreur de saisie), sans jamais faire
  * reculer une demande déjà en production ou expédiée : seul le statut
  * `deposit_paid` revient à `quote_sent`.
+ *
+ * Invariant tenu ici et non dans l'UI : l'encaissé ne dépasse jamais le total du
+ * projet. Un solde se déclare donc seulement s'il existe un total, et dans la
+ * limite de `total − acompte`.
+ *
+ * `kind: 'balance', clear: true` efface un solde fantôme (montant stocké au-delà
+ * du plafond, ou encaissé > total). Refusé sur un solde réglé par Stripe : cet
+ * argent-là est réellement arrivé, il se rembourse, il ne s'efface pas.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isAuthenticated } from '@/lib/auth'
-import { computeBalance, type CustomOrder, type CustomOrderStatus } from '@/types/custom-order'
+import { stripe } from '@/lib/stripe'
+import {
+  balanceAnomaly,
+  balanceCap,
+  computeBalance,
+  paymentState,
+  type CustomOrder,
+  type CustomOrderStatus,
+} from '@/types/custom-order'
 import type { Database } from '@/types/database'
 
 type CustomOrderUpdate = Database['public']['Tables']['custom_orders']['Update']
@@ -37,6 +53,8 @@ const schema = z.object({
    */
   total_amount: z.number().int().positive().optional(),
   method:   z.enum(['transfer', 'cash', 'check', 'stripe']).default('transfer'),
+  /** Avec `kind: 'balance'` : supprime un solde incohérent au lieu de le déclarer. */
+  clear:    z.boolean().optional(),
 })
 
 /** Statuts qu'un encaissement d'acompte fait avancer. Au-delà, la production est déjà lancée. */
@@ -72,6 +90,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
   }
   const order = orderRaw as CustomOrder
 
+  if (parsed.data.clear) {
+    if (kind !== 'balance') {
+      return NextResponse.json({ error: 'Seul un solde peut être supprimé.' }, { status: 422 })
+    }
+    return clearBalance(order)
+  }
+
   // Une date d'encaissement dans le futur fausserait la déclaration du trimestre.
   let paidAt = new Date()
   if (parsed.data.paid_at) {
@@ -104,6 +129,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
           { status: 422 },
         )
       }
+      // Un solde déjà encaissé compte aussi : acompte + solde ne dépassent pas le total.
+      const balancePaid = order.balance_paid_at ? order.balance_amount ?? 0 : 0
+      if (total && amount + balancePaid > total) {
+        return NextResponse.json(
+          { error: `Encaissement refusé : l'encaissé dépasserait le total du projet (${euros(total)}).` },
+          { status: 422 },
+        )
+      }
 
       patch.deposit_amount  = amount
       patch.deposit_paid_at = paidAt.toISOString()
@@ -117,10 +150,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
     }
   } else {
     if (received) {
-      const amount = parsed.data.amount ?? computeBalance(order)
-      if (!amount) {
+      const cap = balanceCap(order)
+      if (cap === null) {
         return NextResponse.json(
-          { error: 'Montant du solde requis : il ne se déduit pas du total connu.' },
+          { error: 'Renseigne d\'abord le total du projet : sans lui, le solde n\'a pas de référence.' },
+          { status: 422 },
+        )
+      }
+      if (cap === 0) {
+        return NextResponse.json(
+          { error: 'Aucun solde à encaisser : l\'acompte couvre déjà le total du projet.' },
+          { status: 422 },
+        )
+      }
+      const amount = parsed.data.amount ?? computeBalance(order)!
+      if (amount > cap) {
+        return NextResponse.json(
+          { error: `Encaissement refusé : le solde ne peut dépasser ${euros(cap)} (total moins acompte). Mets le total à jour dans la carte « Devis » si le projet a évolué.` },
+          { status: 422 },
+        )
+      }
+      const depositPaid = paymentState(order).depositPaid ? order.deposit_amount ?? 0 : 0
+      if (depositPaid + amount > order.total_amount!) {
+        return NextResponse.json(
+          { error: `Encaissement refusé : l'encaissé dépasserait le total du projet (${euros(order.total_amount!)}).` },
           { status: 422 },
         )
       }
@@ -146,5 +199,57 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
   }
 
   console.info('[custom/payment]', JSON.stringify({ orderId, kind, received, method }))
+  return NextResponse.json(data)
+}
+
+function euros(cents: number): string {
+  return `${(cents / 100).toFixed(2).replace('.', ',')} €`
+}
+
+/**
+ * Efface un solde fantôme sans toucher à l'acompte. Un lien Stripe encore ouvert
+ * est expiré : cliqué plus tard, il encaisserait un solde qui n'existe pas.
+ */
+async function clearBalance(order: CustomOrder) {
+  const anomaly = balanceAnomaly(order)
+  if (!anomaly) {
+    return NextResponse.json({ error: 'Ce solde est cohérent avec le total : rien à supprimer.' }, { status: 409 })
+  }
+  if (anomaly.paidByStripe) {
+    return NextResponse.json(
+      { error: 'Solde réglé par carte : l\'argent est arrivé. Rembourse-le depuis Stripe plutôt que de l\'effacer.' },
+      { status: 409 },
+    )
+  }
+
+  if (order.balance_session_id && !order.balance_paid_at) {
+    try {
+      await stripe.checkout.sessions.expire(order.balance_session_id)
+    } catch (err) {
+      // Session déjà expirée ou close : rien à fermer.
+      console.warn('[custom/payment] Session de solde non expirée:', err instanceof Error ? err.message : err)
+    }
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('custom_orders')
+    .update({
+      balance_amount:      null,
+      balance_payment_url: null,
+      balance_session_id:  null,
+      balance_paid_at:     null,
+      balance_method:      null,
+      updated_at:          new Date().toISOString(),
+    })
+    .eq('id', order.id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('[custom/payment] Erreur Supabase:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  console.info('[custom/payment]', JSON.stringify({ orderId: order.id, kind: 'balance', cleared: anomaly }))
   return NextResponse.json(data)
 }

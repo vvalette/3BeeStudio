@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeBalance, paymentState, type CustomOrder } from './custom-order'
+import { balanceAnomaly, computeBalance, paymentState, type CustomOrder } from './custom-order'
 
 /** Demande type : devis de 35 €, acompte de 17,50 €. */
 function order(overrides: Partial<CustomOrder> = {}): CustomOrder {
@@ -19,12 +19,27 @@ describe('computeBalance', () => {
     expect(computeBalance(order())).toBe(1750)
   })
 
-  it('donne la priorité au montant réclamé si l’admin l’a ajusté', () => {
-    expect(computeBalance(order({ balance_amount: 2000 }))).toBe(2000)
+  it('garde un montant réclamé plus bas que le plafond (geste commercial)', () => {
+    expect(computeBalance(order({ balance_amount: 1500 }))).toBe(1500)
   })
 
-  it('ne renvoie rien quand l’acompte couvre tout', () => {
+  it('borne un montant stocké au-delà de total − acompte', () => {
+    expect(computeBalance(order({ balance_amount: 2000 }))).toBe(1750)
+  })
+
+  it('acompte = total : aucun solde, même si un montant fantôme est stocké', () => {
     expect(computeBalance(order({ deposit_amount: 3500 }))).toBeNull()
+    expect(computeBalance(order({ deposit_amount: 3500, balance_amount: 3500 }))).toBeNull()
+  })
+
+  it('acompte = 0 ou absent : le solde est le total', () => {
+    expect(computeBalance(order({ deposit_amount: 0 }))).toBe(3500)
+    expect(computeBalance(order({ deposit_amount: null }))).toBe(3500)
+  })
+
+  it('sans total, seul un montant déjà réclamé fait foi', () => {
+    expect(computeBalance(order({ total_amount: null }))).toBeNull()
+    expect(computeBalance(order({ total_amount: null, balance_amount: 900 }))).toBe(900)
   })
 })
 
@@ -76,5 +91,57 @@ describe('paymentState', () => {
     expect(pay.depositPaid).toBe(false)
     expect(pay.fullyPaid).toBe(false)
     expect(pay.amountPaid).toBe(0)
+  })
+})
+
+describe('paymentState · Reste dû et badge lisent le même chiffre', () => {
+  it('acompte = total avec un solde fantôme stocké : soldé, rien à réclamer', () => {
+    // Cas réel 79e3707b : total 40 €, acompte 40 €, solde de 40 € enregistré à tort.
+    const pay = paymentState(order({
+      status: 'delivered', total_amount: 4000, deposit_amount: 4000, balance_amount: 4000,
+    }))
+    expect(pay.amountPaid).toBe(4000)
+    expect(pay.outstanding).toBeNull()
+    expect(pay.fullyPaid).toBe(true)
+  })
+
+  it('acompte < total encaissé : reste = total − encaissé', () => {
+    const pay = paymentState(order({ status: 'in_production', deposit_paid_at: '2026-08-16T12:00:00Z' }))
+    expect(pay.outstanding).toBe(3500 - pay.amountPaid)
+  })
+
+  it('acompte = 0 : tout le total reste dû', () => {
+    const pay = paymentState(order({ status: 'in_production', deposit_amount: 0 }))
+    expect(pay.amountPaid).toBe(0)
+    expect(pay.outstanding).toBe(3500)
+    expect(pay.fullyPaid).toBe(false)
+  })
+})
+
+describe('balanceAnomaly', () => {
+  it('rien à signaler sur une demande cohérente', () => {
+    expect(balanceAnomaly(order())).toBeNull()
+    expect(balanceAnomaly(order({ balance_amount: 1750, balance_paid_at: '2026-08-21T09:00:00Z', status: 'shipped' }))).toBeNull()
+  })
+
+  it('repère un solde stocké alors que l’acompte couvre le total', () => {
+    const a = balanceAnomaly(order({ status: 'delivered', deposit_amount: 3500, balance_amount: 3500 }))
+    expect(a).toMatchObject({ kind: 'phantom', stored: 3500, cap: 0, paidByStripe: false })
+  })
+
+  it('repère un encaissé supérieur au total', () => {
+    const a = balanceAnomaly(order({
+      status: 'delivered', deposit_amount: 4000, total_amount: 4000,
+      balance_amount: 4000, balance_paid_at: '2026-09-29T00:00:00Z', balance_method: 'transfer',
+    }))
+    expect(a).toMatchObject({ kind: 'overpaid', amountPaid: 8000, paidByStripe: false })
+  })
+
+  it('marque un solde réglé par Stripe comme intouchable', () => {
+    const a = balanceAnomaly(order({
+      status: 'delivered', deposit_amount: 3500,
+      balance_amount: 3500, balance_paid_at: '2026-09-29T00:00:00Z', balance_method: 'stripe',
+    }))
+    expect(a?.paidByStripe).toBe(true)
   })
 })
