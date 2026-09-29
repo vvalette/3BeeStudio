@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import Tooltip from '@/components/ui/Tooltip'
 import { GOOGLE_REVIEWS_URL } from '@/lib/links'
+import PartnerColumn from './PartnerColumn'
 
 /* ── Social SVG icons ── */
 function TikTokIcon() {
@@ -78,7 +79,7 @@ export default function SiteFooter() {
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
 
         {/* ── Main grid ── */}
-        <div className="grid gap-12 py-16 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
 
           {/* Brand column */}
           <div>
@@ -138,6 +139,8 @@ export default function SiteFooter() {
               </ul>
             </div>
           ))}
+
+          <PartnerColumn />
         </div>
 
         {/* ── Bottom bar ── */}
