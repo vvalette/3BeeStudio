@@ -1,5 +1,24 @@
 import { describe, it, expect } from 'vitest'
-import { estimateShopPackage, volumetricWeight } from './boxtal'
+import { estimateShopPackage, normalizePhone, volumetricWeight } from './boxtal'
+
+describe('normalizePhone', () => {
+  it('garde un numéro international tel quel', () => {
+    expect(normalizePhone('+32 470 12 34 56')).toBe('+32470123456')
+  })
+
+  it('convertit un numéro français national', () => {
+    expect(normalizePhone('06 12 34 56 78')).toBe('+33612345678')
+  })
+
+  it('convertit le préfixe 00', () => {
+    expect(normalizePhone('0032470123456')).toBe('+32470123456')
+  })
+
+  it('répare l\u2019indicatif collé devant un numéro déjà international (#D73B9B16)', () => {
+    expect(normalizePhone('+33+32470123456')).toBe('+32470123456')
+    expect(normalizePhone('+33 +32 470 12 34 56')).toBe('+32470123456')
+  })
+})
 
 describe('estimateShopPackage', () => {
   it('somme le poids des articles + 50 g d’emballage', () => {

@@ -21,8 +21,13 @@ function getAuth(): string {
   return Buffer.from(`${key}:${secret}`).toString('base64')
 }
 
-function normalizePhone(phone: string): string {
-  const p = phone.replace(/[\s\-\.\(\)]/g, '')
+export function normalizePhone(phone: string): string {
+  let p = phone.replace(/[\s\-\.\(\)]/g, '')
+  // « +33+324… » : l'indicatif du sélecteur collé devant un numéro déjà saisi
+  // au format international (ancien défaut du champ téléphone du checkout).
+  // Le numéro tapé par le client fait foi : on repart du dernier « + ».
+  const lastPlus = p.lastIndexOf('+')
+  if (lastPlus > 0) p = p.slice(lastPlus)
   if (p.startsWith('00')) return '+' + p.slice(2)
   if (/^0[0-9]{9}$/.test(p)) return '+33' + p.slice(1)
   if (p.startsWith('+')) return p
@@ -230,7 +235,14 @@ async function boxtalFetch(path: string, options: RequestInit = {}) {
   const json = text ? JSON.parse(text) : null
   if (!res.ok) {
     const code = json?.errors?.[0]?.code ?? json?.message ?? `HTTP ${res.status}`
-    throw new Error(`Boxtal ${path}: ${code}`)
+    // Le code seul (« ValidationException ») ne dit pas quoi corriger : les
+    // paramètres de l'erreur portent le champ refusé et la raison.
+    const params = (json?.errors?.[0]?.parameters ?? []) as { code?: string; field?: string; value?: string }[]
+    const detail = params
+      .map((p) => [p.field, p.code].filter(Boolean).join(' : '))
+      .filter(Boolean)
+      .join(' ; ')
+    throw new Error(`Boxtal ${path}: ${code}${detail ? ` (${detail})` : ''}`)
   }
   return json
 }
