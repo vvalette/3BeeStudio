@@ -48,6 +48,13 @@ test.describe('Flux sur-mesure', () => {
     // Étape 2 : coordonnées visibles
     await expect(page.getByText('Prénom').first()).toBeVisible()
 
+    // Un numéro tapé au format international bascule l'indicatif au lieu d'être
+    // préfixé par +33 (« +33+324… », refusé par Boxtal à l'étiquette)
+    const tel = page.locator('input[type="tel"]')
+    await tel.fill('+32 470 12 34 56')
+    await expect(page.getByText('+32', { exact: true })).toBeVisible()
+    await expect(tel).toHaveValue('470123456')
+
     // Retour → l'étape 1 conserve la description
     await page.getByRole('button', { name: 'Retour' }).click()
     await expect(page.getByRole('textbox').first()).toHaveValue(/figurine personnalisée/)

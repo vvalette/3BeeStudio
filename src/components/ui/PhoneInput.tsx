@@ -53,6 +53,25 @@ export default function PhoneInput({ value, onChange, required, invalid }: Phone
     onChange((DIAL_CODES[code] ?? '+33') + num)
   }, [onChange])
 
+  // Numéro saisi ou collé au format international (« +32 4… », « 0032 4… ») :
+  // c'est lui qui fait foi. On bascule le sélecteur sur ce pays au lieu de coller
+  // l'indicatif courant devant, ce qui donnait « +33+324… », refusé par Boxtal.
+  const handleNumber = useCallback((raw: string) => {
+    const compact = raw.replace(/[\s.\-()]/g, '')
+    const intl = compact.startsWith('00') ? '+' + compact.slice(2) : compact
+    if (intl.startsWith('+')) {
+      const parsed = parsePhone(intl)
+      if (intl.startsWith(DIAL_CODES[parsed.countryCode])) {
+        setCountryCode(parsed.countryCode)
+        setNumber(parsed.number)
+        emit(parsed.countryCode, parsed.number)
+        return
+      }
+    }
+    setNumber(raw)
+    emit(countryCode, raw)
+  }, [countryCode, emit])
+
   // Reset if parent clears value
   useEffect(() => {
     if (!value) { setCountryCode('FR'); setNumber('') }
@@ -124,7 +143,7 @@ export default function PhoneInput({ value, onChange, required, invalid }: Phone
       <input
         type="tel"
         value={number}
-        onChange={e => { setNumber(e.target.value); emit(countryCode, e.target.value) }}
+        onChange={e => handleNumber(e.target.value)}
         required={required}
         placeholder="6 12 34 56 78"
         autoComplete="off"
